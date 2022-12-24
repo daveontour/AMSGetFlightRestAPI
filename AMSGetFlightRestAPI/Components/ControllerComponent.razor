@@ -1,0 +1,92 @@
+﻿@inject IGetFlightsConfigService configService;
+
+
+<div>
+    @if (configService.config.AllowAnnonymousUsers)
+    {
+        <RadzenButton Text="Disable Annonymous Users" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" Click="DisableAnnon" Style="padding-left:4px;padding-right:4px;width:180px" />
+    }
+    else
+    {
+        <RadzenButton Text="Enable Annonymous Users" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="EnableAnnon" Style="padding-left:4px;padding-right:4px;width:180px" />
+    }
+    @if (configService.config.AllowAMSXFormat)
+    {
+        <RadzenButton Text="Disable XML Requests" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" Click="DisableXML" Style="padding-left:4px;padding-right:4px;width:180px" />
+    }
+    else
+    {
+        <RadzenButton Text="Enable XML Requests" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="EnableXML" Style="padding-left:4px;padding-right:4px;width:180px" />
+    }
+    @if (configService.config.AllowJSONFormat)
+    {
+        <RadzenButton Text="Disable JSON Requests" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" Click="DisableJSON" Style="padding-left:4px;padding-right:4px;width:180px" />
+    }
+    else
+    {
+        <RadzenButton Text="Enable JSON Requests" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="EnableJSON" Style="padding-left:4px;padding-right:4px;width:180px" />
+    }
+
+    <RadzenButton Text="Apply Config" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="ApplyConfig" Style="padding-left:4px;padding-right:4px;width:180px" />
+    <RadzenButton Text="Save Config to File" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="SaveConfig" Style="padding-left:4px;padding-right:4px;width:180px" />
+    <RadzenButton Text="Restart Service" ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="Restart" Style="padding-left:4px;padding-right:4px;width:180px" />
+</div>
+
+@code {
+
+    [Parameter]
+    public RestAPIManagementComponent Parent { get; set; }
+
+    public void DisableXML()
+    {
+        configService.config.AllowAMSXFormat = false;
+        StateHasChanged();
+        Parent.Update();
+    }
+    public void DisableJSON()
+    {
+        configService.config.AllowJSONFormat = false;
+        StateHasChanged();
+        Parent.Update();
+    }
+    public void EnableXML()
+    {
+        configService.config.AllowAMSXFormat = true;
+        StateHasChanged();
+        Parent.Update();
+    }
+    public void EnableJSON()
+    {
+        configService.config.AllowJSONFormat = true;
+        StateHasChanged();
+        Parent.Update();
+    }
+    public void DisableAnnon()
+    {
+        configService.config.AllowAnnonymousUsers = false;
+        StateHasChanged();
+        Parent.Update();
+    }
+    public void EnableAnnon()
+    {
+        configService.config.AllowAnnonymousUsers = true;
+        StateHasChanged();
+        Parent.Update();
+    }
+    public void SaveConfig()
+    {
+        configService.SaveConfig();
+        StateHasChanged();
+        Parent.Update();
+    }
+    public void ApplyConfig()
+    {
+        
+    }
+    public void Restart()
+    {
+      //  flightService.Restart();
+        StateHasChanged();
+        Parent.Update();
+    }
+}

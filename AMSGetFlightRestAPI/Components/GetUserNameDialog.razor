@@ -1,0 +1,25 @@
+﻿@inject DialogService dialogService;
+
+<div style="display:flex;gap:5px;flex-direction:column">
+    <div style="display:flex;gap:5px">
+        <div>New User Name:</div>
+        <RadzenTextBox @bind-Value=UserName Placeholder="UserName" />
+    </div>
+    <div style="display:flex;gap:5px">
+        <RadzenButton Text="Add User" Click="Close" />
+        <RadzenButton Text="Cancel" Click="CloseNull" />
+    </div>
+</div>
+
+@code {
+
+    private string? UserName { get; set; }
+    private void Close()
+    {
+        dialogService.Close(UserName);
+    }
+    private void CloseNull()
+    {
+        dialogService.Close();
+    }
+}

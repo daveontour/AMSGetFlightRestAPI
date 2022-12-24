@@ -1,0 +1,61 @@
+using AMSGetFlights.Services;
+using Newtonsoft.Json;
+using Radzen;
+
+var builder = WebApplication.CreateBuilder(args);
+var provider = builder.Services.BuildServiceProvider();
+var configuration = provider.GetService<IConfiguration>();
+string dataProvider = configuration.GetSection("GetFlights").GetValue<string>("DataProvider");
+
+// Add services to the container.
+builder.Services.AddRazorPages();
+
+builder.Services.AddHostedService<AMSGetFlightsBackgroundService>();
+
+builder.Services.AddSingleton<IAMSGetFlightStatusService,AMSGetFlightsStatusService>();
+builder.Services.AddSingleton<IGetFlightsConfigService,GetFlightsConfigService>();
+builder.Services.AddSingleton<IFlightRepository, FlightRepository>();
+
+
+if (dataProvider == "SQLite")
+{
+    builder.Services.AddSingleton<IFlightRepositoryDataAccessObject, SqLiteFlightRepository>();
+}
+if (dataProvider == "SQL")
+{
+    builder.Services.AddSingleton<IFlightRepositoryDataAccessObject, MSSQLFlightRepository>();
+}
+builder.Services.AddSingleton<IFlightRequestHandler,FlightRequestHandler>();
+
+builder.Services.AddServerSideBlazor();
+builder.Services.AddControllersWithViews().AddNewtonsoftJson(options =>
+{
+    options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+});
+
+
+builder.Services.AddScoped<DialogService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<TooltipService>();
+builder.Services.AddScoped<ContextMenuService>();
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.MapBlazorHub();
+app.MapControllers();   
+app.MapFallbackToPage("/_Host");
+
+app.Run();

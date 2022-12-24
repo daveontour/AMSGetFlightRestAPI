@@ -1,0 +1,224 @@
+{
+  "SQLConnectionString": "Integrated Security=SSPI;Persist Security Info=False;Database=FLIGHTRESTAPIDB;Server=localhost;",
+  "AdminPass": "omnipass",
+  "AllowAMSXFormat": false,
+  "AllowJSONFormat": true,
+  "BackwardWindowInDays": -15,
+  "ForewardWindowInDays": 10,
+  "ChunkSizeInDays": 1,
+  "AllowAnnonymousUsers": true,
+  "RefreshCron": "0 15 2,21 ? * * *",
+  "UTCOffset": 4.0,
+  "StorageDirectory": "C:/Users/dave_/Desktop",
+  "ConfigurationFile": "GetFlights.config.json",
+  "EnableDirectAMSLookukOnCacheFailure": true,
+  "MappedQueryParameters": {
+    "qa": "S--G_QualifierCategory",
+    "status": "S--G_Status",
+    "callsign": "S--G_CallSign"
+  },
+  "CustomFieldToParameter": {
+    "de-G_MostConfidentDepartureTime": "departureTime",
+    "de-G_MostConfidentArrivalTime": "arrivalTime",
+    "S--G_QualifierCategory": "operationQualifier",
+    "S--G_FlightStatusText": "flightStatus"
+  },
+  "Airports": [
+    {
+      "AptCode": "DOH",
+      "Token": "ef7676e6-17bc-48d1-92d3-4e6243912b1f",
+      "WSURL": "http://localhost/SITAAMSIntegrationService/DOH/v2/SITAAMSIntegrationService",
+      "NotificationQueue": ".\\private$\\fromams"
+    },
+    {
+      "AptCode": "SLL",
+      "Token": "ef7676e6-17bc-48d1-92d3-4e6243912b1f",
+      "WSURL": "http://localhost/SITAAMSIntegrationService/DOH/v2/SITAAMSIntegrationService",
+      "NotificationQueue": ".\\private$\\fromams"
+    }
+  ],
+  "Users": {
+    "default": {
+      "Token": "default",
+      "Name": "Default User",
+      "Enabled": true,
+      "AllowedAirports": [
+        "DOH"
+      ],
+      "AllowedFields": [
+        "route",
+        "aircrafttypeiata",
+        "aircraftregistration",
+        "callsign",
+        "status",
+        "publicRemark",
+        "CustomTables",
+        "Events",
+        "CheckInSlots",
+        "StandSlots",
+        "CarouselSlots",
+        "GateSlots",
+        "LastUpdated",
+        "Values"
+      ],
+      "AllowedCustomFields": [
+        "departureTime",
+        "arrivalTime",
+        "operationQualifier",
+        "flightStatus",
+        "callsign"
+      ],
+      "Defaults": {
+        "apt": "DOH"
+      },
+      "Overrides": {
+        "partialResults": "true"
+      }
+    },
+    "keyforthegroundhandler": {
+      "Token": "keyforthegroundhandler",
+      "Name": "Ground Handler",
+      "Enabled": true,
+      "AllowedAirports": [
+        "DOH",
+        "SLL"
+      ],
+      "AllowedFields": [
+        "route",
+        "aircrafttypeiata",
+        "aircraftregistration",
+        "callsign",
+        "status",
+        "publicRemark",
+        "CustomTables",
+        "Events",
+        "CheckInSlots",
+        "LastUpdated",
+        "Values"
+      ],
+      "AllowedCustomFields": [
+        "departureTime",
+        "arrivalTime",
+        "operationQualifier",
+        "flightStatus"
+      ],
+      "Defaults": {
+        "apt": "DOH"
+      },
+      "Overrides": {
+        "partialResults": "true"
+      }
+    },
+    "62daad6e-41a2-4e0f-acf6-54fa212c65b5": {
+      "Token": "62daad6e-41a2-4e0f-acf6-54fa212c65b5",
+      "Name": "New User",
+      "Enabled": true,
+      "AllowedAirports": [
+        "DOH"
+      ],
+      "AllowedFields": [
+        "route",
+        "aircrafttypeiata",
+        "aircraftregistration",
+        "callsign",
+        "status",
+        "publicRemark",
+        "CustomTables",
+        "Events",
+        "CheckInSlots",
+        "StandSlots",
+        "CarouselSlots",
+        "GateSlots",
+        "LastUpdated",
+        "Values"
+      ],
+      "AllowedCustomFields": [
+        "departureTime",
+        "arrivalTime",
+        "operationQualifier",
+        "flightStatus",
+        "callsign"
+      ],
+      "Defaults": {
+        "apt": "DOH"
+      },
+      "Overrides": {
+        "partialResults": "true"
+      }
+    },
+    "1ecf91df-cbc1-4a2d-bf61-5a2dc8ae2e33": {
+      "Token": "1ecf91df-cbc1-4a2d-bf61-5a2dc8ae2e33",
+      "Name": "swissport",
+      "Enabled": true,
+      "AllowedAirports": [
+        "DOH"
+      ],
+      "AllowedFields": [
+        "route",
+        "aircrafttypeiata",
+        "aircraftregistration",
+        "callsign",
+        "status",
+        "publicRemark",
+        "CustomTables",
+        "Events",
+        "CheckInSlots",
+        "StandSlots",
+        "CarouselSlots",
+        "GateSlots",
+        "LastUpdated",
+        "Values"
+      ],
+      "AllowedCustomFields": [
+        "departureTime",
+        "arrivalTime",
+        "operationQualifier",
+        "flightStatus",
+        "callsign"
+      ],
+      "Defaults": {
+        "apt": "DOH"
+      },
+      "Overrides": {
+        "partialResults": "true"
+      }
+    },
+    "22e1ae97-517b-4329-9096-ddb45016851d": {
+      "Token": "22e1ae97-517b-4329-9096-ddb45016851d",
+      "Name": "menzies",
+      "Enabled": false,
+      "AllowedAirports": [
+        "DOH"
+      ],
+      "AllowedFields": [
+        "route",
+        "aircrafttypeiata",
+        "aircraftregistration",
+        "callsign",
+        "status",
+        "publicRemark",
+        "CustomTables",
+        "Events",
+        "CheckInSlots",
+        "StandSlots",
+        "CarouselSlots",
+        "GateSlots",
+        "LastUpdated",
+        "Values"
+      ],
+      "AllowedCustomFields": [
+        "departureTime",
+        "arrivalTime",
+        "operationQualifier",
+        "flightStatus",
+        "callsign"
+      ],
+      "Defaults": {
+        "apt": "DOH"
+      },
+      "Overrides": {
+        "partialResults": "true"
+      }
+    }
+  }
+}

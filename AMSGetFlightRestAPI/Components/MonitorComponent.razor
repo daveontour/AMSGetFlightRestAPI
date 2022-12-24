@@ -1,0 +1,115 @@
+﻿@inject IFlightRepository flightRepo;
+@inject IFlightRequestHandler requestHandler;
+@inject IAMSGetFlightStatusService flightStatusService;
+
+@implements IDisposable;
+
+
+<MonacoEditor @ref="editor" ConstructionOptions="EditorConstructionOptions" CssClass="amsget-monaco" />
+
+@code {
+
+    public string? consoleText = null;
+    public MonacoEditor? editor { get; set; }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                editor.SetValue(consoleText);
+            }
+        } catch (Exception ex){
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        flightRepo.OnFlightUpdatedOrAdded += FlightUpdated;
+        requestHandler.OnAPIRequestMade += RequestMade;
+        requestHandler.OnAPIURLRequestMade += URLRequestMade;
+        requestHandler.OnMonitorMessage += MonitorMessage;
+        AMSGetFlightsStatusService.OnConsoleMessage += FlightServiceConsoleMessage;
+    }
+
+    private async Task UpdateEditor()
+    {
+        try
+        {
+            editor?.SetValue(consoleText);
+            //          await InvokeAsync(() => StateHasChanged());
+        }
+        catch (Exception) { }
+    }
+
+    public void FlightUpdated(AMSFlight flight)
+    {
+        try
+        {
+            consoleText = consoleText + $"\n[{DateTime.Now.ToString()}] Flight Updated";
+            UpdateEditor();
+        }
+        catch (Exception) { }
+    }
+
+    public void FlightServiceConsoleMessage(string message)
+    {
+        try
+        {
+            consoleText = consoleText + $"\n[{DateTime.Now.ToString()}] {message}";
+            UpdateEditor();
+        }
+        catch (Exception) { }
+    }
+    public async void RequestMade(GetFlightQueryObject request)
+    {
+        try
+        {
+            string json = JsonConvert.SerializeObject(request, Newtonsoft.Json.Formatting.Indented);
+            consoleText = consoleText + $"\n[{DateTime.Now.ToString()}] GetFlight Query \n{json}";
+            UpdateEditor();
+        }
+        catch (Exception) { }
+    }
+    public async void URLRequestMade(string request)
+    {
+        try
+        {
+            consoleText = consoleText + $"\n[{DateTime.Now.ToString()}] Request Made: {request}";
+            UpdateEditor();
+        }
+        catch (Exception) { }
+    }
+    public async void MonitorMessage(string request)
+    {
+        try
+        {
+            consoleText = consoleText + $"\n[{DateTime.Now.ToString()}] {request}";
+            UpdateEditor();
+        }
+        catch (Exception) { }
+    }
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Minimap = new EditorMinimapOptions() { Enabled = false },
+                FontSize = 10,
+                Find = new EditorFindOptions() { SeedSearchStringFromSelection = true },
+                ReadOnly = true,
+                ScrollBeyondLastLine = false,
+            };
+    }
+
+    public void Dispose()
+    {
+        flightRepo.OnFlightUpdatedOrAdded -= FlightUpdated;
+        requestHandler.OnAPIRequestMade -= RequestMade;
+        requestHandler.OnAPIURLRequestMade -= URLRequestMade;
+        requestHandler.OnMonitorMessage -= MonitorMessage;
+        AMSGetFlightsStatusService.OnConsoleMessage -= FlightServiceConsoleMessage;
+    }
+}

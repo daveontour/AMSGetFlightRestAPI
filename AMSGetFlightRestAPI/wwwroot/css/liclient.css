@@ -1,0 +1,800 @@
+﻿:root {
+    --eventdriven: #0063ff;
+    --ratedriven: #87CEEB;
+    --datadriven: #00BFFF;
+    --destination: #3CB371;
+    --danger: indianred;
+    --secondary: cornflowerblue;
+    --lilineheight: 28px;
+    --topbarcolor: #4c636e;
+    --cntrlbtncolor: #dcdce4;
+    --cntrlbtnfontcolor: black;
+}
+
+div.rz-dialog{
+    z-index:2000;
+}
+
+#modelXML {
+    height: 568px;
+}
+
+div {
+    user-select: none;
+}
+
+.flex-container {
+    height: 100%;
+    width:100%;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction:column;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.flex-item {
+    text-align: center;
+    margin-bottom:10px;
+}
+
+.li-layout {
+    display: grid;
+    grid-template-columns: 650px minmax(750px, 950px);
+    grid-template-rows: 75px auto;
+    grid-row-gap:10px;
+    grid-template-areas: "li-header li-header" "li-diagram-area li-editor-area";
+}
+
+@media only screen and (max-width: 1250px) {
+    div.title {
+        display:none;
+    }
+}
+
+.pop-layout {
+    display: grid;
+    grid-template-rows: 75px auto;
+    grid-template-areas: "pop-header" "pop-body";
+}
+
+.pop-body-layout {
+    display: grid;
+    grid-template-columns: 900px 200px;
+}
+
+.amsget-monaco {
+    width: 100%;
+    height: 100%;
+    margin: 5px;
+}
+
+.li-execution-layout {
+    display: grid;
+    grid-template-columns: minmax(950px, 1200px);
+    grid-template-rows: 75px auto;
+    grid-row-gap: 10px;
+    grid-template-areas: "li-header" "li-statuscard-area";
+}
+
+.rz-dropdown-chips .rz-dropdown-chips-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-right: 3rem;
+}
+
+.rz-chip {
+    background: lightgray;
+    color: black;
+    border-radius: 5px;
+    padding-left: 3px;
+    flex-wrap: nowrap;
+}
+
+.dronediv.dronediv {
+    height: calc(100vh - 320px);
+}
+
+.li-desc-head {
+    text-align: right;
+    font-weight: bold;
+}
+
+.li-dialog-holder {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 60px;
+    grid-template-columns: auto;
+}
+
+.li-editor-holder {
+    display: grid;
+    /*   height: calc(100vh - 60px); */
+    grid-template-rows: auto;
+    grid-template-columns: auto;
+    font-size: 10pt;
+}
+
+.li-editor-top {
+    grid-row: 1;
+    overflow-y: auto;
+    padding-top: 5px;
+    padding-left: 5px;
+}
+
+div.li-editor-top div.rz-tabview-panel {
+    padding-right: 2px;
+}
+
+div.li-execution-page div.rz-tabview-panel {
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 15px;
+    padding-top: 1px;
+}
+
+.li-editor-tab-holder {
+    display: grid;
+    height: 100%;
+    grid-template-rows: auto 50px;
+    grid-template-columns: auto;
+    font-size: 10pt;
+}
+
+.li-editor-tab-top {
+    grid-row: 1;
+    overflow-y: auto;
+    padding-top: 5px;
+    padding-left: 5px;
+}
+
+.li-editor-footer {
+    grid-row: 2;
+    width: 100%;
+    display: grid;
+    grid-template-rows: 20px auto;
+    row-gap: 5px
+}
+
+.li-editor-tab-footer {
+    grid-row: 2;
+    width: 100%;
+    display: grid;
+    grid-template-rows: 20px auto;
+    row-gap: 5px
+}
+
+.li-diagram-holder {
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto;
+    grid-template-columns: 720px auto;
+}
+
+
+.li-dialog-top {
+    grid-row: 1;
+    overflow-y: auto;
+    padding-top: 5px;
+    padding-left: 5px;
+}
+
+.li-dialog-footer {
+    grid-row: 2;
+}
+
+.li-dialog-content {
+    overflow-y: auto;
+    overflow-x: hidden
+}
+
+.li-message-template-container {
+    height: 100%;
+    display: grid;
+    grid-template-rows: 50px auto;
+    grid-template-columns: auto;
+    min-height: 600px;
+    margin-top: 20px
+}
+
+.li-model-monaco-editor {
+    height: calc(100% - 100px);
+}
+
+.li-validation-monaco-editor {
+    height: 440px;
+}
+
+.li-model-monaco-editor-template {
+    height: 100%;
+}
+.li-console-monaco-editor {
+    height: 100%;
+    width:100%;
+}
+
+.li-dialog-row {
+    margin-top: 2px !important;
+    margin-bottom: 2px !important;
+    font-size: 10pt !important;
+}
+
+    .li-dialog-row > div:nth-of-type(2n+1) {
+        background-color: royalblue;
+        text-align: right;
+    }
+
+        .li-dialog-row > div:nth-of-type(2n+1) > label {
+            font-weight: 500;
+        }
+
+div.pseudoExecClass div.rz-tabview-panel {
+    padding: 2px !important;
+    background-color: white;
+}
+
+div.pseudoExecClass div.rz-tabview-panel:nth-of-type(4) {
+    background-color: aliceblue;
+}
+
+div.go {
+    background: #FF7A59;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+div.li-exec-console {
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    margin: 2px;
+    background: white;
+    font-family: 'Courier New';
+    font-size: 10pt;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 5px;
+    border: 2pt solid gray;
+    padding-left: 5px;
+    background: black;
+    color: lime;
+    overflow-x: hidden
+}
+
+    div.li-exec-console span.li-error {
+        color: red;
+    }
+
+    div.li-exec-console span.li-dest {
+        color: #3CB371;
+    }
+
+    div.li-exec-console span.li-source {
+        color: cornflowerblue;
+    }
+
+    div.li-exec-console span.li-output {
+        color: white;
+    }
+
+
+.rz-tabview-panel {
+    /* background-color: white !important; */
+    height: 100% !important;
+}
+
+.rz-splitter-bar {
+    display: none !important;
+}
+
+span.rz-button-text {
+    line-height: unset !important;
+}
+
+div.li-config-div > div.rz-splitbutton > button.rz-splitbutton-menubutton {
+    height: 50px;
+}
+
+div.li-config-div > div.rz-splitbutton > button.rz-button {
+    height: 50px;
+}
+
+div.li-eventsource-btn > div.rz-splitbutton > button.rz-button,
+div.li-config-div > div:nth-of-type(1) > button.rz-button {
+    background-color: var(--eventdriven)  !important;
+    height: 50px;
+    font-size: 11pt;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+div.li-datasource-btn > div.rz-splitbutton > button.rz-button,
+div.li-config-div > div:nth-of-type(2) > button.rz-button {
+    background-color: var(--datadriven) !important;
+    height: 50px;
+    font-size: 11pt;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+div.li-ratesource-btn > div.rz-splitbutton > button.rz-button,
+div.li-config-div > div:nth-of-type(3) > button.rz-button {
+    background-color: var(--ratedriven) !important;
+    height: 50px;
+    font-size: 11pt;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+div.li-destination-btn > div.rz-splitbutton > button.rz-button,
+div.li-config-div > div:nth-of-type(4) > button.rz-button {
+    background-color: var(--destination) !important;
+    height: 50px;
+    font-size: 11pt;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+div.li-psuedo > div.rz-splitbutton > button.rz-button.rz-button-text-icon-left,
+div.li-psuedo > div.rz-splitbutton > button.rz-splitbutton-menubutton.rz-button.rz-button-icon-only {
+    background-color: #3CB371 !important;
+    font-size: 9pt;
+    height: 33px;
+    border: 1px;
+}
+
+
+label .li-dropdown-menu-category {
+    margin-left: 10px;
+    font-style: italic;
+    font-weight: bold;
+    color: #181D1F;
+    font-size: 9pt;
+}
+
+.rz-menuitem-link {
+    margin-left: 15px;
+}
+
+.rz-dialog-content {
+    height: 100% !important;
+}
+
+.rz-dialog-titlebar {
+    background-color: darkgray !important;
+}
+
+.rz-dialog-content {
+    background-color: gray !important;
+}
+
+.li-validation-ok .rz-dialog-content {
+    background-color: limegreen !important;
+}
+
+.li-validation-fail .rz-dialog-content {
+    background-color: red !important;
+}
+
+div.dronediv table, div.dronediv th, div.dronediv td {
+    border: 1px solid black;
+    color: black;
+}
+
+.rz-progressbar-label {
+    color: black;
+}
+/*
+.rz-dropdown-items-wrapper {
+    background-color: #dfe7eb !important;
+}
+    */
+
+/*
+.rz-splitbutton-menu {
+    background-color: #dfe7eb !important;
+}
+    */
+
+/*div.li-dialog-holder input.rz-textbox {
+    height: 1.6rem;
+    line-height: 1.25rem;
+    font-size: 10pt;
+}*/
+
+.rz-button.rz-secondary {
+    background-color: var(--secondary)
+}
+
+.rz-button.rz-danger {
+    background-color: var(--danger);
+}
+
+div .li-dialog-holder-inner input.rz-textbox {
+    height: 2.0rem;
+    line-height: 1.5rem;
+    font-size: 11pt;
+}
+
+div.main div.rz-dropdown {
+    height: 1.6rem;
+    line-height: 1.25rem;
+    font-size: 10pt;
+}
+
+div.main .rz-dropdown-label {
+    height: 1.6rem;
+    line-height: 1.5rem;
+    font-size: 11pt;
+}
+
+div.main .rz-dropdown-item {
+    height: 1.6rem;
+    line-height: 1.25rem;
+    font-size: 10pt;
+}
+
+div.main .rz-dropdown-items {
+    height: 1.6rem;
+    line-height: 1.25rem;
+    font-size: 10pt;
+}
+
+div.main input.rz-textbox {
+    height: 1.6rem;
+    line-height: 1.25rem;
+    font-size: 10pt;
+}
+
+div.main input.rz-textbox {
+    height: 20pt;
+    line-height: 20pt;
+    font-size: 11pt;
+}
+
+.li-header-row:nth-of-type(odd) {
+    background-color: aliceblue;
+}
+
+.li-header-row:nth-of-type(even) {
+    background-color: #dfe7eb;
+}
+
+
+li.rz-navigation-item.rz-navigation-item-active > ul {
+    z-index: 1;
+}
+
+li.rz-navigation-item > div > div > i.rzi.rz-navigation-item-icon {
+    color: white;
+    cursor: pointer;
+}
+
+li.rz-navigation-item > div > div > i.rzi.rz-navigation-item-icon-children {
+    color: white;
+    cursor: pointer;
+    margin-left: -10px;
+    display: none;
+}
+
+div.rz-navigation-item-link {
+    padding-top: 2px !important;
+}
+
+.rz-navigation-item-wrapper {
+    cursor: pointer !important;
+}
+
+.rz-navigation-item-link {
+    cursor: pointer !important;
+}
+
+div.li-form-category-title {
+    font-size: 16px;
+    color: lemonchiffon;
+    font-weight: normal;
+    justify-self: start;
+    grid-column: 1/3;
+    background-color: unset;
+    text-align: start;
+    padding-left: 10px;
+    height: 25px;
+}
+
+div.li-form-category-instructions {
+    font-size: 11pt;
+    justify-self: end;
+    grid-column: 3/6;
+    background-color: unset;
+    color: cadetblue;
+    text-align: end;
+    height: 25px;
+    width: 100%;
+    padding-right: 10px;
+}
+
+.li-editor-grid {
+    display: grid;
+    column-gap: 5px;
+    row-gap: 2px;
+    grid-template-columns: 220px minmax(200px, 250px) 1fr 50px;
+    grid-auto-rows: 28px
+}
+
+.li-editor-grid-execution {
+    display: grid;
+    column-gap: 5px;
+    row-gap: 2px;
+    grid-template-columns: 150px 70px 30px 200px 30px;
+    grid-auto-rows: 28px
+}
+
+.li-editor-grid-execution-source {
+    display: grid;
+    column-gap: 0px;
+    row-gap: 2px;
+    grid-template-columns: 150px 75px 30px 120px 200px;
+    grid-auto-rows: 28px
+}
+
+.pop-editor-grid {
+    display: grid;
+    column-gap: 5px;
+    row-gap: 2px;
+    grid-template-columns: 220px minmax(200px, 250px) 1fr 50px;
+    grid-auto-rows: 28px
+}
+
+.li-tm20 {
+    margin-top: 20px;
+}
+
+
+.li-editor-grid button.rz-spinner-button {
+    font-size: 9px;
+    height: 10px;
+    line-height: 9px;
+}
+
+.li-editor-grid button.rz-spinner-up {
+    top: 1px;
+}
+
+    .li-editor-grid button.rz-spinner-up span {
+        margin-top: -2px;
+    }
+
+.li-editor-grid button.rz-spinner-down span {
+    margin-top: -2px;
+}
+
+.li-editor-grid button.rz-spinner-down {
+    bottom: 1px;
+}
+
+.li-editor-grid input.rz-spinner-input {
+    font-size: 10pt
+}
+
+
+.li-form-title {
+    font-size: 10pt;
+    color: powderblue;
+    font-weight: normal;
+    justify-self: end;
+    grid-column: 1;
+    text-align: end;
+    width: 100%;
+    padding-right: 10px;
+    height: 22px;
+    line-height: 22px;
+}
+
+.li-form-title-left {
+    font-size: 10pt;
+    color: powderblue;
+    font-weight: normal;
+    justify-self: end;
+    grid-column: 1;
+    text-align: start;
+    width: 100%;
+    padding-right: 10px;
+    height: 22px;
+    line-height: 22px;
+}
+
+
+.li-form-title-2 {
+    font-size: 10pt;
+    color: powderblue;
+    justify-self: end;
+    grid-column: 1;
+    text-align: end;
+    width: 100%;
+    padding-right: 10px;
+    height: 28px;
+    line-height: 28px;
+}
+
+.li-form-body {
+    font-size: 10pt;
+    justify-self: start;
+    grid-column: 2/5;
+    width: 100%;
+    height: var(--lilineheight);
+}
+.pop-form-body {
+    font-size: 9pt;
+    justify-self: start;
+    width: 100%;
+    height: var(--lilineheight);
+}
+.get-form-body {
+    font-size: 9pt;
+    justify-self: start;
+    width: 100%;
+    height: var(--lilineheight);
+}
+
+.pop-form-body input {
+    font-size: 9pt !important;
+    height: 24px !important;
+}
+.get-form-body input {
+    font-size: 11pt !important;
+    height: 28px !important;
+}
+
+.li-form-body-half {
+    grid-column: 2;
+}
+
+.li-form-body label.rz-dropdown-label {
+    height: 22px;
+    line-height: 22px;
+    margin-top: -2px;
+}
+
+input.li-form-body {
+    height: 25px;
+}
+
+.li-form-body-half > div.rz-chkbox-box {
+    height: 25px;
+    width: 25px;
+}
+
+.li-form-body-half-2 > div.rz-chkbox-box {
+    height: 25px;
+    width: 25px;
+}
+
+.li-form-body > div.rz-chkbox-box {
+    height: 25px;
+    width: 25px;
+}
+
+.li-form-body-half-2 {
+    font-size: 10pt;
+    li-form-body-half justify-self: start;
+    grid-column: 2;
+    width: 100%;
+    height: 25px;
+}
+
+div.li-main-holder > div.rz-tabview > div.rz-tabview-panels > div.rz-tabview-panel {
+    padding: 2px;
+}
+
+/* Drop down menu background so they dont conflict witn tab background*/
+.rz-dropdown-panel {
+    position: absolute;
+    transform: translateY(-4px);
+    background-color: #3a474d;
+    border-radius: 4px;
+    border: 1px solid #45565d;
+    border-top-right-radius: 0;
+    border-top-left-radius: 0;
+}
+
+div.outtertab > div.rz-tabview-panels > div.rz-tabview-panel {
+    background-color: slategray;
+}
+
+div.outtertab > ul.rz-tabview-nav > li.rz-tabview-selected {
+    background-color: slategray;
+}
+
+.rz-menu:not(.rz-profile-menu) .rz-navigation-menu .rz-navigation-item-link {
+    color: black;
+    white-space: nowrap;
+}
+
+span.rz-navigation-item-text {
+    color: white;
+}
+
+i.rz-navigation-item-icon {
+    color: white;
+}
+
+div.switchholder .rz-switch.rz-switch-checked .rz-switch-circle {
+    background: chartreuse;
+}
+
+div.switchholder .rz-switch .rz-switch-circle {
+    background: deepskyblue;
+}
+
+.rz-switch.rz-switch-unchecked .rz-switch-circle {
+    background: #ced4da;
+}
+
+#inputGroupFile01 {
+    margin-left: 10px;
+}
+
+
+.sidenav {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 99999;
+    top: 0;
+    left: 0;
+    /* background-color: #5d717b; */
+    background-color: dimgray;
+    overflow-x: hidden;
+    transition: 0.2s;
+    padding-top: 60px;
+}
+
+    .sidenav span {
+        margin-left: 15px;
+        vertical-align: top;
+    }
+
+    .sidenav a:hover {
+        color: #f1f1f1;
+    }
+
+    .sidenav .closebtn {
+        position: absolute;
+        top: 0;
+        right: 25px;
+        font-size: 36px;
+        margin-left: 50px;
+        cursor: pointer;
+    }
+
+    .sidenav div.li-navitem {
+        display: flex;
+        cursor: pointer;
+        font-size: 20px;
+        vertical-align: top;
+        height: 30px !important;
+        margin-left: 5px;
+        margin-top: 15px
+    }
+
+        .sidenav div.li-navitem:hover {
+            background: dodgerblue;
+        }
+
+.li-validation-fail .rz-dialog-content {
+    background-color: red !important;
+}
+
+}
+
+.li-validation-ok .rz-dialog-content {
+    background-color: lawngreen !important;
+}

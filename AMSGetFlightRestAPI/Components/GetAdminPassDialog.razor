@@ -1,0 +1,19 @@
+﻿@inject DialogService dialogService;
+
+<div style="display:flex;gap:15px;flex-direction:column">
+    <div style="display:flex;gap:5px;line-height:35px">
+        <div>Admin Password:</div>
+        <RadzenPassword @bind-Value=Pass Placeholder="Password" Style="width:250px" />
+        <RadzenButton Text="OK" Click="Close" />
+    </div>
+</div>
+
+@code {
+
+    private string? Pass { get; set; }
+    private void Close()
+    {
+        dialogService.Close(Pass);
+    }
+}
+

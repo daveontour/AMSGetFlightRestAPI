@@ -1,0 +1,60 @@
+﻿@inject DialogService dialogService;
+
+
+<div style="height:100%;width:100%">
+    <RadzenButton Text="Reload" Click="Reload" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" Style="margin:10px;width:140px" />
+    <RadzenButton Text="Delete" Click="Delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Style="align-self:end;width:140px" />
+    <MonacoEditor @ref="editor" ConstructionOptions="EditorConstructionOptions" CssClass="li-console-monaco-editor" />
+</div>
+
+@code {
+
+    private MonacoEditor? editor;
+    private string? fileName;
+
+    protected override void OnInitialized()
+    {
+        var fileTarget = (FileTarget)LogManager.Configuration.FindTargetByName("logfile");
+        var logEventInfo = new LogEventInfo { TimeStamp = DateTime.Now };
+        fileName = fileTarget.FileName.Render(logEventInfo);
+        Reload();
+    }
+
+    private async Task Delete(){
+
+        var res = await dialogService.Confirm("Please confirm you wish to delete the log", "Delete Log");
+        if (!res.Value) return;
+        File.Delete(fileName);
+        Reload();
+    }
+    public void Reload()
+    {
+
+        if (!File.Exists(fileName)){
+            editor?.SetValue("");
+            return;
+        }
+        string fileContent;
+        using (var f = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        {
+            using (var s = new StreamReader(f))
+            {
+                fileContent = s.ReadToEnd();
+            }
+        }
+        editor?.SetValue(fileContent);
+    }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Minimap = new EditorMinimapOptions() { Enabled = false },
+                FontSize = 10,
+                Find = new EditorFindOptions() { SeedSearchStringFromSelection = true },
+                ReadOnly = true,
+                ScrollBeyondLastLine = false,
+            };
+    }
+}

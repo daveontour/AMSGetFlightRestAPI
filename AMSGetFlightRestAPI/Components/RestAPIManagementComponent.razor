@@ -1,0 +1,362 @@
+﻿@inject NavigationManager UriHelper;
+@inject DialogService dialogService;
+@inject IFlightRepository flightRepo;
+@inject IFlightRequestHandler requestHandler;
+@inject IGetFlightsConfigService configService;
+@inject IAMSGetFlightStatusService flightStatusService;
+
+
+@implements IDisposable;
+
+<RadzenTabs RenderMode="TabRenderMode.Client" Change="(int  index) => TabChange(index)" >
+    <Tabs>
+        <RadzenTabsItem Text="Configuration">
+            <div style="display:grid;grid-template-columns: 600px 1fr; height:calc(100vh - 195px);width:calc(100vw - 80px);max-width:calc(100vw - 80px)">
+                <div style="grid-column:auto;display:flex;flex-direction:column">
+                    <div class="pop-editor-grid" style="row-gap:2px;grid-auto-rows:35px">
+                        <div class="li-form-category-title">Global Settings</div>
+                        <div class="li-form-title">Allow Annonymous Requests:</div><div><RadzenCheckBox @bind-Value=@config.AllowAnnonymousUsers Change="(bool args) => DataChanged()" /></div>
+                        <div class="li-form-title">Allow XML Requests:</div><div><RadzenCheckBox @bind-Value=@config.AllowAMSXFormat Change="(bool args) => DataChanged()" /></div>
+                        <div class="li-form-title">Allow JSON Requests:</div><div><RadzenCheckBox @bind-Value=@config.AllowJSONFormat Change="(bool args) => DataChanged()" /></div>
+                        <div class="li-form-title"><sup>*</sup> Backward Window In Days:</div><div><RadzenNumeric @bind-Value=@config.BackwardWindowInDays Max="-1" Min="-5" Change="(int args) => DataChanged()" Style="width:70px" /></div>
+                        <div class="li-form-title"><sup>*</sup> Forward Window In Days:</div><div><RadzenNumeric @bind-Value=@config.ForewardWindowInDays Min="3" Max="14" Change="(int args) => DataChanged()" Style="width:70px" /></div>
+                        <div class="li-form-title"><sup>*</sup> Chunk Size in Days:</div><div><RadzenNumeric @bind-Value=@config.ChunkSizeInDays Change="(int args) => DataChanged()" Style="width:70px" /></div>
+                        <div class="li-form-title"><sup>*</sup> UTC Offset:</div><div><RadzenNumeric @bind-Value=@config.UTCOffset Change="(double args) => DataChanged()" Step="0.5" Max="12" Min="-12" Style="width:70px" /></div>
+                        <div class="li-form-title"><sup>#</sup> Repository Refresh Cron:</div>@config.RefreshCron<div></div>
+                        <div class="li-form-title"><sup>#</sup> Repository Storage Directory:</div>@config.StorageDirectory<div></div>
+                        <div class="li-form-title"><sup>##</sup> Configuration File:</div><div>@config.ConfigurationFile</div>
+                        @foreach (string key in config.MappedQueryParameters.Keys)
+                        {
+                            <div class="li-form-title">Query Parameter "@key":</div>
+                            <div style="display:grid;grid-template-columns: 200px auto">
+                                <span>@config.MappedQueryParameters[key]</span>
+                             @* <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="(args => DeleteQueryParam(key))" Style="padding-left:4px;padding-right:4px;width:80px;margin-top:5px" />*@
+                            </div>
+                        }
+
+                    </div>
+                    @*
+                    <div style="display:flex;flex-direction:column;gap:2px">
+                        <div class="li-form-title" style="grid-column:1 /span 2;margin-top:15px;text-align:left">* Service Restart Required</div>
+                        <div class="li-form-title" style="grid-column:1 /span 2;text-align:left"># Edit directly in Configuration File</div>
+                        <div class="li-form-title" style="grid-column:1 /span 2;text-align:left">## Edit directly in appsettings.json file</div>
+                    </div>
+                    *@
+                    <div style="gap:5px">
+                        <RadzenButton Text="Apply Config" Disabled=@DataClean ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="ApplyConfig" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px" />
+                        <RadzenButton Text="Save Config to File" Disabled=@UnsavedClean ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="SaveConfig" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px" />
+                        <RadzenButton Text="Reload Current Config" Disabled=@DataClean ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="Reload" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px" />
+                    </div>
+                </div>
+                <RadzenAccordion>
+                    <Items>
+                        <RadzenAccordionItem Text="Airports">
+
+                            <div style="display:grid;grid-template-columns:220px auto;row-gap:2px;grid-auto-rows:28px">
+
+                                @foreach (AirportSource aps in config.Airports)
+                                {
+                                    <div class="li-form-category-title">Airport: @aps.AptCode</div>
+
+                                    <div class="li-form-title">AMS API Token:</div>
+                                    <div>@aps.Token</div>
+
+                                    <div class="li-form-title">Webservice URL:</div>
+                                    <div>@aps.WSURL</div>
+
+                                    <div class="li-form-title">AMS Notification Queue:</div>
+                                    <div>@aps.NotificationQueue</div>
+                                }
+                            </div>
+                        </RadzenAccordionItem>
+                        <RadzenAccordionItem Text="Users">
+                            <div style="display:grid;grid-template-columns:220px auto;row-gap:2px;margin-top:10px">
+
+                                <div class="li-form-category-title" style="grid-column:1/1">Select User:</div>
+                                <div style="display:flex;flex-direction:row;gap:5px">
+                                    <RadzenDropDown Data="config.Users.Values" TextProperty="Name" ValueProperty="Token" TValue="string" Change="( (arg) => SelectedUserChange(arg))" Style="width:200px" />
+                                    <RadzenButton Text="Add User" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" Click=@(args => AddUser()) Style="padding-left:4px;padding-right:4px;width:180px" />
+                                </div>
+                                @if (SelectedUser != null)
+                                {
+                                    <div class="li-form-title">Enabled:</div>
+                                    <div style="display:grid;grid-template-columns:200px auto;grid-column-gap:5px">
+                                        <span>@SelectedUser.Enabled</span>
+                                        @if (@SelectedUser.Enabled)
+                                        {
+                                            <RadzenButton Text="Disable User" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" Click=@(args => DisableUser(SelectedUser.Token)) Style="padding-left:4px;padding-right:4px;width:180px" />
+                                        }
+                                        else
+                                        {
+                                            <RadzenButton Text="Enable User" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" Click=@(args => EnableUser(SelectedUser.Token)) Style="padding-left:4px;padding-right:4px;width:180px" />
+                                        }
+                                    </div>
+                                    <div class="li-form-title">Token:</div>
+                                    <div>@SelectedUser.Token</div>
+                                    <div class="li-form-title">Allowed Airports:</div>
+                                    <div style="display:flex;flex-direction:column;gap:2px">
+                                        @foreach (string aa in SelectedUser.AllowedAirports)
+                                        {
+                                            <span>@aa</span>
+                                        }
+                                    </div>
+                                    <div class="li-form-title">Allowed Fields:</div>
+                                    <div style="display:flex;flex-direction:column;gap:2px">
+                                        @foreach (string aa in SelectedUser.AllowedFields)
+                                        {
+                                            <span>@aa </span>
+                                        }
+                                    </div>
+                                    <div class="li-form-title">Allowed Value Fields:</div>
+                                    <div style="display:flex;flex-direction:column;gap:2px">
+                                        @foreach (string aa in SelectedUser.AllowedCustomFields)
+                                        {
+                                            <span>@aa</span>
+                                        }
+                                    </div>
+                                    <div class="li-form-title">Defaults:</div>
+                                    <div style="display:flex;flex-direction:column;gap:2px">
+                                        @foreach (string aa in SelectedUser.Defaults.Keys)
+                                        {
+                                            <div> @aa  => @SelectedUser.Defaults[aa]</div>
+                                        }
+                                    </div>
+                                    <div class="li-form-title">Overrides:</div>
+                                    <div style="display:flex;flex-direction:column;gap:2px">
+                                        @foreach (string aa in SelectedUser.Overrides.Keys)
+                                        {
+                                            <div> @aa  => @SelectedUser.Overrides[aa]</div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </RadzenAccordionItem>
+                    </Items>
+                </RadzenAccordion>
+            </div>
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Reference and Help">
+            <div style="height:calc(100vh - 195px);width:calc(100vw - 80px);max-width:calc(100vw - 80px)">
+                <div class="pop-editor-grid" style="display:grid;grid-template-columns: 220px auto;row-gap:2px;width:100%">
+                    <div class="li-form-title">Examples:</div>
+                    <div style="grid-column:2">http://hostname/GetFlightsJSON <span><i>(Results returned in JSON format)</i></span></div>
+                    <div style="grid-column:2">http://hostname/GetFlightsXML<span><i>(Results returned in AMS-X XML format)</i></span></div>
+                    <div style="grid-column:2">http://hostname/GetFlightsJSON?type=dep</div>
+                    <div style="grid-column:2">http://hostname/GetFlightsJSON?type=dep&from=-3&to=6</div>
+                    <div style="grid-column:2">http://hostname/GetFlightsJSON?al=QF</div>
+                    <div style="grid-column:2">http://hostname/GetFlightsJSON?al=QF&type=arr</div>
+                    <div style="grid-column:2">http://hostname/GetFlightsJSON?fromDate=2022-11-01T00:00&toTime=2022-11-02T23:59</div>
+                    <div style="grid-column:2">http://hostname/GetFlightsJSON?schedDate=2022-11-19</div>
+                </div>
+                <div class="pop-editor-grid" style="display:grid;grid-template-columns: 220px 150px auto;row-gap:2px;width:100%">
+                    <div class="li-form-title">Available Query Paramters:</div>
+                    <div style="grid-column:2">apt</div><div>The 3 letter IATA airport code</div>
+                    <div style="grid-column:2">al</div><div>The 2 letter IATA airline code</div>
+                    <div style="grid-column:2">type</div><div>"arr" or "dep". Default is both arrivals and departures</div>
+                    <div style="grid-column:2">flt</div><div>The 3-4 digit flight number</div>
+                    <div style="grid-column:2">route</div><div>The 3 letter IATA airport code for the origin or destination</div>
+                    <div style="grid-column:2">from</div><div>Integer offset in hour from <i>NOW</i> for the start of the window for the operating time of the flight</div>
+                    <div style="grid-column:2">to</div><div>Integer offset in hour from <i>NOW</i> for the end of the window for the operating time of the flight</div>
+                    <div style="grid-column:2">fromTime</div><div>Time from <i>NOW</i> for the start of the window for the operating time of the flight</div>
+                    <div style="grid-column:2">toTime</div><div>Time from <i>NOW</i> for the end of the window for the operating time of the flight</div>
+                    <div style="grid-column:2">schedDate</div><div>The scheduled date of operation of the flight</div>
+                    @foreach (string key in config.MappedQueryParameters.Keys)
+                    {
+                        <div style="grid-column:2">@key</div>
+                        <div>Mapped to custom field @config.MappedQueryParameters[key]</div>
+                    }
+
+                </div>
+            </div>
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Status">
+            <div style="display:grid;grid-template-columns: 1fr; height:calc(100vh - 195px);width:calc(100vw - 80px);max-width:calc(100vw - 80px)">
+                <div style="grid-column:auto;display:flex;flex-direction:column">
+                    <div style="height:calc(100vh - 195px);max-height:calc(100vh - 195px);width:calc(100vw - 80px);max-width:calc(100vw - 80px)">
+                        <MonitorComponent />
+                    </div>
+                </div>
+            </div>
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Log">
+            <div style="height:calc(100vh - 195px);max-height:calc(100vh - 195px);width:calc(100vw - 80px)">
+                <GetFlightsLogViewerComponent @ref=logViewer />
+            </div>
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
+
+@code {
+    private bool initOK = false;
+    public string? consoleText = null;
+
+    public List<string> AvailAirports { get; set; } = new List<string>();
+    public AirportSource SelectedAirport { get; set; } = new AirportSource();
+    public GetFlightsConfig? config;
+    public GetFlightsLogViewerComponent? logViewer;
+    private string? Result { get; set; }
+    private bool DataClean { get; set; } = true;
+    private bool UnsavedClean { get; set; } = true;
+    private string fileName { get; set; }
+
+    private User SelectedUser { get; set; }
+    protected override void OnInitialized()
+    {
+        try
+        {
+            config = (GetFlightsConfig)configService.config.Clone();
+        } catch (Exception){
+            config = new GetFlightsConfig();
+        }
+
+
+        foreach (AirportSource apt in config.Airports)
+        {
+            AvailAirports.Add(apt.AptCode);
+        }
+       // simpleHTTPService.OnRestAPIEnable += RestServiceRunning;
+        configService.OnConfigLoaded += ConfigUpdated;
+        AMSGetFlightsStatusService.OnFlightServiceRunning += FlightServiceRunning;
+
+        var fileTarget = (FileTarget)LogManager.Configuration.FindTargetByName("logfile");
+        var logEventInfo = new LogEventInfo { TimeStamp = DateTime.Now };
+        fileName = fileTarget.FileName.Render(logEventInfo);
+
+        initOK = true;
+
+
+    }
+
+    public void TabChange(int index){
+        if(index == 2){
+            logViewer?.Reload();
+        }
+    }
+
+    public void ConfigUpdated()
+    {
+        config = (GetFlightsConfig)configService.config.Clone();
+        foreach (AirportSource apt in config.Airports)
+        {
+            AvailAirports.Add(apt.AptCode);
+        }
+        StateHasChanged();
+    }
+    public void NavigateHome()
+    {
+        UriHelper.NavigateTo("/omnihome");
+    }
+    public void DataChanged()
+    {
+        DataClean = false;
+        UnsavedClean = false;
+        StateHasChanged();
+    }
+    public void FlightServiceRunning(bool running)
+    {
+        InvokeAsync(() => StateHasChanged());
+    }
+    public void RestServiceRunning(bool running)
+    {
+        InvokeAsync(() => StateHasChanged());
+    }
+
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Minimap = new EditorMinimapOptions() { Enabled = false },
+                FontSize = 10,
+                Find = new EditorFindOptions() { SeedSearchStringFromSelection = true },
+                ReadOnly = true,
+                ScrollBeyondLastLine = false,
+            };
+    }
+
+    public void EnableUser(string token)
+    {
+        config.Users[token].Enabled = true;
+        DataChanged();
+        StateHasChanged();
+    }
+    public void DisableUser(string token)
+    {
+        config.Users[token].Enabled = false;
+        DataChanged();
+        StateHasChanged();
+    }
+    public void DeleteQueryParam(string key)
+    {
+        config.MappedQueryParameters.Remove(key);
+        DataChanged();
+    }
+
+    public void Update()
+    {
+        StateHasChanged();
+    }
+
+    public void SaveConfig()
+    {
+        configService.SaveConfig(config);
+        UnsavedClean = true;
+        StateHasChanged();
+    }
+    public void Reload()
+    {
+        config = (GetFlightsConfig)configService.config.Clone();
+        DataClean = true;
+        UnsavedClean = true;
+        StateHasChanged();
+    }
+    public void Restart()
+    {
+        //  flightService.Restart();
+        StateHasChanged();
+    }
+
+    public void ApplyConfig()
+    {
+        configService.ApplyConfig(config);
+        DataClean = true;
+        StateHasChanged();
+    }
+
+
+    public void SelectedUserChange(object arg)
+    {
+
+        string? userKey = arg as string;
+        SelectedUser = config.Users[userKey];
+        StateHasChanged();
+    }
+
+    public async Task AddUser()
+    {
+
+        string userName  = (string) await dialogService.OpenAsync<GetUserNameDialog>("Add New User", null, new DialogOptions() { ShowTitle = true, Style = "min-height:auto;min-width:auto;width:700px", CloseDialogOnEsc = false });
+
+        if(userName==null){
+            return;
+        }
+        User nu = (User)config.Users["default"].Clone();
+        nu.Token = Guid.NewGuid().ToString();
+        nu.Name = userName;
+        config.Users.Add(nu.Token, nu);
+        DataChanged();
+        StateHasChanged();
+
+        dialogService.Alert($"User {userName} Added", "Add User", new AlertOptions() { OkButtonText = "OK" });
+    }
+
+
+    public void Dispose()
+    {
+       // simpleHTTPService.OnRestAPIEnable -= RestServiceRunning;
+        AMSGetFlightsStatusService.OnFlightServiceRunning -= FlightServiceRunning;
+        configService.OnConfigLoaded -= ConfigUpdated;
+
+    }
+}
