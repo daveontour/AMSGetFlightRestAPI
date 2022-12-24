@@ -1,7 +1,7 @@
 {
   "SQLConnectionString": "Integrated Security=SSPI;Persist Security Info=False;Database=FLIGHTRESTAPIDB;Server=localhost;",
   "AdminPass": "omnipass",
-  "AllowAMSXFormat": false,
+  "AllowAMSXFormat": true,
   "AllowJSONFormat": true,
   "BackwardWindowInDays": -15,
   "ForewardWindowInDays": 10,
@@ -11,7 +11,8 @@
   "UTCOffset": 4.0,
   "StorageDirectory": "C:/Users/dave_/Desktop",
   "ConfigurationFile": "GetFlights.config.json",
-  "EnableDirectAMSLookukOnCacheFailure": true,
+  "EnableDirectAMSLookukOnSingleFlightCacheFailure": true,
+  "EnableDirectAMSLookukOnMultiFlightCacheFailure": true,
   "MappedQueryParameters": {
     "qa": "S--G_QualifierCategory",
     "status": "S--G_Status",

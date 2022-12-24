@@ -43,6 +43,7 @@ namespace AMSGetFlights.Services
         string CheckQueryStatus(GetFlightQueryObject q);
         List<AMSFlight> GetFlights(GetFlightQueryObject query, bool xml = false);
         List<AMSFlight> GetSingleFlight(string xml, string token);
+        List<AMSFlight> GetFlightsFromXML(string xml, GetFlightQueryObject query);
         GetFlightQueryObject GetQueryObject(HttpRequest request, string format);
         void URLRequestMade(string message);
         void MonitorMessage(string message);

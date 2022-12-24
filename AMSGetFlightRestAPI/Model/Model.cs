@@ -362,7 +362,6 @@ namespace AMSGetFlights.Model
             return (AMSFlight)MemberwiseClone();
         }
     }
-
     public class FlightID : ICloneable
     {
         [JsonIgnore]
@@ -393,7 +392,6 @@ namespace AMSGetFlights.Model
 
         }
     }
-
     public class CustomField : ICloneable
     {
         public CustomField(string name, string value)
@@ -410,7 +408,6 @@ namespace AMSGetFlights.Model
             return (CustomField)MemberwiseClone();
         }
     }
-
     public class CodeShare : ICloneable
     {
         public string airlineIATA { get; set; }

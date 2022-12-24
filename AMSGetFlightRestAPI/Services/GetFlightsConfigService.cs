@@ -17,12 +17,12 @@ namespace AMSGetFlights.Services
         public double UTCOffset { get; set; }
         public string? StorageDirectory { get; set; }
         public string? ConfigurationFile { get; set; }
-        public bool EnableDirectAMSLookukOnCacheFailure { get; set; } = false;
+        public bool EnableDirectAMSLookukOnSingleFlightCacheFailure { get; set; } = false;
+        public bool EnableDirectAMSLookukOnMultiFlightCacheFailure { get; set; } = false;
         public Dictionary<string, string> MappedQueryParameters { get; set; } = new Dictionary<string, string>();
         public Dictionary<string, string> CustomFieldToParameter { get; set; } = new Dictionary<string, string>();
         public List<AirportSource> Airports { get; set; } = new List<AirportSource>();
         public Dictionary<string, User> Users { get; set; } = new Dictionary<string, User>();
-
         public List<string> ValidUserFields(string user)
         {
             if (Users.ContainsKey(user))
@@ -54,7 +54,6 @@ namespace AMSGetFlights.Services
         {
             return MappedQueryParameters;
         }
-
         public object Clone()
         {
             GetFlightsConfig clone = (GetFlightsConfig)MemberwiseClone();
@@ -76,9 +75,6 @@ namespace AMSGetFlights.Services
         public string? CurrentConfigFile { get; set; } = null;
         public event Action OnConfigLoaded;
         public GetFlightsConfig? config { get; set; }
-        //      private IConfiguration serverconfig;
-        //public GetFlightsConfigService(IConfiguration serverconfig)
-        //{
         public GetFlightsConfigService(IConfiguration env)
         {
             string webConfigFile = env.GetSection("GetFlights").GetValue<string>("ConfigFile");
@@ -87,7 +83,6 @@ namespace AMSGetFlights.Services
             CurrentConfigFile = webConfigFile;
 
         }
-
         public void SaveConfig(GetFlightsConfig localconfig = null)
         {
             if (localconfig != null)
@@ -99,7 +94,6 @@ namespace AMSGetFlights.Services
                 File.WriteAllText(CurrentConfigFile, JsonConvert.SerializeObject(config, Formatting.Indented));
             }
         }
-
         public void ApplyConfig(GetFlightsConfig? newconfig)
         {
             config = (GetFlightsConfig)newconfig.Clone();

@@ -107,7 +107,7 @@ namespace AMSGetFlights.Controllers
                 string queryStatus = handler.CheckQueryStatus(query);
 
                 // If configured go directly to AMS for a specific flight if out of bounds
-                if ((queryStatus =="OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnCacheFailure  && query.IsSingleFlight)
+                if ((queryStatus =="OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnSingleFlightCacheFailure  && query.IsSingleFlight)
                 {
                     string xml = GetOutOfBoundsFlight(query);
                     if (xml == "Flight Not Found")
@@ -124,7 +124,24 @@ namespace AMSGetFlights.Controllers
                     Response.StatusCode = StatusCodes.Status200OK;
 
                     return res;
-                } 
+                } else if ((queryStatus == "OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnMultiFlightCacheFailure)
+                {
+                    string xml = GetOutOfBoundsFlights(query);
+                    if (xml == "Flights Not Found")
+                    {
+                        return new GetFlightsResponse() { error = "Flights Not Found", query = query, flights = new List<AMSFlight>() };
+                    }
+
+                    List<AMSFlight> tt = handler.GetFlightsFromXML(xml,query);
+                    query.NumberOfResults = tt.Count();
+
+                    Log("Success", query, query.NumberOfResults.ToString(), warn: true);
+
+                    GetFlightsResponse res = new GetFlightsResponse() { query = query, flights = tt, partialResutlsRetuned = queryStatus == "PARTIAL" ? true : false };
+                    Response.StatusCode = StatusCodes.Status200OK;
+
+                    return res;
+                }
                 
                 // Query is completely out of bounds of the current cache
                 if (queryStatus == "OUTOFBOUND")
@@ -220,7 +237,7 @@ namespace AMSGetFlights.Controllers
 
                 string queryStatus = handler.CheckQueryStatus(query);
 
-                if ((queryStatus == "OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnCacheFailure && query.IsSingleFlight)
+                if ((queryStatus == "OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnSingleFlightCacheFailure && query.IsSingleFlight)
                 {
                     string xml = GetOutOfBoundsFlight(query);
                     if (xml == "Flight Not Found")
@@ -245,6 +262,39 @@ namespace AMSGetFlights.Controllers
                     sbx.AppendLine("</Flights>");
 
                     Log("Success", query, info: true);
+                    return new ContentResult
+                    {
+                        Content = PrintXML(sbx.ToString()),
+                        ContentType = "text/xml",
+                        StatusCode = (int)HttpStatusCode.OK
+                    };
+                }
+                else if ((queryStatus == "OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnMultiFlightCacheFailure)
+                {
+                    string xml = GetOutOfBoundsFlights(query);
+                    if (xml == "Flight Not Found")
+                    {
+                        return new ContentResult
+                        {
+                            Content = $"<error>Flight Not Found</error>",
+                            ContentType = "text/xml",
+                            StatusCode = 500
+                        };
+                    }
+
+                    List<AMSFlight> tt = handler.GetFlightsFromXML(xml, query);
+                    query.NumberOfResults = tt.Count();
+
+                    StringBuilder sbx = new StringBuilder();
+                    sbx.AppendLine("<Flights>");
+                    foreach (AMSFlight flight in tt)
+                    {
+                        sbx.AppendLine(flight.XmlRaw);
+                    }
+                    sbx.AppendLine("</Flights>");
+
+                    Log("Sucess", query, info: true);
+
                     return new ContentResult
                     {
                         Content = PrintXML(sbx.ToString()),
@@ -347,7 +397,33 @@ namespace AMSGetFlights.Controllers
             }
             return xml; 
         }
-        
+
+        private string GetOutOfBoundsFlights(GetFlightQueryObject query)
+        {
+            string? token = null;
+            string? url = null;
+
+            foreach (AirportSource apts in configService.config.Airports)
+            {
+                if (query.apt != apts.AptCode) continue;
+                token = apts.Token;
+                url = apts.WSURL;
+                break;
+            }
+
+            if (token == null || url == null)
+            {
+                return "Flight Not Found";
+            }
+
+            string? xml = AMSGetFlightsStatusService.GetFlightsXML(query.startQuery, query.endQuery, query.apt, token, url).Result;
+            if (xml == null || xml.Contains("<ErrorCode>FLIGHT_NOT_FOUND</ErrorCode>"))
+            {
+                return "Flight Not Found";
+            }
+            return xml;
+        }
+
         private void Log(string result,  GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false)
         {
             LogEntry lee = new LogEntry();

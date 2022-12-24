@@ -18,6 +18,8 @@
                         <div class="li-form-title">Allow Annonymous Requests:</div><div><RadzenCheckBox @bind-Value=@config.AllowAnnonymousUsers Change="(bool args) => DataChanged()" /></div>
                         <div class="li-form-title">Allow XML Requests:</div><div><RadzenCheckBox @bind-Value=@config.AllowAMSXFormat Change="(bool args) => DataChanged()" /></div>
                         <div class="li-form-title">Allow JSON Requests:</div><div><RadzenCheckBox @bind-Value=@config.AllowJSONFormat Change="(bool args) => DataChanged()" /></div>
+                        <div class="li-form-title">Allow Direct AMS Lookups (Single):</div><div><RadzenCheckBox @bind-Value=@config.EnableDirectAMSLookukOnSingleFlightCacheFailure Change="(bool args) => DataChanged()" /></div>
+                        <div class="li-form-title">Allow Direct AMS Lookups (Multi):</div><div><RadzenCheckBox @bind-Value=@config.EnableDirectAMSLookukOnMultiFlightCacheFailure Change="(bool args) => DataChanged()" /></div>
                         <div class="li-form-title"><sup>*</sup> Backward Window In Days:</div><div><RadzenNumeric @bind-Value=@config.BackwardWindowInDays Max="-1" Min="-5" Change="(int args) => DataChanged()" Style="width:70px" /></div>
                         <div class="li-form-title"><sup>*</sup> Forward Window In Days:</div><div><RadzenNumeric @bind-Value=@config.ForewardWindowInDays Min="3" Max="14" Change="(int args) => DataChanged()" Style="width:70px" /></div>
                         <div class="li-form-title"><sup>*</sup> Chunk Size in Days:</div><div><RadzenNumeric @bind-Value=@config.ChunkSizeInDays Change="(int args) => DataChanged()" Style="width:70px" /></div>
@@ -226,13 +228,11 @@
 
 
     }
-
     public void TabChange(int index){
         if(index == 2){
             logViewer?.Reload();
         }
     }
-
     public void ConfigUpdated()
     {
         config = (GetFlightsConfig)configService.config.Clone();
@@ -260,21 +260,6 @@
     {
         InvokeAsync(() => StateHasChanged());
     }
-
-
-    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
-    {
-        return new StandaloneEditorConstructionOptions
-            {
-                AutomaticLayout = true,
-                Minimap = new EditorMinimapOptions() { Enabled = false },
-                FontSize = 10,
-                Find = new EditorFindOptions() { SeedSearchStringFromSelection = true },
-                ReadOnly = true,
-                ScrollBeyondLastLine = false,
-            };
-    }
-
     public void EnableUser(string token)
     {
         config.Users[token].Enabled = true;
@@ -292,12 +277,10 @@
         config.MappedQueryParameters.Remove(key);
         DataChanged();
     }
-
     public void Update()
     {
         StateHasChanged();
     }
-
     public void SaveConfig()
     {
         configService.SaveConfig(config);
@@ -316,15 +299,12 @@
         //  flightService.Restart();
         StateHasChanged();
     }
-
     public void ApplyConfig()
     {
         configService.ApplyConfig(config);
         DataClean = true;
         StateHasChanged();
     }
-
-
     public void SelectedUserChange(object arg)
     {
 
@@ -332,7 +312,6 @@
         SelectedUser = config.Users[userKey];
         StateHasChanged();
     }
-
     public async Task AddUser()
     {
 
@@ -350,13 +329,22 @@
 
         dialogService.Alert($"User {userName} Added", "Add User", new AlertOptions() { OkButtonText = "OK" });
     }
-
-
     public void Dispose()
     {
        // simpleHTTPService.OnRestAPIEnable -= RestServiceRunning;
         AMSGetFlightsStatusService.OnFlightServiceRunning -= FlightServiceRunning;
         configService.OnConfigLoaded -= ConfigUpdated;
-
+    }
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Minimap = new EditorMinimapOptions() { Enabled = false },
+                FontSize = 10,
+                Find = new EditorFindOptions() { SeedSearchStringFromSelection = true },
+                ReadOnly = true,
+                ScrollBeyondLastLine = false,
+            };
     }
 }

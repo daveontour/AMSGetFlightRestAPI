@@ -1,5 +1,6 @@
 ﻿using AMSGetFlights.Model;
 using Microsoft.Extensions.Primitives;
+using System.Xml;
 
 namespace AMSGetFlights.Services
 {
@@ -116,6 +117,54 @@ namespace AMSGetFlights.Services
 
             query.Format = format;
             return query;
+        }
+
+        public List<AMSFlight> GetFlightsFromXML(string xml, GetFlightQueryObject query)
+        {
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(xml);
+            // Get the list of flights
+           
+            List<AMSFlight> flights = new List<AMSFlight>();
+            foreach(XmlNode f in doc.SelectNodes(".//Flight"))
+            {
+                AMSFlight flight = new AMSFlight(f, configService.config);
+                flight.XmlRaw = f.OuterXml;
+                flights.Add(flight);
+            }
+            // Adjust the result so only elements the user is allowed to see are set
+            List<string> validFields = configService.config.ValidUserFields(query.token);
+            List<string> validCustomFields = configService.config.ValidUserCustomFields(query.token);
+
+            foreach (var flight in flights)
+            {
+                foreach (var prop in flight.GetType().GetProperties())
+                {
+                    if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
+                    {
+                        if (prop.Name == "XmlRaw")
+                        {
+                            continue;
+                        }
+                        prop.SetValue(flight, null);
+                    }
+                }
+                if (flight.Values != null && validCustomFields.Count() > 0)
+                {
+                    Dictionary<string, string> fields = new Dictionary<string, string>();
+                    foreach (string key in flight.Values.Keys)
+                    {
+                        if (validCustomFields.Contains(key))
+                        {
+                            fields.Add(key, flight.Values[key]);
+                        }
+                    }
+                    flight.Values = fields;
+                    // flight.Values = flight.Values.Where(f => validCustomFields.Contains(f.name)).ToList();
+                }
+            }
+
+            return flights;
         }
 
         public List<AMSFlight> GetSingleFlight(string xml, string token)

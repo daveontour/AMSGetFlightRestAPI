@@ -9,32 +9,24 @@ using Quartz.Impl;
 using Quartz;
 using NLog;
 
-
 namespace AMSGetFlights.Services;
 
 public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
 {
-    public static Action OnServerFlightsUpdates;
-    public static Action OnServerNoFlightsUpdates;
-    public static Action<bool> OnFlightServiceRunning;
-    public static Action<string> OnConsoleMessage;
+    public static Action? OnServerFlightsUpdates;
+    public static Action? OnServerNoFlightsUpdates;
+    public static Action<bool>? OnFlightServiceRunning;
+    public static Action<string>? OnConsoleMessage;
 
     public bool Running { get; set; } = false;
     private bool startListenLoop;
     private IFlightRepository repo;
-
-
     private int advanceWindow = 10;
     private int backWindow = -3;
     private int chunkSize = 1;
-
     private List<string> listenerQueues = new List<string>();   
-
     public static readonly Logger logger = LogManager.GetLogger("consoleLogger");
-
-
     private IGetFlightsConfigService configService;
-
     private int i = 1;
     private static AMSGetFlightsStatusService Instance { get; set; }
 
@@ -279,7 +271,7 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
         repo.BulkUpdateOrInsert(fls);
         System.GC.Collect();
     }
-    private async static Task<string> GetFlightsXML(DateTime from, DateTime to, string aptCode, string token, string url)
+    public async static Task<string> GetFlightsXML(DateTime from, DateTime to, string aptCode, string token, string url)
     {
 
         string mediaType = "text/xml";
@@ -340,7 +332,6 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
             return null;
         }
     }
-
     public async static Task<string> GetFlightXML(GetFlightQueryObject query, string kind, string token, string url)
     {
         return await GetFlightXML(query.al, query.flt, kind, query.schedDate, query.apt, token, url);
@@ -423,9 +414,6 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
             return null;
         }
     }
-
-
-
     internal class RefreshJob : IJob
     {
         public Task Execute(IJobExecutionContext context)

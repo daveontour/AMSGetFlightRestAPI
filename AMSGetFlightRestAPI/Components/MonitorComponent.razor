@@ -4,7 +4,6 @@
 
 @implements IDisposable;
 
-
 <MonacoEditor @ref="editor" ConstructionOptions="EditorConstructionOptions" CssClass="amsget-monaco" />
 
 @code {
@@ -24,7 +23,6 @@
             Console.WriteLine(ex.Message);
         }
     }
-
     protected override void OnInitialized()
     {
         flightRepo.OnFlightUpdatedOrAdded += FlightUpdated;
@@ -33,7 +31,6 @@
         requestHandler.OnMonitorMessage += MonitorMessage;
         AMSGetFlightsStatusService.OnConsoleMessage += FlightServiceConsoleMessage;
     }
-
     private async Task UpdateEditor()
     {
         try
@@ -43,7 +40,6 @@
         }
         catch (Exception) { }
     }
-
     public void FlightUpdated(AMSFlight flight)
     {
         try
@@ -53,7 +49,6 @@
         }
         catch (Exception) { }
     }
-
     public void FlightServiceConsoleMessage(string message)
     {
         try
@@ -69,7 +64,7 @@
         {
             string json = JsonConvert.SerializeObject(request, Newtonsoft.Json.Formatting.Indented);
             consoleText = consoleText + $"\n[{DateTime.Now.ToString()}] GetFlight Query \n{json}";
-            UpdateEditor();
+            await UpdateEditor();
         }
         catch (Exception) { }
     }
@@ -78,7 +73,7 @@
         try
         {
             consoleText = consoleText + $"\n[{DateTime.Now.ToString()}] Request Made: {request}";
-            UpdateEditor();
+            await UpdateEditor();
         }
         catch (Exception) { }
     }
@@ -87,9 +82,17 @@
         try
         {
             consoleText = consoleText + $"\n[{DateTime.Now.ToString()}] {request}";
-            UpdateEditor();
+            await UpdateEditor();
         }
         catch (Exception) { }
+    }
+    public void Dispose()
+    {
+        flightRepo.OnFlightUpdatedOrAdded -= FlightUpdated;
+        requestHandler.OnAPIRequestMade -= RequestMade;
+        requestHandler.OnAPIURLRequestMade -= URLRequestMade;
+        requestHandler.OnMonitorMessage -= MonitorMessage;
+        AMSGetFlightsStatusService.OnConsoleMessage -= FlightServiceConsoleMessage;
     }
     private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
     {
@@ -102,14 +105,5 @@
                 ReadOnly = true,
                 ScrollBeyondLastLine = false,
             };
-    }
-
-    public void Dispose()
-    {
-        flightRepo.OnFlightUpdatedOrAdded -= FlightUpdated;
-        requestHandler.OnAPIRequestMade -= RequestMade;
-        requestHandler.OnAPIURLRequestMade -= URLRequestMade;
-        requestHandler.OnMonitorMessage -= MonitorMessage;
-        AMSGetFlightsStatusService.OnConsoleMessage -= FlightServiceConsoleMessage;
     }
 }
