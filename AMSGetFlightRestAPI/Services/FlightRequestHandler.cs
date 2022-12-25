@@ -6,16 +6,15 @@ namespace AMSGetFlights.Services
 {
     public class FlightRequestHandler : IFlightRequestHandler
     {
-        public event Action<GetFlightQueryObject> OnAPIRequestMade;
-        public event Action<string> OnAPIURLRequestMade;
-        public event Action<string> OnMonitorMessage;
         public IFlightRepository repo { get; set; }
         private IGetFlightsConfigService configService;
+        private IEventExchange eventExchange;
 
-        public FlightRequestHandler(IFlightRepository repo, IGetFlightsConfigService configService)
+        public FlightRequestHandler(IFlightRepository repo, IGetFlightsConfigService configService,IEventExchange eventExchange)
         {
             this.repo = repo;
             this.configService = configService;
+            this.eventExchange = eventExchange;
         }
         public List<AMSFlight> GetFlights(GetFlightQueryObject query, bool xml = false)
         {
@@ -55,7 +54,7 @@ namespace AMSGetFlights.Services
                 }
             }
 
-            OnAPIRequestMade?.Invoke(query);
+            eventExchange.APIRequestMade(query);
 
             return res;
         }
@@ -89,18 +88,17 @@ namespace AMSGetFlights.Services
         // Put all the non core quest parameters into a Dictionary
         public GetFlightQueryObject GetQueryObject(HttpRequest request, string format)
         {
-            Dictionary<string, string> dict = new Dictionary<string, string>();
+            Dictionary<string, string> dict = new();
             foreach (string key in request.Query.Keys)
             {
-                StringValues val;
-                request.Query.TryGetValue(key, out val);
+                request.Query.TryGetValue(key, out StringValues val);
                 dict.Add(key.ToLower(), val.ElementAt(0));
             }
 
             //
-            StringValues values;
-            request.Headers.TryGetValue("Authorization", out values);
-            string providedUser = "default";
+            request.Headers.TryGetValue("Authorization", out StringValues values);
+
+            string providedUser;
             try
             {
                 providedUser = values.ElementAt(0);
@@ -121,17 +119,20 @@ namespace AMSGetFlights.Services
 
         public List<AMSFlight> GetFlightsFromXML(string xml, GetFlightQueryObject query)
         {
-            XmlDocument doc = new XmlDocument();
+            XmlDocument doc = new();
             doc.LoadXml(xml);
-            // Get the list of flights
-           
+
+            // Get the list of flights           
             List<AMSFlight> flights = new List<AMSFlight>();
             foreach(XmlNode f in doc.SelectNodes(".//Flight"))
             {
-                AMSFlight flight = new AMSFlight(f, configService.config);
-                flight.XmlRaw = f.OuterXml;
+                AMSFlight flight = new(f, configService.config)
+                {
+                    XmlRaw = f.OuterXml
+                };
                 flights.Add(flight);
             }
+
             // Adjust the result so only elements the user is allowed to see are set
             List<string> validFields = configService.config.ValidUserFields(query.token);
             List<string> validCustomFields = configService.config.ValidUserCustomFields(query.token);
@@ -149,9 +150,9 @@ namespace AMSGetFlights.Services
                         prop.SetValue(flight, null);
                     }
                 }
-                if (flight.Values != null && validCustomFields.Count() > 0)
+                if (flight.Values != null && validCustomFields.Count > 0)
                 {
-                    Dictionary<string, string> fields = new Dictionary<string, string>();
+                    Dictionary<string, string> fields = new();
                     foreach (string key in flight.Values.Keys)
                     {
                         if (validCustomFields.Contains(key))
@@ -160,7 +161,6 @@ namespace AMSGetFlights.Services
                         }
                     }
                     flight.Values = fields;
-                    // flight.Values = flight.Values.Where(f => validCustomFields.Contains(f.name)).ToList();
                 }
             }
 
@@ -169,7 +169,7 @@ namespace AMSGetFlights.Services
 
         public List<AMSFlight> GetSingleFlight(string xml, string token)
         {
-            AMSFlight flight = new AMSFlight(xml, configService.config);
+            AMSFlight flight = new(xml, configService.config);
 
 
             // Adsjust the result so only elements the user is allowed to see are set
@@ -187,9 +187,9 @@ namespace AMSGetFlights.Services
                     prop.SetValue(flight, null);
                 }
             }
-            if (flight.Values != null && validCustomFields.Count() > 0)
+            if (flight.Values != null && validCustomFields.Count > 0)
             {
-                Dictionary<string, string> fields = new Dictionary<string, string>();
+                Dictionary<string, string> fields = new();
                 foreach (string key in flight.Values.Keys)
                 {
                     if (validCustomFields.Contains(key))
@@ -198,22 +198,12 @@ namespace AMSGetFlights.Services
                     }
                 }
                 flight.Values = fields;
-                // flight.Values = flight.Values.Where(f => validCustomFields.Contains(f.name)).ToList();
             }
 
 
-            List<AMSFlight> res = new List<AMSFlight>() { flight };
+            List<AMSFlight> res = new() { flight };
 
             return res;
-        }
-
-        public void URLRequestMade(string message)
-        {
-            OnAPIURLRequestMade?.Invoke(message);
-        }
-        public void MonitorMessage(string message)
-        {
-            OnMonitorMessage?.Invoke(message);
         }
     }
 }

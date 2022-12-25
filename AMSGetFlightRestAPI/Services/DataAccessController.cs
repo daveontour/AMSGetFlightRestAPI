@@ -14,12 +14,14 @@ namespace AMSGetFlights.Services
     {
         private static string? dbLocation;
         private static string? dbfileName;
+        private IEventExchange eventExchange;
 
-        public SqLiteFlightRepository(IGetFlightsConfigService configService)
+        public SqLiteFlightRepository(IGetFlightsConfigService configService, IEventExchange eventExchange)
         {
             dbLocation = configService.config.StorageDirectory;
             dbfileName = "AmsGetFlights.sqlite";
             File.Delete(Path.Combine(dbLocation, dbfileName));
+            this.eventExchange = eventExchange;
         }
 
         public static string DbFile
@@ -181,7 +183,7 @@ namespace AMSGetFlights.Services
                 sqlComm.ExecuteNonQuery();
                 cnn.Close();
 
-                Console.WriteLine($"Bulk Update of {fls.Count()} flights");
+                eventExchange.MonitorMessage($"Bulk Update of {fls.Count()} flights");
             }
 
             System.GC.Collect();
@@ -189,11 +191,14 @@ namespace AMSGetFlights.Services
     }
     public class MSSQLFlightRepository : IFlightRepositoryDataAccessObject
     {
-        private string ConnectionString { get; set; }
-    
-        public MSSQLFlightRepository(IGetFlightsConfigService configService)
+        private string? ConnectionString { get; set; }
+
+        private IEventExchange eventExchange;
+
+        public MSSQLFlightRepository(IGetFlightsConfigService configService, IEventExchange eventExchange)
         {
             ConnectionString = configService.config.SQLConnectionString;
+            this.eventExchange = eventExchange;
         }
         private IDbConnection SimpleDbConnection()
         {
@@ -322,11 +327,11 @@ namespace AMSGetFlights.Services
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    eventExchange.MonitorMessage(ex.Message);
                 }
                 cnn.Close();
 
-                Console.WriteLine($"Bulk Update of {fls.Count()} flights");
+                eventExchange.MonitorMessage($"Bulk Update of {fls.Count()} flights");
             }
         }
     }

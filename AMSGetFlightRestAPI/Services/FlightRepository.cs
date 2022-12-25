@@ -4,20 +4,22 @@ namespace AMSGetFlights.Services
 {
     public class FlightRepository : IFlightRepository
     {
-        public event Action<AMSFlight>? OnFlightUpdatedOrAdded;
-        public event Action<AMSFlight>? OnFlightDeleted;
-        public event Action? OnFlightRepositoryUpdated;
+        //public event Action<AMSFlight>? OnFlightUpdatedOrAdded;
+        //public event Action<AMSFlight>? OnFlightDeleted;
+        //public event Action? OnFlightRepositoryUpdated;
 
         private IGetFlightsConfigService configService;
-        public IFlightRepositoryDataAccessObject flightRepo; 
-        
+        public IFlightRepositoryDataAccessObject flightRepo;
+        private IEventExchange eventExchange;
+
         public DateTime MaxDateTime { get; set; } = DateTime.MaxValue;
         public DateTime MinDateTime { get; set; } = DateTime.MinValue;
 
-        public FlightRepository(IFlightRepositoryDataAccessObject flightRepo, IGetFlightsConfigService configService)
+        public FlightRepository(IFlightRepositoryDataAccessObject flightRepo, IGetFlightsConfigService configService, IEventExchange eventExchange)
         {
             this.configService = configService;
-            this.flightRepo = flightRepo;   
+            this.flightRepo = flightRepo;
+            this.eventExchange = eventExchange;
         }
         public void UpdateOrAddFlight(AMSFlight flt)
         {
@@ -41,14 +43,14 @@ namespace AMSGetFlights.Services
             //    OnFlightUpdated?.Invoke(flt);
             //}
             flightRepo.Upsert(new List<AMSFlight>() { flt });
-            OnFlightUpdatedOrAdded?.Invoke(flt);
-            OnFlightRepositoryUpdated?.Invoke();
+            eventExchange.FlightUpdatedOrAdded(flt);
+            eventExchange.FlightRepositoryUpdated();
         }
         public void DeleteFlight(AMSFlight flt)
         {
             flightRepo.DeleteRecord(flt);
-            OnFlightDeleted?.Invoke(flt);
-            OnFlightRepositoryUpdated?.Invoke();
+            eventExchange.FlightDeleted(flt);
+            eventExchange.FlightRepositoryUpdated();
         } 
         public void BulkUpdateOrInsert(List<AMSFlight> fls)
         {

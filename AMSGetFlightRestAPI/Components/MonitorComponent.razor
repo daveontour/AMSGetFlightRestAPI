@@ -1,6 +1,7 @@
 ﻿@inject IFlightRepository flightRepo;
 @inject IFlightRequestHandler requestHandler;
 @inject IAMSGetFlightStatusService flightStatusService;
+@inject IEventExchange eventExchange;
 
 @implements IDisposable;
 
@@ -25,11 +26,11 @@
     }
     protected override void OnInitialized()
     {
-        flightRepo.OnFlightUpdatedOrAdded += FlightUpdated;
-        requestHandler.OnAPIRequestMade += RequestMade;
-        requestHandler.OnAPIURLRequestMade += URLRequestMade;
-        requestHandler.OnMonitorMessage += MonitorMessage;
-        AMSGetFlightsStatusService.OnConsoleMessage += FlightServiceConsoleMessage;
+        eventExchange.OnFlightUpdatedOrAdded += FlightUpdated;
+        eventExchange.OnAPIRequestMade += RequestMade;
+        eventExchange.OnAPIURLRequestMade += URLRequestMade;
+        eventExchange.OnMonitorMessage += MonitorMessage;
+        eventExchange.OnConsoleMessage += FlightServiceConsoleMessage;
     }
     private async Task UpdateEditor()
     {
@@ -88,11 +89,11 @@
     }
     public void Dispose()
     {
-        flightRepo.OnFlightUpdatedOrAdded -= FlightUpdated;
-        requestHandler.OnAPIRequestMade -= RequestMade;
-        requestHandler.OnAPIURLRequestMade -= URLRequestMade;
-        requestHandler.OnMonitorMessage -= MonitorMessage;
-        AMSGetFlightsStatusService.OnConsoleMessage -= FlightServiceConsoleMessage;
+        eventExchange.OnFlightUpdatedOrAdded -= FlightUpdated;
+        eventExchange.OnAPIRequestMade -= RequestMade;
+        eventExchange.OnAPIURLRequestMade -= URLRequestMade;
+        eventExchange.OnMonitorMessage -= MonitorMessage;
+        eventExchange.OnConsoleMessage -= FlightServiceConsoleMessage;
     }
     private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
     {

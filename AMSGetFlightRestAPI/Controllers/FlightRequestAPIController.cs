@@ -1,14 +1,11 @@
 ﻿using AMSGetFlights.Model;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Xml;
 using NLog;
 using AMSGetFlights.Services;
-using Microsoft.AspNetCore.Connections;
-using Radzen;
 using Microsoft.AspNetCore.Http.Extensions;
 
 namespace AMSGetFlights.Controllers
@@ -19,12 +16,14 @@ namespace AMSGetFlights.Controllers
     {
         private IFlightRequestHandler handler;
         private IGetFlightsConfigService configService;
+        private IEventExchange eventExchange;
         private readonly Logger logger = LogManager.GetLogger("consoleLogger");
 
-        public FlightRequestAPIController(IFlightRequestHandler handler, IGetFlightsConfigService configService)
+        public FlightRequestAPIController(IFlightRequestHandler handler, IGetFlightsConfigService configService, IEventExchange eventExchange)
         {
             this.handler = handler;
             this.configService = configService;
+            this.eventExchange = eventExchange;
         }
 
         [HttpGet("status")]
@@ -51,7 +50,7 @@ namespace AMSGetFlights.Controllers
                 status.ProcessMemory = usedMemory;
 
                 return status;
-            } catch (Exception e)
+            } catch (Exception)
             {
                 ServerStatus status = new ServerStatus();
                 status.Error = "Error";
@@ -67,7 +66,7 @@ namespace AMSGetFlights.Controllers
         public ActionResult<GetFlightsResponse> Get()
         {
 
-            handler.URLRequestMade(Request.GetDisplayUrl());
+            eventExchange.URLRequestMade(Request.GetDisplayUrl());
 
             // Are JSON requests allowed
             if (!configService.config.AllowJSONFormat)
@@ -186,7 +185,7 @@ namespace AMSGetFlights.Controllers
         [HttpGet("GetFlightsXML")]
         public IActionResult GetXML()
         {
-            handler.URLRequestMade(Request.GetDisplayUrl());
+            eventExchange.URLRequestMade(Request.GetDisplayUrl());
 
             if (!configService.config.AllowAMSXFormat)
             {
@@ -397,7 +396,6 @@ namespace AMSGetFlights.Controllers
             }
             return xml; 
         }
-
         private string GetOutOfBoundsFlights(GetFlightQueryObject query)
         {
             string? token = null;
@@ -423,26 +421,9 @@ namespace AMSGetFlights.Controllers
             }
             return xml;
         }
-
         private void Log(string result,  GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false)
         {
-            LogEntry lee = new LogEntry();
-            if (result != null) {
-                lee.Result = result;
-            }
-            if (query != null)
-            {
-                lee.query = query;
-            }
-            if(int.TryParse(recordsReturned, out int count))
-            {
-                lee.RecordsReturned = count;
-            }
-            handler.MonitorMessage(result);
-
-            if (error)logger.Error(JsonConvert.SerializeObject(lee, Newtonsoft.Json.Formatting.Indented));
-            if (warn) logger.Warn(JsonConvert.SerializeObject(lee, Newtonsoft.Json.Formatting.Indented));
-            if (info) logger.Info(JsonConvert.SerializeObject(lee, Newtonsoft.Json.Formatting.Indented));
+            eventExchange.Log(result, query, recordsReturned, info, warn, error);
         }
         public string PrintXML(string xml)
         {

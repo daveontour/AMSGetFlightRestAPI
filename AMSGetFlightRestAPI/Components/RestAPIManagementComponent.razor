@@ -4,6 +4,7 @@
 @inject IFlightRequestHandler requestHandler;
 @inject IGetFlightsConfigService configService;
 @inject IAMSGetFlightStatusService flightStatusService;
+@inject IEventExchange eventExchange;
 
 
 @implements IDisposable;
@@ -27,15 +28,6 @@
                         <div class="li-form-title"><sup>#</sup> Repository Refresh Cron:</div>@config.RefreshCron<div></div>
                         <div class="li-form-title"><sup>#</sup> Repository Storage Directory:</div>@config.StorageDirectory<div></div>
                         <div class="li-form-title"><sup>##</sup> Configuration File:</div><div>@config.ConfigurationFile</div>
-                        @foreach (string key in config.MappedQueryParameters.Keys)
-                        {
-                            <div class="li-form-title">Query Parameter "@key":</div>
-                            <div style="display:grid;grid-template-columns: 200px auto">
-                                <span>@config.MappedQueryParameters[key]</span>
-                             @* <RadzenButton Text="Delete" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="(args => DeleteQueryParam(key))" Style="padding-left:4px;padding-right:4px;width:80px;margin-top:5px" />*@
-                            </div>
-                        }
-
                     </div>
                     @*
                     <div style="display:flex;flex-direction:column;gap:2px">
@@ -217,8 +209,7 @@
             AvailAirports.Add(apt.AptCode);
         }
        // simpleHTTPService.OnRestAPIEnable += RestServiceRunning;
-        configService.OnConfigLoaded += ConfigUpdated;
-        AMSGetFlightsStatusService.OnFlightServiceRunning += FlightServiceRunning;
+        eventExchange.OnFlightServiceRunning += FlightServiceRunning;
 
         var fileTarget = (FileTarget)LogManager.Configuration.FindTargetByName("logfile");
         var logEventInfo = new LogEventInfo { TimeStamp = DateTime.Now };
@@ -229,18 +220,9 @@
 
     }
     public void TabChange(int index){
-        if(index == 2){
+        if(index == 3){
             logViewer?.Reload();
         }
-    }
-    public void ConfigUpdated()
-    {
-        config = (GetFlightsConfig)configService.config.Clone();
-        foreach (AirportSource apt in config.Airports)
-        {
-            AvailAirports.Add(apt.AptCode);
-        }
-        StateHasChanged();
     }
     public void NavigateHome()
     {
@@ -331,9 +313,7 @@
     }
     public void Dispose()
     {
-       // simpleHTTPService.OnRestAPIEnable -= RestServiceRunning;
-        AMSGetFlightsStatusService.OnFlightServiceRunning -= FlightServiceRunning;
-        configService.OnConfigLoaded -= ConfigUpdated;
+        eventExchange.OnFlightServiceRunning -= FlightServiceRunning;
     }
     private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
     {

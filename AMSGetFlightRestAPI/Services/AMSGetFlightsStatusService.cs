@@ -13,10 +13,10 @@ namespace AMSGetFlights.Services;
 
 public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
 {
-    public static Action? OnServerFlightsUpdates;
-    public static Action? OnServerNoFlightsUpdates;
-    public static Action<bool>? OnFlightServiceRunning;
-    public static Action<string>? OnConsoleMessage;
+    //public static Action? OnServerFlightsUpdates;
+    //public static Action? OnServerNoFlightsUpdates;
+    //public static Action<bool>? OnFlightServiceRunning;
+    //public static Action<string>? OnConsoleMessage;
 
     public bool Running { get; set; } = false;
     private bool startListenLoop;
@@ -29,11 +29,12 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
     private IGetFlightsConfigService configService;
     private int i = 1;
     private static AMSGetFlightsStatusService Instance { get; set; }
-
-    public AMSGetFlightsStatusService(IFlightRepository repo, IGetFlightsConfigService configService)
+    public IEventExchange eventExchange;
+    public AMSGetFlightsStatusService(IFlightRepository repo, IGetFlightsConfigService configService, IEventExchange eventExchange)
     {
         this.repo = repo;
         this.configService = configService;
+        this.eventExchange = eventExchange; 
 
         advanceWindow = configService.config.ForewardWindowInDays;
         backWindow = configService.config.BackwardWindowInDays;
@@ -107,7 +108,8 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
         scheduler.ScheduleJob(job, trigger);
 
         Running = true;
-        OnFlightServiceRunning?.Invoke(Running);
+        eventExchange.FlightServiceRunning(Running);
+
     }
     public async Task BackgroundProcessing(CancellationToken stoppingToken)
     {
@@ -126,7 +128,7 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
 
             do
             {
-                OnConsoleMessage?.Invoke($"Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
+                eventExchange.MonitorMessage($"Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
                 Console.WriteLine($"Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
                 logger.Info($"Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
 
@@ -152,9 +154,7 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
     public void UpdateFlightCache()
     {
         //Just need to fetch flight for the top end of the window
-
-        Console.WriteLine("Running Update Job");
-        OnConsoleMessage?.Invoke("Running Update Job");
+        eventExchange.MonitorMessage("Running Update Job");
         DateTime FromTime = DateTime.UtcNow.AddDays(advanceWindow - 2);
         DateTime ToTime = DateTime.UtcNow.AddDays(advanceWindow);
 
@@ -332,11 +332,11 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
             return null;
         }
     }
-    public async static Task<string> GetFlightXML(GetFlightQueryObject query, string kind, string token, string url)
+    public async static Task<string?> GetFlightXML(GetFlightQueryObject query, string kind, string token, string url)
     {
         return await GetFlightXML(query.al, query.flt, kind, query.schedDate, query.apt, token, url);
     }
-    private async static Task<string> GetFlightXML(string airline, string flt, string kind, string sdo, string aptCode, string token, string url)
+    private async static Task<string?> GetFlightXML(string airline, string flt, string kind, string sdo, string aptCode, string token, string url)
     {
         string mediaType = "text/xml";
         string messageXML = @"<soapenv:Envelope xmlns:soapenv=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:ams6=""http://www.sita.aero/ams6-xml-api-webservice"" xmlns:wor=""http://schemas.datacontract.org/2004/07/WorkBridge.Modules.AMS.AMSIntegrationAPI.Mod.Intf.DataTypes"">
@@ -393,7 +393,10 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
                 try
                 {
                     using HttpResponseMessage response = await client.SendAsync(requestMessage);
-                    if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted || response.StatusCode == HttpStatusCode.Created || response.StatusCode == HttpStatusCode.NoContent)
+                    if (response.StatusCode == HttpStatusCode.OK 
+                        || response.StatusCode == HttpStatusCode.Accepted 
+                        || response.StatusCode == HttpStatusCode.Created 
+                        || response.StatusCode == HttpStatusCode.NoContent)
                     {
                         return await response.Content.ReadAsStringAsync();
                     }
@@ -402,7 +405,7 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
                         return null;
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return null;
                 }

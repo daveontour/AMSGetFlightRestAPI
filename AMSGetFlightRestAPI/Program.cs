@@ -12,6 +12,7 @@ builder.Services.AddRazorPages();
 
 builder.Services.AddHostedService<AMSGetFlightsBackgroundService>();
 
+builder.Services.AddSingleton<IEventExchange, EventExchange>();
 builder.Services.AddSingleton<IAMSGetFlightStatusService,AMSGetFlightsStatusService>();
 builder.Services.AddSingleton<IGetFlightsConfigService,GetFlightsConfigService>();
 builder.Services.AddSingleton<IFlightRepository, FlightRepository>();

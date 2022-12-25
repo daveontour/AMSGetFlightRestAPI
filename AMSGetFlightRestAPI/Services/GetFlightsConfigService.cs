@@ -73,19 +73,22 @@ namespace AMSGetFlights.Services
     public class GetFlightsConfigService : IGetFlightsConfigService
     {
         public string? CurrentConfigFile { get; set; } = null;
-        public event Action OnConfigLoaded;
+
         public GetFlightsConfig? config { get; set; }
         public GetFlightsConfigService(IConfiguration env)
         {
             string webConfigFile = env.GetSection("GetFlights").GetValue<string>("ConfigFile");
             config = JsonConvert.DeserializeObject<GetFlightsConfig>(File.ReadAllText(webConfigFile));
-            config.ConfigurationFile = webConfigFile;
-            CurrentConfigFile = webConfigFile;
+            if (config != null)
+            {
+                config.ConfigurationFile = webConfigFile;
+                CurrentConfigFile = webConfigFile;
+            }
 
         }
-        public void SaveConfig(GetFlightsConfig localconfig = null)
+        public void SaveConfig(GetFlightsConfig? localconfig = null)
         {
-            if (localconfig != null)
+            if (localconfig != null && CurrentConfigFile != null)
             {
                 File.WriteAllText(CurrentConfigFile, JsonConvert.SerializeObject(localconfig, Formatting.Indented));
             }
@@ -96,6 +99,7 @@ namespace AMSGetFlights.Services
         }
         public void ApplyConfig(GetFlightsConfig? newconfig)
         {
+            if (newconfig != null)
             config = (GetFlightsConfig)newconfig.Clone();
         }
     }

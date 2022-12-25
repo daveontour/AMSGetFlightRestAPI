@@ -1,8 +1,35 @@
 ﻿using AMSGetFlights.Model;
+using AMSGetFlights.Services;
 
 namespace AMSGetFlights.Services
 {
-    public interface IAMSGetFlightStatusService
+    public interface IEventExchange
+    {
+        event Action<AMSFlight> OnFlightDeleted;
+        event Action OnFlightRepositoryUpdated;
+        event Action<AMSFlight> OnFlightUpdatedOrAdded;
+        event Action<GetFlightQueryObject> OnAPIRequestMade;
+        event Action<string> OnAPIURLRequestMade;
+        event Action<string> OnMonitorMessage;
+
+        event Action OnServerFlightsUpdates;
+        event Action OnServerNoFlightsUpdates;
+        event Action<bool> OnFlightServiceRunning;
+        event Action<string> OnConsoleMessage;
+
+        void URLRequestMade(string message);
+        void APIRequestMade(GetFlightQueryObject query);
+        void MonitorMessage(string message);
+
+        void FlightRepositoryUpdated();
+        void FlightUpdatedOrAdded(AMSFlight flt);
+        void FlightDeleted(AMSFlight flt);
+        void FlightServiceRunning(bool running);
+        void Log(string result, GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false);
+    }
+
+}
+public interface IAMSGetFlightStatusService
     {
         bool Running { get; set; }
         Task BackgroundProcessing(CancellationToken stoppingToken);
@@ -14,10 +41,6 @@ namespace AMSGetFlights.Services
     {
         DateTime MaxDateTime { get; set; }
         DateTime MinDateTime { get; set; }
-
-        event Action<AMSFlight> OnFlightDeleted;
-        event Action OnFlightRepositoryUpdated;
-        event Action<AMSFlight> OnFlightUpdatedOrAdded;
         void DeleteFlight(AMSFlight flt);
         List<AMSFlight> GetFlights(GetFlightQueryObject query);
         void UpdateOrAddFlight(AMSFlight flt);
@@ -36,17 +59,11 @@ namespace AMSGetFlights.Services
     public interface IFlightRequestHandler
     {
         IFlightRepository repo { get; set; }
-
-        event Action<GetFlightQueryObject> OnAPIRequestMade;
-        event Action<string> OnAPIURLRequestMade;
-        event Action<string> OnMonitorMessage;
         string CheckQueryStatus(GetFlightQueryObject q);
         List<AMSFlight> GetFlights(GetFlightQueryObject query, bool xml = false);
         List<AMSFlight> GetSingleFlight(string xml, string token);
         List<AMSFlight> GetFlightsFromXML(string xml, GetFlightQueryObject query);
         GetFlightQueryObject GetQueryObject(HttpRequest request, string format);
-        void URLRequestMade(string message);
-        void MonitorMessage(string message);
 
     }
     public interface IGetFlightsConfig
@@ -71,11 +88,10 @@ namespace AMSGetFlights.Services
     }
     public interface IGetFlightsConfigService
     {
-        event Action OnConfigLoaded;
         string? CurrentConfigFile { get; set; }
-        GetFlightsConfig? config { get; set; }
+        GetFlightsConfig config { get; set; }
         void ApplyConfig(GetFlightsConfig? newconfig);
         void SaveConfig(GetFlightsConfig localconfig = null);
 
     }
-}
+
