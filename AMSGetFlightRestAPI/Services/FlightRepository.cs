@@ -4,13 +4,9 @@ namespace AMSGetFlights.Services
 {
     public class FlightRepository : IFlightRepository
     {
-        //public event Action<AMSFlight>? OnFlightUpdatedOrAdded;
-        //public event Action<AMSFlight>? OnFlightDeleted;
-        //public event Action? OnFlightRepositoryUpdated;
-
-        private IGetFlightsConfigService configService;
-        public IFlightRepositoryDataAccessObject flightRepo;
-        private IEventExchange eventExchange;
+        private readonly IGetFlightsConfigService configService;
+        private readonly IFlightRepositoryDataAccessObject flightRepo;
+        private readonly IEventExchange eventExchange;
 
         public DateTime MaxDateTime { get; set; } = DateTime.MaxValue;
         public DateTime MinDateTime { get; set; } = DateTime.MinValue;
@@ -29,19 +25,6 @@ namespace AMSGetFlights.Services
                 return;
             }
 
-            //// See if the flight is already in the database so we know whether to do an Update or insert and to fire the right type of notification
-            //StoredFlight fl = flightRepo.GetStoredFlight(flt);
-
-            //if (fl == null)
-            //{
-            //    flightRepo.SaveRecord(flt);
-            //    OnFlightAdded?.Invoke(flt);
-            //}
-            //else
-            //{
-            //    flightRepo.UpdateRecord(flt);
-            //    OnFlightUpdated?.Invoke(flt);
-            //}
             flightRepo.Upsert(new List<AMSFlight>() { flt });
             eventExchange.FlightUpdatedOrAdded(flt);
             eventExchange.FlightRepositoryUpdated();
@@ -82,7 +65,7 @@ namespace AMSGetFlights.Services
             {
                 foreach (StoredFlight stfl in flights)
                 {
-                    fls.Add(new AMSFlight(stfl.XML, configService.config, DateTime.Parse(stfl.lastupdate).AddHours(configService.config.UTCOffset).ToString("yyyy-MM-ddTHH:mm:ssK")));
+                    fls.Add(new AMSFlight(stfl.XML, configService.config, DateTime.Parse(stfl.Lastupdate).AddHours(configService.config.UTCOffset).ToString("yyyy-MM-ddTHH:mm:ssK")));
                 }
             } else
             {

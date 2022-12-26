@@ -8,13 +8,13 @@ namespace AMSGetFlights.Services
     public class StoredFlight
     {
         public string? XML { get; set; }
-        public string? lastupdate { get; set; }
+        public string? Lastupdate { get; set; }
     }
     public class SqLiteFlightRepository : IFlightRepositoryDataAccessObject
     {
         private static string? dbLocation;
         private static string? dbfileName;
-        private IEventExchange eventExchange;
+        private readonly  IEventExchange eventExchange;
 
         public SqLiteFlightRepository(IGetFlightsConfigService configService, IEventExchange eventExchange)
         {
@@ -38,12 +38,12 @@ namespace AMSGetFlights.Services
             catch { }
         }
 
-        private SqliteConnection SimpleDbConnection()
+        private static SqliteConnection SimpleDbConnection()
         {
 
             if (!File.Exists(DbFile))
             {
-                SqliteConnection sqliteConnection = new SqliteConnection("Data Source=" + DbFile);
+                SqliteConnection sqliteConnection = new("Data Source=" + DbFile);
                 sqliteConnection.Open();
                 sqliteConnection.Execute(
                     @"create table StoredFlights(
@@ -67,22 +67,21 @@ namespace AMSGetFlights.Services
 
         public int GetNumEntries()
         {
-            string sql = $"SELECT count(*) from StoredFlights";
-            using (var cnn = SimpleDbConnection())
+            string? sql = $"SELECT count(*) from StoredFlights";
+            using var cnn = SimpleDbConnection();
+            cnn.Open();
+            try
             {
-                cnn.Open();
-                try
-                {
-                    return cnn.QueryFirst<int>(sql);
-                }
-                catch (Exception)
-                {
-                    return 0;
-                }
-                finally { 
-                    cnn.Close();
-                    System.GC.Collect();
-                }
+                return cnn.QueryFirst<int>(sql);
+            }
+            catch (Exception)
+            {
+                return 0;
+            }
+            finally
+            {
+                cnn.Close();
+                System.GC.Collect();
             }
         }
 
@@ -96,56 +95,54 @@ namespace AMSGetFlights.Services
             }
             if (query.al != null)
             {
-                sql = sql + $" AND al = '{query.al}'";
+                sql += $" AND al = '{query.al}'";
             }
             if (query.apt != null)
             {
-                sql = sql + $" AND apt = '{query.apt}'";
+                sql += $" AND apt = '{query.apt}'";
             }
             if (query.flt != null)
             {
-                sql = sql + $" AND fltNum = '{query.flt}'";
+                sql += $" AND fltNum = '{query.flt}'";
             }
             if (query.callsign != null)
             {
-                sql = sql + $" AND callsign = '{query.callsign}'";
+                sql += $" AND callsign = '{query.callsign}'";
             }
             if (kind != null)
             {
-                sql = sql + $" AND type = '{kind}'";
+                sql += $" AND type = '{kind}'";
             }
 
-            sql = sql + " ORDER BY sto ";
+            sql += " ORDER BY sto ";
 
-            using (var cnn = SimpleDbConnection())
+            using var cnn = SimpleDbConnection();
+            try
             {
-                try
-                {
-                    cnn.Open();
-                    return cnn.Query<StoredFlight>(sql);
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
-                finally
-                {
-                    cnn.Close();
-                    System.GC.Collect();
-                }
+                cnn.Open();
+                return cnn.Query<StoredFlight>(sql);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            finally
+            {
+                cnn.Close();
+                System.GC.Collect();
             }
         }
 
         public void DeleteRecord(AMSFlight record)
         {
-            string sql = $"DELETE FROM StoredFlights WHERE flightID = '{record.flightId.flightUniqueID}'";
+            string? sql = $"DELETE FROM StoredFlights WHERE flightID = '{record.flightId.flightUniqueID}'";
             using (var cnn = SimpleDbConnection())
             {
                 cnn.Open();
                 cnn.Execute(sql, record);
                 cnn.Close();
             }
-            System.GC.Collect();
+            GC.Collect();
         }
         public void Prune(int backWindow)
         {
@@ -158,7 +155,7 @@ namespace AMSGetFlights.Services
                 cnn.Execute(sql);
                 cnn.Close();
             }
-            System.GC.Collect();
+            GC.Collect();
         }
 
         public void Upsert(List<AMSFlight> fls)
@@ -183,17 +180,17 @@ namespace AMSGetFlights.Services
                 sqlComm.ExecuteNonQuery();
                 cnn.Close();
 
-                eventExchange.MonitorMessage($"Bulk Update of {fls.Count()} flights");
+                eventExchange.MonitorMessage($"Bulk Update of {fls.Count} flights");
             }
 
-            System.GC.Collect();
+            GC.Collect();
         }
     }
     public class MSSQLFlightRepository : IFlightRepositoryDataAccessObject
     {
         private string? ConnectionString { get; set; }
 
-        private IEventExchange eventExchange;
+        private readonly IEventExchange eventExchange;
 
         public MSSQLFlightRepository(IGetFlightsConfigService configService, IEventExchange eventExchange)
         {
@@ -221,29 +218,25 @@ namespace AMSGetFlights.Services
         public void DeleteRecord(AMSFlight record)
         {
             string sql = $"DELETE FROM StoredFlights WHERE flightID = '{record.flightId.flightUniqueID}'";
-            using (var cnn = SimpleDbConnection())
-            {
-                cnn.Open();
-                cnn.Execute(sql, record);
-                cnn.Close();
-            }
+            using var cnn = SimpleDbConnection();
+            cnn.Open();
+            cnn.Execute(sql, record);
+            cnn.Close();
         }
         public int GetNumEntries()
         {
             string sql = $"SELECT count(*) from StoredFlights";
-            using (var cnn = SimpleDbConnection())
+            using var cnn = SimpleDbConnection();
+            cnn.Open();
+            try
             {
-                cnn.Open();
-                try
-                {
-                    return cnn.QueryFirst<int>(sql);
-                }
-                catch (Exception)
-                {
-                    return 0;
-                }
-                finally { cnn.Close(); }
+                return cnn.QueryFirst<int>(sql);
             }
+            catch (Exception)
+            {
+                return 0;
+            }
+            finally { cnn.Close(); }
         }
         public IEnumerable<StoredFlight> GetStoredFlights(GetFlightQueryObject query, string? kind)
         {
@@ -254,85 +247,79 @@ namespace AMSGetFlights.Services
             }
             if (query.al != null)
             {
-                sql = sql + $" AND al = '{query.al}'";
+                sql += $" AND al = '{query.al}'";
             }
             if (query.apt != null)
             {
-                sql = sql + $" AND apt = '{query.apt}'";
+                sql += $" AND apt = '{query.apt}'";
             }
             if (query.flt != null)
             {
-                sql = sql + $" AND fltNum = '{query.flt}'";
+                sql += $" AND fltNum = '{query.flt}'";
             }
             if (query.callsign != null)
             {
-                sql = sql + $" AND callsign = '{query.callsign}'";
+                sql += $" AND callsign = '{query.callsign}'";
             }
             if (kind != null)
             {
-                sql = sql + $" AND type = '{kind}'";
+                sql += $" AND type = '{kind}'";
             }
 
-            sql = sql + " ORDER BY sto ";
+            sql += " ORDER BY sto ";
 
-            using (var cnn = SimpleDbConnection())
+            using var cnn = SimpleDbConnection();
+            try
             {
-                try
-                {
-                    cnn.Open();
-                    return cnn.Query<StoredFlight>(sql);
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
-                finally
-                {
-                    cnn.Close();
-                }
+                cnn.Open();
+                return cnn.Query<StoredFlight>(sql);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            finally
+            {
+                cnn.Close();
             }
         }
         public void Prune(int backWindow)
         {
             DateTime pruneDate = DateTime.Now.AddDays(backWindow);
             string sql = $"DELETE FROM StoredFlights WHERE sto <'{pruneDate}' OR lastupdate IS NULL";
-            using (var cnn = SimpleDbConnection())
-            {
-                cnn.Open();
-                cnn.Execute(sql);
-                cnn.Close();
-            }
+            using var cnn = SimpleDbConnection();
+            cnn.Open();
+            cnn.Execute(sql);
+            cnn.Close();
         }
         public void Upsert(List<AMSFlight> fls)
         {
-            using (var cnn = SimpleDbConnection())
+            using var cnn = SimpleDbConnection();
+            cnn.Open();
+            string sql;
+            try
             {
-                cnn.Open();
-                string sql;
-                try
+                foreach (AMSFlight record in fls)
                 {
-                    foreach (AMSFlight record in fls)
+                    sql = $" INSERT INTO StoredFlights (flightID, XML,al,apt,fltNum,type, sdo,sto,lastupdate) VALUES ('{record.Key}', '{record.XmlRaw}','{record.flightId.iataAirline}','{record.flightId.iatalocalairport}','{record.flightId.flightNumber}','{record.flightId.flightkind}','{record.flightId.scheduleDate}', '{record.flightId.scheduleTime}',GETDATE());";
+                    try
                     {
-                        sql = $" INSERT INTO StoredFlights (flightID, XML,al,apt,fltNum,type, sdo,sto,lastupdate) VALUES ('{record.Key}', '{record.XmlRaw}','{record.flightId.iataAirline}','{record.flightId.iatalocalairport}','{record.flightId.flightNumber}','{record.flightId.flightkind}','{record.flightId.scheduleDate}', '{record.flightId.scheduleTime}',GETDATE());";
-                        try
-                        {
-                            cnn.Execute(sql);
-                        }
-                        catch (System.Data.SqlClient.SqlException ex)
-                        {
-                            sql = $" UPDATE StoredFlights SET XML = '{record.XmlRaw}', al = '{record.flightId.iataAirline}', apt = '{record.flightId.iatalocalairport}', fltNum = '{record.flightId.flightNumber}', type = '{record.flightId.flightkind}', sdo = '{record.flightId.scheduleDate}', sto ='{record.flightId.scheduleTime}', lastupdate = GETDATE() WHERE flightID = '{record.Key}';";
-                            cnn.Execute(sql);
-                        }
+                        cnn.Execute(sql);
+                    }
+                    catch (System.Data.SqlClient.SqlException ex)
+                    {
+                        sql = $" UPDATE StoredFlights SET XML = '{record.XmlRaw}', al = '{record.flightId.iataAirline}', apt = '{record.flightId.iatalocalairport}', fltNum = '{record.flightId.flightNumber}', type = '{record.flightId.flightkind}', sdo = '{record.flightId.scheduleDate}', sto ='{record.flightId.scheduleTime}', lastupdate = GETDATE() WHERE flightID = '{record.Key}';";
+                        cnn.Execute(sql);
                     }
                 }
-                catch (Exception ex)
-                {
-                    eventExchange.MonitorMessage(ex.Message);
-                }
-                cnn.Close();
-
-                eventExchange.MonitorMessage($"Bulk Update of {fls.Count()} flights");
             }
+            catch (Exception ex)
+            {
+                eventExchange.MonitorMessage(ex.Message);
+            }
+            cnn.Close();
+
+            eventExchange.MonitorMessage($"Upsert of {fls.Count} flights");
         }
     }
 }

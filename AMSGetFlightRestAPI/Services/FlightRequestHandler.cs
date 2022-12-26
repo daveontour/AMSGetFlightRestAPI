@@ -6,9 +6,9 @@ namespace AMSGetFlights.Services
 {
     public class FlightRequestHandler : IFlightRequestHandler
     {
-        public IFlightRepository repo { get; set; }
-        private IGetFlightsConfigService configService;
-        private IEventExchange eventExchange;
+        private readonly IFlightRepository repo;
+        private readonly IGetFlightsConfigService configService;
+        private readonly IEventExchange eventExchange;
 
         public FlightRequestHandler(IFlightRepository repo, IGetFlightsConfigService configService,IEventExchange eventExchange)
         {
@@ -16,7 +16,7 @@ namespace AMSGetFlights.Services
             this.configService = configService;
             this.eventExchange = eventExchange;
         }
-        public List<AMSFlight> GetFlights(GetFlightQueryObject query, bool xml = false)
+        public List<AMSFlight> GetFlights(GetFlightQueryObject query, bool IsXML = false)
         {
 
             // Get the list of flights
@@ -32,7 +32,7 @@ namespace AMSGetFlights.Services
                 {
                     if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
                     {
-                        if (prop.Name == "XmlRaw" && xml)
+                        if (prop.Name == "XmlRaw" && IsXML)
                         {
                             continue;
                         }
@@ -85,7 +85,7 @@ namespace AMSGetFlights.Services
             return "OUTOFBOUND";
         }
 
-        // Put all the non core quest parameters into a Dictionary
+        // Put all the non core request parameters into a Dictionary
         public GetFlightQueryObject GetQueryObject(HttpRequest request, string format)
         {
             Dictionary<string, string> dict = new();
@@ -117,19 +117,16 @@ namespace AMSGetFlights.Services
             return query;
         }
 
-        public List<AMSFlight> GetFlightsFromXML(string xml, GetFlightQueryObject query)
+        public List<AMSFlight> GetFlightsFromXML(string xml, GetFlightQueryObject query, bool IsXML = false)
         {
             XmlDocument doc = new();
             doc.LoadXml(xml);
 
             // Get the list of flights           
             List<AMSFlight> flights = new List<AMSFlight>();
-            foreach(XmlNode f in doc.SelectNodes(".//Flight"))
+            foreach(XmlNode f in doc.SelectNodes(".//*[local-name() = 'Flights']/*[local-name() = 'Flight']"))
             {
-                AMSFlight flight = new(f, configService.config)
-                {
-                    XmlRaw = f.OuterXml
-                };
+                AMSFlight flight = new(f, configService.config);
                 flights.Add(flight);
             }
 
@@ -143,7 +140,7 @@ namespace AMSGetFlights.Services
                 {
                     if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
                     {
-                        if (prop.Name == "XmlRaw")
+                        if (prop.Name == "XmlRaw" && IsXML)
                         {
                             continue;
                         }
@@ -167,7 +164,7 @@ namespace AMSGetFlights.Services
             return flights;
         }
 
-        public List<AMSFlight> GetSingleFlight(string xml, string token)
+        public List<AMSFlight> GetSingleFlight(string xml, string token, bool IsXML = false)
         {
             AMSFlight flight = new(xml, configService.config);
 
@@ -180,7 +177,7 @@ namespace AMSGetFlights.Services
             {
                 if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
                 {
-                    if (prop.Name == "XmlRaw")
+                    if (prop.Name == "XmlRaw" && IsXML)
                     {
                         continue;
                     }
@@ -199,7 +196,6 @@ namespace AMSGetFlights.Services
                 }
                 flight.Values = fields;
             }
-
 
             List<AMSFlight> res = new() { flight };
 

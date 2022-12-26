@@ -5,7 +5,9 @@ using Radzen;
 var builder = WebApplication.CreateBuilder(args);
 var provider = builder.Services.BuildServiceProvider();
 var configuration = provider.GetService<IConfiguration>();
-string dataProvider = configuration.GetSection("GetFlights").GetValue<string>("DataProvider");
+//string dataProvider = configuration.GetSection("GetFlights").GetValue<string>("DataProvider");
+string webConfigFile = configuration.GetSection("GetFlights").GetValue<string>("ConfigFile");
+GetFlightsConfig config = JsonConvert.DeserializeObject<GetFlightsConfig>(File.ReadAllText(webConfigFile));
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -18,11 +20,11 @@ builder.Services.AddSingleton<IGetFlightsConfigService,GetFlightsConfigService>(
 builder.Services.AddSingleton<IFlightRepository, FlightRepository>();
 
 
-if (dataProvider == "SQLite")
+if (config.Storage ==  "SQLite")
 {
     builder.Services.AddSingleton<IFlightRepositoryDataAccessObject, SqLiteFlightRepository>();
 }
-if (dataProvider == "SQL")
+if (config.Storage == "SQL")
 {
     builder.Services.AddSingleton<IFlightRepositoryDataAccessObject, MSSQLFlightRepository>();
 }

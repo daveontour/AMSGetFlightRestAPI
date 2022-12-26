@@ -17,6 +17,7 @@ namespace AMSGetFlights.Services
         public double UTCOffset { get; set; }
         public string? StorageDirectory { get; set; }
         public string? ConfigurationFile { get; set; }
+        public string? Storage { get; set; }
         public bool EnableDirectAMSLookukOnSingleFlightCacheFailure { get; set; } = false;
         public bool EnableDirectAMSLookukOnMultiFlightCacheFailure { get; set; } = false;
         public Dictionary<string, string> MappedQueryParameters { get; set; } = new Dictionary<string, string>();
@@ -77,6 +78,7 @@ namespace AMSGetFlights.Services
         public GetFlightsConfig? config { get; set; }
         public GetFlightsConfigService(IConfiguration env)
         {
+
             string webConfigFile = env.GetSection("GetFlights").GetValue<string>("ConfigFile");
             config = JsonConvert.DeserializeObject<GetFlightsConfig>(File.ReadAllText(webConfigFile));
             if (config != null)
@@ -84,7 +86,6 @@ namespace AMSGetFlights.Services
                 config.ConfigurationFile = webConfigFile;
                 CurrentConfigFile = webConfigFile;
             }
-
         }
         public void SaveConfig(GetFlightsConfig? localconfig = null)
         {

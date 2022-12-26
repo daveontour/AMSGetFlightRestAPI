@@ -58,11 +58,10 @@ public interface IAMSGetFlightStatusService
     }
     public interface IFlightRequestHandler
     {
-        IFlightRepository repo { get; set; }
         string CheckQueryStatus(GetFlightQueryObject q);
-        List<AMSFlight> GetFlights(GetFlightQueryObject query, bool xml = false);
-        List<AMSFlight> GetSingleFlight(string xml, string token);
-        List<AMSFlight> GetFlightsFromXML(string xml, GetFlightQueryObject query);
+        List<AMSFlight> GetFlights(GetFlightQueryObject query, bool IsXml = false);
+        List<AMSFlight> GetSingleFlight(string xml, string token, bool IsXml = false);
+        List<AMSFlight> GetFlightsFromXML(string xml, GetFlightQueryObject query, bool IsXml = false);
         GetFlightQueryObject GetQueryObject(HttpRequest request, string format);
 
     }

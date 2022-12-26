@@ -9,124 +9,134 @@
 
 @implements IDisposable;
 
-<RadzenTabs RenderMode="TabRenderMode.Client" Change="(int  index) => TabChange(index)" >
+<RadzenTabs RenderMode="TabRenderMode.Client" Change="(int  index) => TabChange(index)">
     <Tabs>
         <RadzenTabsItem Text="Configuration">
             <div style="display:grid;grid-template-columns: 600px 1fr; height:calc(100vh - 195px);width:calc(100vw - 80px);max-width:calc(100vw - 80px)">
                 <div style="grid-column:auto;display:flex;flex-direction:column">
-                    <div class="pop-editor-grid" style="row-gap:2px;grid-auto-rows:35px">
+                    <div class="pop-editor-grid" style="row-gap:2px;grid-auto-rows:28px">
                         <div class="li-form-category-title">Global Settings</div>
                         <div class="li-form-title">Allow Annonymous Requests:</div><div><RadzenCheckBox @bind-Value=@config.AllowAnnonymousUsers Change="(bool args) => DataChanged()" /></div>
                         <div class="li-form-title">Allow XML Requests:</div><div><RadzenCheckBox @bind-Value=@config.AllowAMSXFormat Change="(bool args) => DataChanged()" /></div>
                         <div class="li-form-title">Allow JSON Requests:</div><div><RadzenCheckBox @bind-Value=@config.AllowJSONFormat Change="(bool args) => DataChanged()" /></div>
                         <div class="li-form-title">Allow Direct AMS Lookups (Single):</div><div><RadzenCheckBox @bind-Value=@config.EnableDirectAMSLookukOnSingleFlightCacheFailure Change="(bool args) => DataChanged()" /></div>
                         <div class="li-form-title">Allow Direct AMS Lookups (Multi):</div><div><RadzenCheckBox @bind-Value=@config.EnableDirectAMSLookukOnMultiFlightCacheFailure Change="(bool args) => DataChanged()" /></div>
-                        <div class="li-form-title"><sup>*</sup> Backward Window In Days:</div><div><RadzenNumeric @bind-Value=@config.BackwardWindowInDays Max="-1" Min="-5" Change="(int args) => DataChanged()" Style="width:70px" /></div>
-                        <div class="li-form-title"><sup>*</sup> Forward Window In Days:</div><div><RadzenNumeric @bind-Value=@config.ForewardWindowInDays Min="3" Max="14" Change="(int args) => DataChanged()" Style="width:70px" /></div>
-                        <div class="li-form-title"><sup>*</sup> Chunk Size in Days:</div><div><RadzenNumeric @bind-Value=@config.ChunkSizeInDays Change="(int args) => DataChanged()" Style="width:70px" /></div>
-                        <div class="li-form-title"><sup>*</sup> UTC Offset:</div><div><RadzenNumeric @bind-Value=@config.UTCOffset Change="(double args) => DataChanged()" Step="0.5" Max="12" Min="-12" Style="width:70px" /></div>
-                        <div class="li-form-title"><sup>#</sup> Repository Refresh Cron:</div>@config.RefreshCron<div></div>
-                        <div class="li-form-title"><sup>#</sup> Repository Storage Directory:</div>@config.StorageDirectory<div></div>
-                        <div class="li-form-title"><sup>##</sup> Configuration File:</div><div>@config.ConfigurationFile</div>
-                    </div>
-                    @*
-                    <div style="display:flex;flex-direction:column;gap:2px">
-                        <div class="li-form-title" style="grid-column:1 /span 2;margin-top:15px;text-align:left">* Service Restart Required</div>
-                        <div class="li-form-title" style="grid-column:1 /span 2;text-align:left"># Edit directly in Configuration File</div>
-                        <div class="li-form-title" style="grid-column:1 /span 2;text-align:left">## Edit directly in appsettings.json file</div>
-                    </div>
-                    *@
-                    <div style="gap:5px">
-                        <RadzenButton Text="Apply Config" Disabled=@DataClean ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="ApplyConfig" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px" />
-                        <RadzenButton Text="Save Config to File" Disabled=@UnsavedClean ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="SaveConfig" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px" />
-                        <RadzenButton Text="Reload Current Config" Disabled=@DataClean ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="Reload" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px" />
-                    </div>
+                        <div class="li-form-title"><sup>*</sup> Backward Window In Days:</div><div><RadzenNumeric class="pop-form-body"  @bind-Value=@config.BackwardWindowInDays Min="-5" Max="-1" Change="(int args) => DataChanged()" Style="width:70px" /></div>
+                        <div class="li-form-title"><sup>*</sup> Forward Window In Days:</div><div><RadzenNumeric class="pop-form-body" @bind-Value=@config.ForewardWindowInDays Min="3" Max="14" Change="(int args) => DataChanged()" Style="width:70px" /></div>
+                        <div class="li-form-title"><sup>*</sup> Chunk Size in Days:</div><div><RadzenNumeric class="pop-form-body" @bind-Value=@config.ChunkSizeInDays Min="1" Max="3" Change="(int args) => DataChanged()" Style="width:70px" /></div>
+                        <div class="li-form-title"><sup>*</sup> UTC Offset:</div><div><RadzenNumeric class="pop-form-body" @bind-Value=@config.UTCOffset Change="(double args) => DataChanged()" Step="0.5" Max="12" Min="-12" Style="width:70px" /></div>
+                        <div class="li-form-title"><sup>#</sup> Repository Refresh Cron:</div><div>@config.RefreshCron</div>
+                        <div class="li-form-title"><sup>#</sup> Data Provider:</div><div>@config.Storage</div>
+                        @if (config.Storage == "SQLite"){
+                            <div class="li-form-title"><sup>#</sup> SQLite Storage Directory:</div>
+                            <div style="overflow:clip">@config.StorageDirectory</div>
+                        }
+                        @if (config.Storage == "SQL") {
+                            <div class="li-form-title"><sup>#</sup>SQL Connection String:</div>
+                            <div style="overflow:clip">@config.SQLConnectionString</div>
+                        }
+
+                    <div class="li-form-title"><sup>##</sup> Configuration File:</div><div>@config.ConfigurationFile</div>
                 </div>
-                <RadzenAccordion>
-                    <Items>
-                        <RadzenAccordionItem Text="Airports">
 
-                            <div style="display:grid;grid-template-columns:220px auto;row-gap:2px;grid-auto-rows:28px">
+                <div style="display:flex;flex-direction:column;gap:2px">
+                        <div class="li-form-title" style="grid-column:1 /span 2;margin-top:15px;text-align:left">* Service Restart Required &nbsp;&nbsp; # Edit directly in Configuration File</div>
+                    <div class="li-form-title" style="grid-column:1 /span 2;text-align:left">## Edit directly in appsettings.json file</div>
+                </div>
 
-                                @foreach (AirportSource aps in config.Airports)
+                <div style="gap:5px">
+                    <RadzenButton Text="Apply Config" Disabled=@DataClean ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="ApplyConfig" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px" />
+                    <RadzenButton Text="Save Config to File" Disabled=@UnsavedClean ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="SaveConfig" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px" />
+                    <RadzenButton Text="Reload Current Config" Disabled=@DataClean ButtonStyle="ButtonStyle.Success" Size="ButtonSize.Small" Click="Reload" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px" />
+                </div>
+            </div>
+            <RadzenAccordion>
+                <Items>
+                    <RadzenAccordionItem Text="Airports">
+
+                        <div style="display:grid;grid-template-columns:220px auto;row-gap:2px;grid-auto-rows:28px">
+
+                            @foreach (AirportSource aps in config.Airports)
+                            {
+                            <div class="li-form-category-title">Airport: @aps.AptCode</div>
+
+                            <div class="li-form-title">AMS API Token:</div>
+                            <div>@aps.Token</div>
+
+                            <div class="li-form-title">Webservice URL:</div>
+                            <div>@aps.WSURL</div>
+
+                            <div class="li-form-title">AMS Notification Queue:</div>
+                            <div>@aps.NotificationQueue</div>
+                            }
+                        </div>
+                    </RadzenAccordionItem>
+                    <RadzenAccordionItem Text="Users">
+                        <div style="display:grid;grid-template-columns:220px auto;row-gap:2px;margin-top:10px">
+
+                            <div class="li-form-category-title" style="grid-column:1/1">Select User:</div>
+                            <div style="display:flex;flex-direction:row;gap:5px">
+                                <RadzenDropDown Data="config.Users.Values" TextProperty="Name" ValueProperty="Token" TValue="string" Change="( (arg) => SelectedUserChange(arg))" Style="width:200px" />
+                                <RadzenButton Text="Add User" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" Click=@(args => AddUser()) Style="padding-left:4px;padding-right:4px;width:180px" />
+                            </div>
+                            @if (SelectedUser != null)
+                            {
+                            <div class="li-form-title">Enabled:</div>
+                            <div style="display:grid;grid-template-columns:200px auto;grid-column-gap:5px">
+                                <span>@SelectedUser.Enabled</span>
+                                @if (@SelectedUser.Enabled)
                                 {
-                                    <div class="li-form-category-title">Airport: @aps.AptCode</div>
-
-                                    <div class="li-form-title">AMS API Token:</div>
-                                    <div>@aps.Token</div>
-
-                                    <div class="li-form-title">Webservice URL:</div>
-                                    <div>@aps.WSURL</div>
-
-                                    <div class="li-form-title">AMS Notification Queue:</div>
-                                    <div>@aps.NotificationQueue</div>
+                                <RadzenButton Text="Disable User" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" Click=@(args => DisableUser(SelectedUser.Token)) Style="padding-left:4px;padding-right:4px;width:180px" />
+                                }
+                                else
+                                {
+                                <RadzenButton Text="Enable User" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" Click=@(args => EnableUser(SelectedUser.Token)) Style="padding-left:4px;padding-right:4px;width:180px" />
                                 }
                             </div>
-                        </RadzenAccordionItem>
-                        <RadzenAccordionItem Text="Users">
-                            <div style="display:grid;grid-template-columns:220px auto;row-gap:2px;margin-top:10px">
-
-                                <div class="li-form-category-title" style="grid-column:1/1">Select User:</div>
-                                <div style="display:flex;flex-direction:row;gap:5px">
-                                    <RadzenDropDown Data="config.Users.Values" TextProperty="Name" ValueProperty="Token" TValue="string" Change="( (arg) => SelectedUserChange(arg))" Style="width:200px" />
-                                    <RadzenButton Text="Add User" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" Click=@(args => AddUser()) Style="padding-left:4px;padding-right:4px;width:180px" />
-                                </div>
-                                @if (SelectedUser != null)
+                            <div class="li-form-title">Token:</div>
+                            <div>@SelectedUser.Token</div>
+                            <div class="li-form-title">Allowed Airports:</div>
+                            <div style="display:flex;flex-direction:column;gap:2px">
+                                @foreach (string aa in SelectedUser.AllowedAirports)
                                 {
-                                    <div class="li-form-title">Enabled:</div>
-                                    <div style="display:grid;grid-template-columns:200px auto;grid-column-gap:5px">
-                                        <span>@SelectedUser.Enabled</span>
-                                        @if (@SelectedUser.Enabled)
-                                        {
-                                            <RadzenButton Text="Disable User" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" Click=@(args => DisableUser(SelectedUser.Token)) Style="padding-left:4px;padding-right:4px;width:180px" />
-                                        }
-                                        else
-                                        {
-                                            <RadzenButton Text="Enable User" ButtonStyle="ButtonStyle.Warning" Size="ButtonSize.Small" Click=@(args => EnableUser(SelectedUser.Token)) Style="padding-left:4px;padding-right:4px;width:180px" />
-                                        }
-                                    </div>
-                                    <div class="li-form-title">Token:</div>
-                                    <div>@SelectedUser.Token</div>
-                                    <div class="li-form-title">Allowed Airports:</div>
-                                    <div style="display:flex;flex-direction:column;gap:2px">
-                                        @foreach (string aa in SelectedUser.AllowedAirports)
-                                        {
-                                            <span>@aa</span>
-                                        }
-                                    </div>
-                                    <div class="li-form-title">Allowed Fields:</div>
-                                    <div style="display:flex;flex-direction:column;gap:2px">
-                                        @foreach (string aa in SelectedUser.AllowedFields)
-                                        {
-                                            <span>@aa </span>
-                                        }
-                                    </div>
-                                    <div class="li-form-title">Allowed Value Fields:</div>
-                                    <div style="display:flex;flex-direction:column;gap:2px">
-                                        @foreach (string aa in SelectedUser.AllowedCustomFields)
-                                        {
-                                            <span>@aa</span>
-                                        }
-                                    </div>
-                                    <div class="li-form-title">Defaults:</div>
-                                    <div style="display:flex;flex-direction:column;gap:2px">
-                                        @foreach (string aa in SelectedUser.Defaults.Keys)
-                                        {
-                                            <div> @aa  => @SelectedUser.Defaults[aa]</div>
-                                        }
-                                    </div>
-                                    <div class="li-form-title">Overrides:</div>
-                                    <div style="display:flex;flex-direction:column;gap:2px">
-                                        @foreach (string aa in SelectedUser.Overrides.Keys)
-                                        {
-                                            <div> @aa  => @SelectedUser.Overrides[aa]</div>
-                                        }
-                                    </div>
+                                <span>@aa</span>
                                 }
                             </div>
-                        </RadzenAccordionItem>
-                    </Items>
-                </RadzenAccordion>
+                            <div class="li-form-title">Allowed XML Access:</div>
+                            <div>@SelectedUser.AllowXML</div>
+                            <div class="li-form-title">Allowed Fields:</div>
+                            <div style="display:flex;flex-direction:column;gap:2px">
+                                @foreach (string aa in SelectedUser.AllowedFields)
+                                {
+                                <span>@aa </span>
+                                }
+                            </div>
+                            <div class="li-form-title">Allowed Value Fields:</div>
+                            <div style="display:flex;flex-direction:column;gap:2px">
+                                @foreach (string aa in SelectedUser.AllowedCustomFields)
+                                {
+                                <span>@aa</span>
+                                }
+                            </div>
+                            <div class="li-form-title">Defaults:</div>
+                            <div style="display:flex;flex-direction:column;gap:2px">
+                                @foreach (string aa in SelectedUser.Defaults.Keys)
+                                {
+                                <div> @aa  => @SelectedUser.Defaults[aa]</div>
+                                }
+                            </div>
+                            <div class="li-form-title">Overrides:</div>
+                            <div style="display:flex;flex-direction:column;gap:2px">
+                                @foreach (string aa in SelectedUser.Overrides.Keys)
+                                {
+                                <div> @aa  => @SelectedUser.Overrides[aa]</div>
+                                }
+                            </div>
+                            }
+                        </div>
+                    </RadzenAccordionItem>
+                </Items>
+            </RadzenAccordion>
             </div>
         </RadzenTabsItem>
         <RadzenTabsItem Text="Reference and Help">
@@ -154,10 +164,10 @@
                     <div style="grid-column:2">fromTime</div><div>Time from <i>NOW</i> for the start of the window for the operating time of the flight</div>
                     <div style="grid-column:2">toTime</div><div>Time from <i>NOW</i> for the end of the window for the operating time of the flight</div>
                     <div style="grid-column:2">schedDate</div><div>The scheduled date of operation of the flight</div>
-                    @foreach (string key in config.MappedQueryParameters.Keys)
+                     @foreach (string key in config.MappedQueryParameters.Keys)
                     {
-                        <div style="grid-column:2">@key</div>
-                        <div>Mapped to custom field @config.MappedQueryParameters[key]</div>
+                    <div style="grid-column:2">@key</div>
+                    <div>Mapped to custom field @config.MappedQueryParameters[key]</div>
                     }
 
                 </div>
@@ -182,149 +192,154 @@
 
 @code {
     private bool initOK = false;
-    public string? consoleText = null;
+public string? consoleText = null;
 
-    public List<string> AvailAirports { get; set; } = new List<string>();
-    public AirportSource SelectedAirport { get; set; } = new AirportSource();
-    public GetFlightsConfig? config;
-    public GetFlightsLogViewerComponent? logViewer;
-    private string? Result { get; set; }
-    private bool DataClean { get; set; } = true;
-    private bool UnsavedClean { get; set; } = true;
-    private string fileName { get; set; }
+public List<string> AvailAirports { get; set; } = new List<string>();
+public AirportSource SelectedAirport { get; set; } = new AirportSource();
+public GetFlightsConfig? config;
+public GetFlightsLogViewerComponent? logViewer;
+private string? Result { get; set; }
+private bool DataClean { get; set; } = true;
+private bool UnsavedClean { get; set; } = true;
+private string fileName { get; set; }
 
-    private User SelectedUser { get; set; }
-    protected override void OnInitialized()
+private User SelectedUser { get; set; }
+protected override void OnInitialized()
+{
+    try
     {
-        try
-        {
-            config = (GetFlightsConfig)configService.config.Clone();
-        } catch (Exception){
-            config = new GetFlightsConfig();
-        }
-
-
-        foreach (AirportSource apt in config.Airports)
-        {
-            AvailAirports.Add(apt.AptCode);
-        }
-       // simpleHTTPService.OnRestAPIEnable += RestServiceRunning;
-        eventExchange.OnFlightServiceRunning += FlightServiceRunning;
-
-        var fileTarget = (FileTarget)LogManager.Configuration.FindTargetByName("logfile");
-        var logEventInfo = new LogEventInfo { TimeStamp = DateTime.Now };
-        fileName = fileTarget.FileName.Render(logEventInfo);
-
-        initOK = true;
+    config = (GetFlightsConfig)configService.config.Clone();
+    }
+    catch (Exception)
+    {
+    config = new GetFlightsConfig();
+    }
 
 
-    }
-    public void TabChange(int index){
-        if(index == 3){
-            logViewer?.Reload();
-        }
-    }
-    public void NavigateHome()
+    foreach (AirportSource apt in config.Airports)
     {
-        UriHelper.NavigateTo("/omnihome");
+    AvailAirports.Add(apt.AptCode);
     }
-    public void DataChanged()
-    {
-        DataClean = false;
-        UnsavedClean = false;
-        StateHasChanged();
-    }
-    public void FlightServiceRunning(bool running)
-    {
-        InvokeAsync(() => StateHasChanged());
-    }
-    public void RestServiceRunning(bool running)
-    {
-        InvokeAsync(() => StateHasChanged());
-    }
-    public void EnableUser(string token)
-    {
-        config.Users[token].Enabled = true;
-        DataChanged();
-        StateHasChanged();
-    }
-    public void DisableUser(string token)
-    {
-        config.Users[token].Enabled = false;
-        DataChanged();
-        StateHasChanged();
-    }
-    public void DeleteQueryParam(string key)
-    {
-        config.MappedQueryParameters.Remove(key);
-        DataChanged();
-    }
-    public void Update()
-    {
-        StateHasChanged();
-    }
-    public void SaveConfig()
-    {
-        configService.SaveConfig(config);
-        UnsavedClean = true;
-        StateHasChanged();
-    }
-    public void Reload()
-    {
-        config = (GetFlightsConfig)configService.config.Clone();
-        DataClean = true;
-        UnsavedClean = true;
-        StateHasChanged();
-    }
-    public void Restart()
-    {
-        //  flightService.Restart();
-        StateHasChanged();
-    }
-    public void ApplyConfig()
-    {
-        configService.ApplyConfig(config);
-        DataClean = true;
-        StateHasChanged();
-    }
-    public void SelectedUserChange(object arg)
-    {
+    // simpleHTTPService.OnRestAPIEnable += RestServiceRunning;
+    eventExchange.OnFlightServiceRunning += FlightServiceRunning;
 
-        string? userKey = arg as string;
-        SelectedUser = config.Users[userKey];
-        StateHasChanged();
-    }
-    public async Task AddUser()
-    {
+    var fileTarget = (FileTarget)LogManager.Configuration.FindTargetByName("logfile");
+    var logEventInfo = new LogEventInfo { TimeStamp = DateTime.Now };
+    fileName = fileTarget.FileName.Render(logEventInfo);
 
-        string userName  = (string) await dialogService.OpenAsync<GetUserNameDialog>("Add New User", null, new DialogOptions() { ShowTitle = true, Style = "min-height:auto;min-width:auto;width:700px", CloseDialogOnEsc = false });
+    initOK = true;
 
-        if(userName==null){
-            return;
-        }
-        User nu = (User)config.Users["default"].Clone();
-        nu.Token = Guid.NewGuid().ToString();
-        nu.Name = userName;
-        config.Users.Add(nu.Token, nu);
-        DataChanged();
-        StateHasChanged();
 
-        dialogService.Alert($"User {userName} Added", "Add User", new AlertOptions() { OkButtonText = "OK" });
-    }
-    public void Dispose()
+}
+public void TabChange(int index)
+{
+    if (index == 3)
     {
-        eventExchange.OnFlightServiceRunning -= FlightServiceRunning;
+    logViewer?.Reload();
     }
-    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+}
+public void NavigateHome()
+{
+    UriHelper.NavigateTo("/omnihome");
+}
+public void DataChanged()
+{
+    DataClean = false;
+    UnsavedClean = false;
+    StateHasChanged();
+}
+public void FlightServiceRunning(bool running)
+{
+    InvokeAsync(() => StateHasChanged());
+}
+public void RestServiceRunning(bool running)
+{
+    InvokeAsync(() => StateHasChanged());
+}
+public void EnableUser(string token)
+{
+    config.Users[token].Enabled = true;
+    DataChanged();
+    StateHasChanged();
+}
+public void DisableUser(string token)
+{
+    config.Users[token].Enabled = false;
+    DataChanged();
+    StateHasChanged();
+}
+public void DeleteQueryParam(string key)
+{
+    config.MappedQueryParameters.Remove(key);
+    DataChanged();
+}
+public void Update()
+{
+    StateHasChanged();
+}
+public void SaveConfig()
+{
+    configService.SaveConfig(config);
+    UnsavedClean = true;
+    StateHasChanged();
+}
+public void Reload()
+{
+    config = (GetFlightsConfig)configService.config.Clone();
+    DataClean = true;
+    UnsavedClean = true;
+    StateHasChanged();
+}
+public void Restart()
+{
+    //  flightService.Restart();
+    StateHasChanged();
+}
+public void ApplyConfig()
+{
+    configService.ApplyConfig(config);
+    DataClean = true;
+    StateHasChanged();
+}
+public void SelectedUserChange(object arg)
+{
+
+    string? userKey = arg as string;
+    SelectedUser = config.Users[userKey];
+    StateHasChanged();
+}
+public async Task AddUser()
+{
+
+    string userName = (string)await dialogService.OpenAsync<GetUserNameDialog>("Add New User", null, new DialogOptions() { ShowTitle = true, Style = "min-height:auto;min-width:auto;width:700px", CloseDialogOnEsc = false });
+
+    if (userName == null)
     {
-        return new StandaloneEditorConstructionOptions
-            {
-                AutomaticLayout = true,
-                Minimap = new EditorMinimapOptions() { Enabled = false },
-                FontSize = 10,
-                Find = new EditorFindOptions() { SeedSearchStringFromSelection = true },
-                ReadOnly = true,
-                ScrollBeyondLastLine = false,
-            };
+    return;
     }
+    User nu = (User)config.Users["default"].Clone();
+    nu.Token = Guid.NewGuid().ToString();
+    nu.Name = userName;
+    config.Users.Add(nu.Token, nu);
+    DataChanged();
+    StateHasChanged();
+
+    dialogService.Alert($"User {userName} Added", "Add User", new AlertOptions() { OkButtonText = "OK" });
+}
+public void Dispose()
+{
+    eventExchange.OnFlightServiceRunning -= FlightServiceRunning;
+}
+private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+{
+    return new StandaloneEditorConstructionOptions
+    {
+        AutomaticLayout = true,
+        Minimap = new EditorMinimapOptions() { Enabled = false },
+        FontSize = 10,
+        Find = new EditorFindOptions() { SeedSearchStringFromSelection = true },
+        ReadOnly = true,
+        ScrollBeyondLastLine = false,
+    };
+}
 }

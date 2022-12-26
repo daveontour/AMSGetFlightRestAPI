@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Xml;
-using NLog;
 using AMSGetFlights.Services;
 using Microsoft.AspNetCore.Http.Extensions;
 
@@ -14,16 +13,17 @@ namespace AMSGetFlights.Controllers
     [ApiController]
     public partial class FlightRequestAPIController : ControllerBase
     {
-        private IFlightRequestHandler handler;
-        private IGetFlightsConfigService configService;
-        private IEventExchange eventExchange;
-        private readonly Logger logger = LogManager.GetLogger("consoleLogger");
+        private readonly IFlightRequestHandler handler;
+        private readonly IGetFlightsConfigService configService;
+        private readonly IEventExchange eventExchange;
+        private readonly IFlightRepository repo;
 
-        public FlightRequestAPIController(IFlightRequestHandler handler, IGetFlightsConfigService configService, IEventExchange eventExchange)
+        public FlightRequestAPIController(IFlightRequestHandler handler, IGetFlightsConfigService configService, IEventExchange eventExchange,IFlightRepository repo)
         {
             this.handler = handler;
             this.configService = configService;
             this.eventExchange = eventExchange;
+            this.repo = repo;
         }
 
         [HttpGet("status")]
@@ -31,7 +31,7 @@ namespace AMSGetFlights.Controllers
         {
             try
             {
-                ServerStatus status = new ServerStatus();
+                ServerStatus status = new();
                 GetFlightQueryObject query = handler.GetQueryObject(Request, null);
 
 
@@ -44,16 +44,18 @@ namespace AMSGetFlights.Controllers
                 Process currentProcess = Process.GetCurrentProcess();
                 long usedMemory = currentProcess.PrivateMemorySize64;
 
-                status.EarliestEntry = handler.repo.MinDateTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
-                status.LatestEntry = handler.repo.MaxDateTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
-                status.NumberOfEntries = handler.repo.GetNumEntries();
+                status.EarliestEntry = repo.MinDateTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+                status.LatestEntry = repo.MaxDateTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+                status.NumberOfEntries = repo.GetNumEntries();
                 status.ProcessMemory = usedMemory;
 
                 return status;
             } catch (Exception)
             {
-                ServerStatus status = new ServerStatus();
-                status.Error = "Error";
+                ServerStatus status = new()
+                {
+                    Error = "Error"
+                };
                 return status;
             }
             finally
@@ -115,11 +117,11 @@ namespace AMSGetFlights.Controllers
                     }
 
                     List<AMSFlight> tt = handler.GetSingleFlight(xml, query.token);
-                    query.NumberOfResults = tt.Count();
+                    query.NumberOfResults = tt.Count;
 
                     Log("Success", query, query.NumberOfResults.ToString(), warn: true); 
  
-                    GetFlightsResponse res = new GetFlightsResponse() { query = query, flights = tt, partialResutlsRetuned = queryStatus == "PARTIAL" ? true : false };
+                    GetFlightsResponse res = new () { query = query, flights = tt, partialResutlsRetuned = queryStatus == "PARTIAL" };
                     Response.StatusCode = StatusCodes.Status200OK;
 
                     return res;
@@ -132,11 +134,11 @@ namespace AMSGetFlights.Controllers
                     }
 
                     List<AMSFlight> tt = handler.GetFlightsFromXML(xml,query);
-                    query.NumberOfResults = tt.Count();
+                    query.NumberOfResults = tt.Count;
 
                     Log("Success", query, query.NumberOfResults.ToString(), warn: true);
 
-                    GetFlightsResponse res = new GetFlightsResponse() { query = query, flights = tt, partialResutlsRetuned = queryStatus == "PARTIAL" ? true : false };
+                    GetFlightsResponse res = new() { query = query, flights = tt, partialResutlsRetuned = queryStatus == "PARTIAL" };
                     Response.StatusCode = StatusCodes.Status200OK;
 
                     return res;
@@ -160,25 +162,25 @@ namespace AMSGetFlights.Controllers
 
                 //Get the flights
                 List<AMSFlight> t = handler.GetFlights(query);
-                query.NumberOfResults = t.Count();
+                query.NumberOfResults = t.Count;
 
                 // Return the results
                 Log("Success", query, query.NumberOfResults.ToString(),info: true);
-                GetFlightsResponse r = new GetFlightsResponse() { query = query, flights = t, partialResutlsRetuned = queryStatus == "PARTIAL" ? true : false };
+                GetFlightsResponse r = new() { query = query, flights = t, partialResutlsRetuned = queryStatus == "PARTIAL" };
                 Response.StatusCode = StatusCodes.Status200OK;
 
                 return r;
             }
             catch (Exception ex)
             {
-                Log($"Query String: {Request.QueryString.ToString()}. Error Message {ex.Message}", error: true);
+                Log($"Query String: {Request.QueryString}. Error Message {ex.Message}", error: true);
 
                 Response.StatusCode = StatusCodes.Status500InternalServerError;
                 return new GetFlightsResponse() { error = $"{ex.Message}" };
             }
             finally
             {
-                System.GC.Collect();
+                GC.Collect();
             }
         }
 
@@ -233,6 +235,17 @@ namespace AMSGetFlights.Controllers
                         StatusCode = 400
                     };
                 }
+                if (!configService.config.Users[query.token].AllowXML)
+                {
+                    Log("XML Not Allowed for User", query, warn: true);
+
+                    return new ContentResult
+                    {
+                        Content = $"<error>XML Access is Not Enabled for User</error>",
+                        ContentType = "text/xml",
+                        StatusCode = 400
+                    };
+                }
 
                 string queryStatus = handler.CheckQueryStatus(query);
 
@@ -249,10 +262,10 @@ namespace AMSGetFlights.Controllers
                         };
                     }
 
-                    List<AMSFlight> tt = handler.GetSingleFlight(xml, query.token);
-                    query.NumberOfResults = tt.Count();
+                    List<AMSFlight> tt = handler.GetSingleFlight(xml, query.token, true);
+                    query.NumberOfResults = tt.Count;
 
-                    StringBuilder sbx = new StringBuilder();
+                    StringBuilder sbx = new();
                     sbx.AppendLine("<Flights>");
                     foreach (AMSFlight flight in tt)
                     {
@@ -281,10 +294,10 @@ namespace AMSGetFlights.Controllers
                         };
                     }
 
-                    List<AMSFlight> tt = handler.GetFlightsFromXML(xml, query);
-                    query.NumberOfResults = tt.Count();
+                    List<AMSFlight> tt = handler.GetFlightsFromXML(xml, query, true);
+                    query.NumberOfResults = tt.Count;
 
-                    StringBuilder sbx = new StringBuilder();
+                    StringBuilder sbx = new();
                     sbx.AppendLine("<Flights>");
                     foreach (AMSFlight flight in tt)
                     {
@@ -326,9 +339,9 @@ namespace AMSGetFlights.Controllers
                 }
 
                 List<AMSFlight> t = handler.GetFlights(query, true);
-                query.NumberOfResults = t.Count();
+                query.NumberOfResults = t.Count;
 
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new();
                 sb.AppendLine("<Flights>");
                 foreach (AMSFlight flight in t)
                 {
@@ -394,6 +407,9 @@ namespace AMSGetFlights.Controllers
             {
                 return "Flight Not Found";
             }
+            xml = xml.Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-datatypes\"", "")
+         .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-messages\"", "")
+         .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-webservice\"", "");
             return xml; 
         }
         private string GetOutOfBoundsFlights(GetFlightQueryObject query)
@@ -419,6 +435,9 @@ namespace AMSGetFlights.Controllers
             {
                 return "Flight Not Found";
             }
+            xml = xml.Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-datatypes\"", "")
+         .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-messages\"", "")
+         .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-webservice\"", "");
             return xml;
         }
         private void Log(string result,  GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false)
@@ -427,7 +446,7 @@ namespace AMSGetFlights.Controllers
         }
         public string PrintXML(string xml)
         {
-            string result = "";
+            string result;
 
             MemoryStream mStream = new();
             XmlTextWriter writer = new(mStream, Encoding.Unicode);

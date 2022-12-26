@@ -2,7 +2,6 @@
 using Newtonsoft.Json;
 using System.Xml;
 
-
 namespace AMSGetFlights.Model
 {
     public class AirportSource : ICloneable
@@ -22,6 +21,7 @@ namespace AMSGetFlights.Model
         public string Token { get; set; }
         public string? Name { get; set; }
         public bool Enabled { get; set; } = false;
+        public bool AllowXML { get; set; } = false;
         public List<string> AllowedAirports { get; set; } = new List<string>();
         public List<string> AllowedFields { get; set; } = new List<string>();
         public List<string> AllowedCustomFields { get; set; } = new List<string>();
@@ -85,17 +85,17 @@ namespace AMSGetFlights.Model
         }
         public AMSFlight(XmlDocument doc, GetFlightsConfig config)
         {
-            XmlNode node = doc.SelectSingleNode("//Flight");
+            XmlNode node = doc.SelectSingleNode("//*[local-name() = 'Flight']");
             ConfigFlight(node, config);
             XmlRaw = node.OuterXml;
-
         }
-
         public AMSFlight(XmlNode node, GetFlightsConfig config)
         {
+
             ConfigFlight(node, config);
             XmlRaw = node.OuterXml;
         }
+
 
         public void ConfigFlight(XmlNode node, GetFlightsConfig config)
         {
@@ -178,14 +178,14 @@ namespace AMSGetFlights.Model
             //Custom Table Processing
             foreach (XmlNode xmlNode in node.SelectNodes(".//FlightState/TableValue"))
             {
-                string name = xmlNode.Attributes["propertyName"].Value;
+                string name = xmlNode.Attributes["propertyName"]?.Value;
                 List<Dictionary<string, string>> table = new List<Dictionary<string, string>>();
                 foreach (XmlNode row in xmlNode.SelectNodes("./Row"))
                 {
                     Dictionary<string, string> dict = new Dictionary<string, string>();
                     foreach (XmlNode e in row.SelectNodes("./Value"))
                     {
-                        string prop = e.Attributes["propertyName"].Value;
+                        string prop = e.Attributes["propertyName"]?.Value;
                         string value = e.InnerText;
                         dict.Add(prop, value);
                     }
@@ -354,6 +354,7 @@ namespace AMSGetFlights.Model
         public List<Dictionary<string, string>> CarouselSlots { get; set; } = new List<Dictionary<string, string>>();
         public List<Dictionary<string, string>> GateSlots { get; set; } = new List<Dictionary<string, string>>();
         public Dictionary<string, List<Dictionary<string, string>>> CustomTables { get; set; } = new Dictionary<string, List<Dictionary<string, string>>>();
+        [JsonIgnore] 
         public string XmlRaw { get; set; }
         public string LastUpdated { get; private set; }
 

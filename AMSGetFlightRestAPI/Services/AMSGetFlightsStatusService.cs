@@ -13,23 +13,20 @@ namespace AMSGetFlights.Services;
 
 public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
 {
-    //public static Action? OnServerFlightsUpdates;
-    //public static Action? OnServerNoFlightsUpdates;
-    //public static Action<bool>? OnFlightServiceRunning;
-    //public static Action<string>? OnConsoleMessage;
-
     public bool Running { get; set; } = false;
+
     private bool startListenLoop;
-    private IFlightRepository repo;
     private int advanceWindow = 10;
     private int backWindow = -3;
     private int chunkSize = 1;
     private List<string> listenerQueues = new List<string>();   
-    public static readonly Logger logger = LogManager.GetLogger("consoleLogger");
-    private IGetFlightsConfigService configService;
-    private int i = 1;
+    private readonly Logger logger = LogManager.GetLogger("consoleLogger");
+   
     private static AMSGetFlightsStatusService Instance { get; set; }
-    public IEventExchange eventExchange;
+
+    private readonly IEventExchange eventExchange;
+    private readonly IFlightRepository repo;
+    private readonly IGetFlightsConfigService configService;
     public AMSGetFlightsStatusService(IFlightRepository repo, IGetFlightsConfigService configService, IEventExchange eventExchange)
     {
         this.repo = repo;
@@ -166,7 +163,7 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
 
             do
             {
-                Console.WriteLine($"Update Job Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
+                eventExchange.MonitorMessage($"Update Job Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
                 logger.Info($"Update Job Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
                 string xml = GetFlightsXML(chunkFromTime, chunkToTime, airport.AptCode, airport.Token, airport.WSURL).Result;
                 if (xml != null)

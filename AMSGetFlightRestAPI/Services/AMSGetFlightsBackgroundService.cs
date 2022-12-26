@@ -2,7 +2,7 @@
 {
     public class AMSGetFlightsBackgroundService : BackgroundService
     {
-        private IAMSGetFlightStatusService service;
+        private readonly IAMSGetFlightStatusService service;
 
         public AMSGetFlightsBackgroundService(IAMSGetFlightStatusService service)
         {
