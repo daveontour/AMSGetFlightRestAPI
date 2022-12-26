@@ -5,6 +5,8 @@ namespace AMSGetFlights.Model
 
     public class GetFlightQueryObject
     {
+        public string QueryID { get; set; } = Guid.NewGuid().ToString();
+        public bool IsOutOfBoundsQuery { get; set; } = false;  
         public bool IsSingleFlight
         {
             get
@@ -158,7 +160,7 @@ namespace AMSGetFlights.Model
         }
         public DateTime startQuery { get; set; }
         public DateTime endQuery { get; set; }
-        public int NumberOfResults { get; set; }
+        public int NumberOfResults { get; set; } = -1;
 
         private Dictionary<string, string> _queryParams;
         public Dictionary<string, string> queryParams
@@ -187,11 +189,11 @@ namespace AMSGetFlights.Model
                     startQuery = DateTime.MinValue;
                 }
             }
-            else if (_queryParams.ContainsKey("fromTime"))
+            else if (_queryParams.ContainsKey("fromtime"))
             {
                 try
                 {
-                    startQuery = DateTime.Parse(_queryParams["fromTime"]);
+                    startQuery = DateTime.Parse(_queryParams["fromtime"]);
                 }
                 catch (Exception)
                 {
@@ -217,11 +219,11 @@ namespace AMSGetFlights.Model
                     endQuery = DateTime.MinValue;
                 }
             }
-            else if (_queryParams.ContainsKey("toTime"))
+            else if (_queryParams.ContainsKey("totime"))
             {
                 try
                 {
-                    endQuery = DateTime.Parse(_queryParams["toTime"]);
+                    endQuery = DateTime.Parse(_queryParams["totime"]);
                 }
                 catch (Exception)
                 {
@@ -230,7 +232,14 @@ namespace AMSGetFlights.Model
             }
             else
             {
-                endQuery = DateTime.Now.AddHours(24);
+                if (_queryParams.ContainsKey("fromtime"))
+                {
+                    endQuery = startQuery.AddDays(1);
+                }
+                else
+                {
+                    endQuery = DateTime.Now.AddHours(24);
+                }
             }
 
             if (_queryParams.ContainsKey("scheddate"))

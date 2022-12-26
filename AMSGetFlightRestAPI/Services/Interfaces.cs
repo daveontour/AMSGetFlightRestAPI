@@ -20,12 +20,11 @@ namespace AMSGetFlights.Services
         void URLRequestMade(string message);
         void APIRequestMade(GetFlightQueryObject query);
         void MonitorMessage(string message);
-
         void FlightRepositoryUpdated();
         void FlightUpdatedOrAdded(AMSFlight flt);
         void FlightDeleted(AMSFlight flt);
         void FlightServiceRunning(bool running);
-        void Log(string result, GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false);
+        void Log(string result, GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false, bool showQuery = false);
     }
 
 }

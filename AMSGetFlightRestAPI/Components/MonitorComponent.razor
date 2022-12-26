@@ -4,9 +4,10 @@
 @inject IEventExchange eventExchange;
 
 @implements IDisposable;
-
-<MonacoEditor @ref="editor" ConstructionOptions="EditorConstructionOptions" CssClass="amsget-monaco" />
-
+<div style="height:100%;width:100%">
+    <RadzenButton Text="Clear" Click="Clear" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" Style="margin:10px;width:140px" />
+    <MonacoEditor @ref="editor" ConstructionOptions="EditorConstructionOptions" CssClass="li-console-monaco-editor" />
+</div>
 @code {
 
     public string? consoleText = null;
@@ -20,7 +21,9 @@
             {
                 editor.SetValue(consoleText);
             }
-        } catch (Exception ex){
+        }
+        catch (Exception ex)
+        {
             Console.WriteLine(ex.Message);
         }
     }
@@ -86,6 +89,11 @@
             await UpdateEditor();
         }
         catch (Exception) { }
+    }
+    public void Clear()
+    {
+
+        editor?.SetValue("");
     }
     public void Dispose()
     {

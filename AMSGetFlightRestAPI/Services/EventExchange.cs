@@ -11,6 +11,7 @@ namespace AMSGetFlights.Services
         public event Action? OnFlightRepositoryUpdated;
         public event Action<AMSFlight>? OnFlightUpdatedOrAdded;
         public event Action<GetFlightQueryObject>? OnAPIRequestMade;
+        public event Action<GetFlightQueryObject>? OnAPIRequestResult;
         public event Action<string>? OnAPIURLRequestMade;
         public event Action<string>? OnMonitorMessage;
         public event Action? OnServerFlightsUpdates;
@@ -32,7 +33,10 @@ namespace AMSGetFlights.Services
         {
             OnAPIRequestMade?.Invoke(query);
         }
-
+        public void APIRequestResult(GetFlightQueryObject query)
+        {
+            OnAPIRequestResult?.Invoke(query);
+        }
         public void FlightRepositoryUpdated()
         {
             OnFlightRepositoryUpdated?.Invoke();
@@ -53,7 +57,7 @@ namespace AMSGetFlights.Services
             OnFlightServiceRunning?.Invoke(running);
         }
 
-        public void Log(string result, GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false)
+        public void Log(string result, GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false, bool showQuery = false)
         {
             LogEntry lee = new ();
             if (result != null)
@@ -69,6 +73,7 @@ namespace AMSGetFlights.Services
                 lee.RecordsReturned = count;
             }
             MonitorMessage(result);
+            if (showQuery && query != null)MonitorMessage(JsonConvert.SerializeObject(query, Formatting.Indented));
 
             if (error) logger.Error(JsonConvert.SerializeObject(lee,Formatting.Indented));
             if (warn) logger.Warn(JsonConvert.SerializeObject(lee, Formatting.Indented));

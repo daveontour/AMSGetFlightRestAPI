@@ -212,7 +212,7 @@ div.li-execution-page div.rz-tabview-panel {
     height: 100%;
 }
 .li-console-monaco-editor {
-    height: 100%;
+    height: calc(100% - 50px);
     width:100%;
 }
 

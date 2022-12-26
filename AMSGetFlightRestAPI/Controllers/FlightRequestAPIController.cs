@@ -74,7 +74,7 @@ namespace AMSGetFlights.Controllers
             if (!configService.config.AllowJSONFormat)
             {
                
-                Log("JSON Request. Not enabled", warn: true);
+                Log($"JSON Request. JSON Not enabled. {Request.GetEncodedPathAndQuery}", warn: true);
                 return new GetFlightsResponse() { error = "Not Enabled" };
             }
 
@@ -82,6 +82,7 @@ namespace AMSGetFlights.Controllers
             {
                 // Parse the input
                 GetFlightQueryObject query = handler.GetQueryObject(Request, "JSON");
+               
 
                 //Check for Annonymous users
                 if (query.token == "default" && !configService.config.AllowAnnonymousUsers)
@@ -110,6 +111,8 @@ namespace AMSGetFlights.Controllers
                 // If configured go directly to AMS for a specific flight if out of bounds
                 if ((queryStatus =="OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnSingleFlightCacheFailure  && query.IsSingleFlight)
                 {
+                    query.IsOutOfBoundsQuery = true;
+                    Log("Single Flight Out of Bounds Request", query, warn:true, showQuery:true);
                     string xml = GetOutOfBoundsFlight(query);
                     if (xml == "Flight Not Found")
                     {
@@ -119,14 +122,16 @@ namespace AMSGetFlights.Controllers
                     List<AMSFlight> tt = handler.GetSingleFlight(xml, query.token);
                     query.NumberOfResults = tt.Count;
 
-                    Log("Success", query, query.NumberOfResults.ToString(), warn: true); 
- 
+                    Log("Success", query, query.NumberOfResults.ToString(), warn: true,showQuery:true);
+
                     GetFlightsResponse res = new () { query = query, flights = tt, partialResutlsRetuned = queryStatus == "PARTIAL" };
                     Response.StatusCode = StatusCodes.Status200OK;
 
                     return res;
                 } else if ((queryStatus == "OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnMultiFlightCacheFailure)
                 {
+                    query.IsOutOfBoundsQuery = true;
+                    Log("Multi Flight Out of Bounds Request", query, warn: true, showQuery:true);
                     string xml = GetOutOfBoundsFlights(query);
                     if (xml == "Flights Not Found")
                     {
@@ -136,7 +141,7 @@ namespace AMSGetFlights.Controllers
                     List<AMSFlight> tt = handler.GetFlightsFromXML(xml,query);
                     query.NumberOfResults = tt.Count;
 
-                    Log("Success", query, query.NumberOfResults.ToString(), warn: true);
+                    Log("Success", query, query.NumberOfResults.ToString(), warn: true, showQuery: true);
 
                     GetFlightsResponse res = new() { query = query, flights = tt, partialResutlsRetuned = queryStatus == "PARTIAL" };
                     Response.StatusCode = StatusCodes.Status200OK;
@@ -191,7 +196,7 @@ namespace AMSGetFlights.Controllers
 
             if (!configService.config.AllowAMSXFormat)
             {
-                Log("XML Request. Not enabled", warn: true);
+                Log($"XML Request. XML Not enabled. {Request.GetEncodedPathAndQuery}", warn: true);
                 return new ContentResult
                 {
                     Content = $"<error>XML Request Not Enabled</error>",
@@ -251,6 +256,8 @@ namespace AMSGetFlights.Controllers
 
                 if ((queryStatus == "OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnSingleFlightCacheFailure && query.IsSingleFlight)
                 {
+                    query.IsOutOfBoundsQuery = true;
+                    Log("Single Flight Out of Bounds Request", query, warn: true, showQuery: true);
                     string xml = GetOutOfBoundsFlight(query);
                     if (xml == "Flight Not Found")
                     {
@@ -273,7 +280,7 @@ namespace AMSGetFlights.Controllers
                     }
                     sbx.AppendLine("</Flights>");
 
-                    Log("Success", query, info: true);
+                    Log("Success", query, info: true, showQuery: true);
                     return new ContentResult
                     {
                         Content = PrintXML(sbx.ToString()),
@@ -283,6 +290,8 @@ namespace AMSGetFlights.Controllers
                 }
                 else if ((queryStatus == "OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnMultiFlightCacheFailure)
                 {
+                    query.IsOutOfBoundsQuery = true;
+                    Log("Multi Flight Out of Bounds Request",query, warn: true, showQuery: true);
                     string xml = GetOutOfBoundsFlights(query);
                     if (xml == "Flight Not Found")
                     {
@@ -305,7 +314,7 @@ namespace AMSGetFlights.Controllers
                     }
                     sbx.AppendLine("</Flights>");
 
-                    Log("Sucess", query, info: true);
+                    Log("Sucess", query, info: true, showQuery: true);
 
                     return new ContentResult
                     {
@@ -440,9 +449,9 @@ namespace AMSGetFlights.Controllers
          .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-webservice\"", "");
             return xml;
         }
-        private void Log(string result,  GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false)
+        private void Log(string result,  GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false, bool showQuery = false)
         {
-            eventExchange.Log(result, query, recordsReturned, info, warn, error);
+            eventExchange.Log(result, query, recordsReturned, info, warn, error, showQuery);
         }
         public string PrintXML(string xml)
         {
