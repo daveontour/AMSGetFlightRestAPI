@@ -1,5 +1,7 @@
-﻿using AMSGetFlights.Services;
+﻿using AMSGetFlights.Model;
+using AMSGetFlights.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -17,36 +19,76 @@ namespace AMSGetFlights.Controllers
             this.subManager = subManager;
         }
 
-        // GET: api/<SubscriptionController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        [HttpGet("status")]
+        public ActionResult<Subscription> GetStatus()
         {
-            return new string[] { "value1", "value2" };
+            return subManager.Subscriptions.ElementAt(0);
         }
 
-        // GET api/<SubscriptionController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpPost("subscribe")]
+        public ActionResult<Subscription> Subscribe([FromBody] Subscription sub)
         {
-            return "value";
+            string user = GetProvidedUser();
+            return subManager.Subscribe(sub);
         }
 
-        // POST api/<SubscriptionController>
-        [HttpPost]
-        public void Post([FromBody] string value)
+        [HttpGet("subscriptions")]
+        public ActionResult<IEnumerable<Subscription>> Subscriptions()
         {
+            string user = GetProvidedUser();
+            return subManager.GetSubscriptionsForUser(user);
         }
-
-        // PUT api/<SubscriptionController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpGet("disable/{ID}")]
+        public ActionResult<Subscription> DisableSubscription(string ID)
         {
+            string user = GetProvidedUser();
+            return subManager.DisableSubscription(ID, user);
         }
-
-        // DELETE api/<SubscriptionController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        [HttpGet("enable/{ID}")]
+        public ActionResult<Subscription> EnableSubscription(string ID)
         {
+            string user = GetProvidedUser();
+            return subManager.EnableSubscription(ID,user);
+        }
+        [HttpPost("update")]
+        public ActionResult<Subscription> UpdateSubscription([FromBody] Subscription sub)
+        {
+            string user = GetProvidedUser();
+            return subManager.UpdateSubscription(sub, user);
+        }
+        [HttpGet("delete/{ID}")]
+        public ActionResult<string> DeleteSubscription(string ID)
+        {
+            string user = GetProvidedUser();
+            return subManager.DeleteSubscription(ID, user);
+        }
+        [HttpGet("clearbacklog/{ID}")]
+        public ActionResult<Subscription> DeleteBacklog(string ID)
+        {
+            string user = GetProvidedUser();
+            return subManager.ClearBacklog(ID, user);
+        }
+        [HttpGet("sendbacklog/{ID}")]
+        public ActionResult<string> SendBacklog(string ID)
+        {
+            string user = GetProvidedUser();
+            return subManager.SendBacklog(ID, user);
+        }
+        private string GetProvidedUser()
+        {
+            Request.Headers.TryGetValue("Authorization", out StringValues values);
+
+            string providedUser;
+            try
+            {
+                providedUser = values.ElementAt(0);
+                providedUser = providedUser.Replace("Bearer", "").Trim();
+            }
+            catch (Exception)
+            {
+                providedUser = "default";
+            }
+            return providedUser;
         }
     }
 }

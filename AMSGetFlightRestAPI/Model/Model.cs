@@ -448,5 +448,6 @@ namespace AMSGetFlights.Model
 
         [JsonIgnore]
         public ConcurrentQueue<AMSFlight> BackLog { get; set; } = new();
+        public string StatusMessage { get; internal set; }
     }
 }
