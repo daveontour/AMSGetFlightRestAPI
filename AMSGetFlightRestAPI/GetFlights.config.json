@@ -1,4 +1,6 @@
 {
+  "EnableSubscriptions": true,
+  "IsTest": true,
   "Storage": "SQLite",
   "SQLConnectionString": "Integrated Security=SSPI;Persist Security Info=False;Database=FLIGHTRESTAPIDB;Server=localhost;",
   "AdminPass": "omnipass",

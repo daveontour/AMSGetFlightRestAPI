@@ -24,6 +24,9 @@ namespace AMSGetFlights.Services
         public Dictionary<string, string> CustomFieldToParameter { get; set; } = new Dictionary<string, string>();
         public List<AirportSource> Airports { get; set; } = new List<AirportSource>();
         public Dictionary<string, User> Users { get; set; } = new Dictionary<string, User>();
+        public bool IsTest { get; set; } = false;
+        public bool EnableSubscriptions { get; set; } = false;  
+
         public List<string> ValidUserFields(string user)
         {
             if (Users.ContainsKey(user))

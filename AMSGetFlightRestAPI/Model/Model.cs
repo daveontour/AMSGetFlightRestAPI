@@ -1,5 +1,6 @@
 ﻿using AMSGetFlights.Services;
 using Newtonsoft.Json;
+using System.Collections.Concurrent;
 using System.Xml;
 
 namespace AMSGetFlights.Model
@@ -420,5 +421,32 @@ namespace AMSGetFlights.Model
             return (CodeShare)MemberwiseClone();
         }
 
+    }
+    public class Subscription
+    {
+        public string? SubscriberToken { get; set; }
+        public string? SubscriberName { get; set; }
+        public string? SubscriptionID { get; set; }
+        public string DataFormat { get; set; }  //JSON or XML
+        public bool IsArrival { get; set; } = false;
+        public bool IsDeparture { get; set; } = false;
+        public bool IsEnabled { get; set; } = true;
+        public string? AirlineIATA { get; set; }
+        public string? AirportIATA { get; set; }
+        public string? GroundHandler { get; set; }
+        public int MaxHorizonInHours { get; set; } = 24;
+        public int MinHorizonInHours { get; set; } = -24;
+        public string? AuthorizationHeaderName { get; set; }
+        public string? AuthorizationHeaderValue { get; set; }
+        public string? CallBackURL { get; set; }
+        public int ConsecutiveUnsuccessfullCalls { get; set; } = 0;
+        public int ConsecutiveSuccessfullCalls { get; set; } = 0;
+        public DateTime? LastSuccess { get; set; }
+        public DateTime? LastFailure { get; set; }
+        public string? LastError { get; set; }
+        public DateTime ValidUntil { get; set; } = DateTime.MaxValue;
+
+        [JsonIgnore]
+        public ConcurrentQueue<AMSFlight> BackLog { get; set; } = new();
     }
 }

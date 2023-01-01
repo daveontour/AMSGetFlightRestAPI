@@ -12,8 +12,12 @@ GetFlightsConfig config = JsonConvert.DeserializeObject<GetFlightsConfig>(File.R
 // Add services to the container.
 builder.Services.AddRazorPages();
 
+// Service for monitoring AMS
 builder.Services.AddHostedService<AMSGetFlightsBackgroundService>();
 
+// Service to distribute updates 
+builder.Services.AddSingleton<SubscriptionDispatcher>();
+builder.Services.AddSingleton<SubscriptionManager>();
 builder.Services.AddSingleton<IEventExchange, EventExchange>();
 builder.Services.AddSingleton<IAMSGetFlightStatusService,AMSGetFlightsStatusService>();
 builder.Services.AddSingleton<IGetFlightsConfigService,GetFlightsConfigService>();
@@ -36,6 +40,10 @@ builder.Services.AddControllersWithViews().AddNewtonsoftJson(options =>
     options.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
 });
 
+if (config.EnableSubscriptions)
+{
+    builder.Services.AddHostedService<SubscriptionBackgroundService>();
+}
 
 builder.Services.AddScoped<DialogService>();
 builder.Services.AddScoped<NotificationService>();
