@@ -160,6 +160,7 @@ namespace AMSGetFlights.Model
         }
         public DateTime startQuery { get; set; }
         public DateTime endQuery { get; set; }
+        public DateTime updatedFrom { get; set; }
         public int NumberOfResults { get; set; } = -1;
 
         private Dictionary<string, string> _queryParams;
@@ -242,7 +243,21 @@ namespace AMSGetFlights.Model
                 }
             }
 
-            if (_queryParams.ContainsKey("scheddate"))
+            if (_queryParams.ContainsKey("updatedFrom"))
+            {
+                try
+                {
+                    updatedFrom = DateTime.Parse(_queryParams["updatedFrom"]);
+                } catch (Exception)
+                {
+                    updatedFrom = DateTime.MinValue;
+                }
+            } else
+            {
+                updatedFrom = DateTime.MinValue;
+            }
+
+                if (_queryParams.ContainsKey("scheddate"))
             {
                 startQuery = DateTime.Parse(_queryParams["scheddate"]);
                 endQuery = DateTime.Parse(_queryParams["scheddate"]).AddDays(1);

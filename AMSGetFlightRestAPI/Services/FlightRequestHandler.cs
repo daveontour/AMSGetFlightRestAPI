@@ -8,9 +8,9 @@ namespace AMSGetFlights.Services
     {
         private readonly IFlightRepository repo;
         private readonly IGetFlightsConfigService configService;
-        private readonly IEventExchange eventExchange;
+        private readonly EventExchange eventExchange;
 
-        public FlightRequestHandler(IFlightRepository repo, IGetFlightsConfigService configService,IEventExchange eventExchange)
+        public FlightRequestHandler(IFlightRepository repo, IGetFlightsConfigService configService,EventExchange eventExchange)
         {
             this.repo = repo;
             this.configService = configService;

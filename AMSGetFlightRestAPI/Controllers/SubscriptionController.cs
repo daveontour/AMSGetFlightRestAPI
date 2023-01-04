@@ -2,12 +2,13 @@
 using AMSGetFlights.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+using System.Net;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace AMSGetFlights.Controllers
 {
-   
+
     [Route("subscription")]
     [ApiController]
     public class SubscriptionController : ControllerBase
@@ -29,13 +30,19 @@ namespace AMSGetFlights.Controllers
         public ActionResult<Subscription> Subscribe([FromBody] Subscription sub)
         {
             string user = GetProvidedUser();
-            return subManager.Subscribe(sub);
+            return subManager.Subscribe(sub, user);
         }
 
         [HttpGet("subscriptions")]
         public ActionResult<IEnumerable<Subscription>> Subscriptions()
         {
+
             string user = GetProvidedUser();
+            if (user == "default" || user == null)
+            {
+                return new StatusCodeResult(403);
+            }
+
             return subManager.GetSubscriptionsForUser(user);
         }
         [HttpGet("disable/{ID}")]
@@ -48,12 +55,20 @@ namespace AMSGetFlights.Controllers
         public ActionResult<Subscription> EnableSubscription(string ID)
         {
             string user = GetProvidedUser();
-            return subManager.EnableSubscription(ID,user);
+            return subManager.EnableSubscription(ID, user);
+        }
+        [HttpGet("backlogdepth/{ID}")]
+        public ActionResult<string> BacklogDepth(string ID)
+        {
+            string user = GetProvidedUser();
+            return subManager.GetBacklogDepth(ID, user);
         }
         [HttpPost("update")]
         public ActionResult<Subscription> UpdateSubscription([FromBody] Subscription sub)
         {
             string user = GetProvidedUser();
+            Response.StatusCode = 403;
+
             return subManager.UpdateSubscription(sub, user);
         }
         [HttpGet("delete/{ID}")]

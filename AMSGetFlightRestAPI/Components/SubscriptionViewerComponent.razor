@@ -1,0 +1,97 @@
+﻿@inject EventExchange eventExchange;
+@inject SubscriptionManager subscriptionManager;
+
+@implements IDisposable;
+
+
+<RadzenDataGrid @ref="subscriptionGrid" AllowColumnResize="true" Data="@items" TItem="Subscription" ColumnWidth="300px" Style="height:600px;margin-bottom:20px">
+    <Columns>
+        <RadzenDataGridColumn TItem="Subscription" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="200px">
+            <Template Context="data">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(args => EditRow(data))" @onclick:stopPropagation="true">
+                </RadzenButton>
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" Class="my-1 ms-1" Click="@(args => DeleteRow(data))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="data">
+                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => SaveRow(data))">
+                </RadzenButton>
+                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Class="my-1 ms-1" Click="@((args) => CancelEdit(data))">
+                </RadzenButton>
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" Class="my-1 ms-1" Click="@(args => DeleteRow(data))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Subscription" Title="Enabled" Property="IsEnabled" TextAlign="TextAlign.Center" Width="80px">
+            <EditTemplate Context="data">
+                <RadzenCheckBox @bind-Value="data.IsEnabled" Data="@items" TextProperty="Enabled" ValueProperty="IsEnabled" Style="width:100%; display: block;" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Subscription" Title="Subscriber Token" Property="SubscriberToken" TextAlign="TextAlign.Left" Width="300px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Subscription ID" Property="SubscriptionID" TextAlign="TextAlign.Left" Width="300px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="CallBack URL" Property="CallBackURL" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Valid Until" Property="ValidUntil" TextAlign="TextAlign.Center" Width="200px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Authorisation Header" Property="AuthorizationHeaderName" TextAlign="TextAlign.Left" Width="200px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Authorisation Value" Property="AuthorizationHeaderValue" TextAlign="TextAlign.Left" Width="200px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Last Successful Send" Property="LastSuccess" TextAlign="TextAlign.Center" Width="200px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Consecutive Successful Sends" Property="ConsecutiveSuccessfullCalls" TextAlign="TextAlign.Center" Width="120px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Last Failed Send" Property="LastFailure" TextAlign="TextAlign.Center" Width="200px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Last Error Messaged" Property="LastError" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Consecutive Failed Sends" Property="ConsecutiveUnsuccessfullCalls" TextAlign="TextAlign.Center" Width="120px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Backlog Size" Property="BacklogSize" TextAlign="TextAlign.Center" Width="120px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Airport" Property="AirportIATA" TextAlign="TextAlign.Center" Width="120px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Data Type" Property="DataFormat" TextAlign="TextAlign.Center" Width="120px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Airline" Property="AirlineIATA" TextAlign="TextAlign.Center" Width="120px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Arrivals" Property="IsArrival" TextAlign="TextAlign.Center" Width="100px"/>
+        <RadzenDataGridColumn TItem="Subscription" Title="Departures" Property="IsDeparture" TextAlign="TextAlign.Center" Width="100px"/>
+
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+
+    public List<Subscription>? items { get; set; }
+    public RadzenDataGrid<Subscription>? subscriptionGrid;
+    protected override void OnInitialized()
+    {
+        eventExchange.OnSubscriptionsChanged += SubsChanged;
+        items = subscriptionManager.Subscriptions;
+    }
+
+    public void SubsChanged(List<Subscription> subs)
+    {
+        items = subs;
+        subscriptionGrid?.Reload();
+        InvokeAsync(() => StateHasChanged());
+    }
+
+    public void Dispose()
+    {
+        eventExchange.OnSubscriptionsChanged -= SubsChanged;
+    }
+
+    async Task EditRow(Subscription order)
+    {
+
+        await subscriptionGrid.EditRow(order);
+    }
+
+    void OnUpdateRow(Subscription order)
+    {
+    }
+
+    async Task SaveRow(Subscription order)
+    {
+
+    }
+
+    void CancelEdit(Subscription order)
+    {
+        subscriptionGrid.CancelEditRow(order);
+    }
+
+    async Task DeleteRow(Subscription order)
+    {
+
+    }
+}

@@ -1,4 +1,5 @@
 ﻿using AMSGetFlights.Model;
+using Newtonsoft.Json;
 
 namespace AMSGetFlights.Services
 {
@@ -6,12 +7,12 @@ namespace AMSGetFlights.Services
     {
         private readonly IGetFlightsConfigService configService;
         private readonly IFlightRepositoryDataAccessObject flightRepo;
-        private readonly IEventExchange eventExchange;
+        private readonly EventExchange eventExchange;
 
         public DateTime MaxDateTime { get; set; } = DateTime.MaxValue;
         public DateTime MinDateTime { get; set; } = DateTime.MinValue;
 
-        public FlightRepository(IFlightRepositoryDataAccessObject flightRepo, IGetFlightsConfigService configService, IEventExchange eventExchange)
+        public FlightRepository(IFlightRepositoryDataAccessObject flightRepo, IGetFlightsConfigService configService, EventExchange eventExchange)
         {
             this.configService = configService;
             this.flightRepo = flightRepo;
@@ -65,6 +66,15 @@ namespace AMSGetFlights.Services
             {
                 foreach (StoredFlight stfl in flights)
                 {
+                    DateTime lastUpdate = DateTime.MinValue;
+                    try
+                    {
+                        lastUpdate = DateTime.Parse(stfl.Lastupdate);   
+                    } catch (Exception)
+                    {
+                        lastUpdate = DateTime.MinValue;
+                    }
+                    if(lastUpdate >= query.updatedFrom) 
                     fls.Add(new AMSFlight(stfl.XML, configService.config, DateTime.Parse(stfl.Lastupdate).AddHours(configService.config.UTCOffset).ToString("yyyy-MM-ddTHH:mm:ssK")));
                 }
             } else
@@ -160,6 +170,46 @@ namespace AMSGetFlights.Services
             }
 
             return false;
+        }
+
+        public List<Subscription> GetAllSubscriptions()
+        {
+            List<Subscription> subscriptions = new List<Subscription>();
+            try
+            {
+                List<string> subtrs = flightRepo.GetAllSubscriptions().ToList();
+
+                foreach (string subtr in subtrs)
+                {
+                    Subscription subscription = JsonConvert.DeserializeObject<Subscription>(subtr);
+                    subscriptions.Add(subscription);
+                }
+                return subscriptions;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return subscriptions;
+            }
+        }
+
+        public void SaveSubsciptions(List<Subscription> subscriptions)
+        {
+            List<string> substr = new List<string>();
+            try
+            {
+                foreach (Subscription s in subscriptions)
+                {
+                   string ss = JsonConvert.SerializeObject(s);
+                    substr.Add(ss);
+                }
+                flightRepo.SaveSubsciptions(substr);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return;
+            }
         }
     }
 }

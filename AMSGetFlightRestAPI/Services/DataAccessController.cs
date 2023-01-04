@@ -14,9 +14,9 @@ namespace AMSGetFlights.Services
     {
         private static string? dbLocation;
         private static string? dbfileName;
-        private readonly  IEventExchange eventExchange;
+        private readonly  EventExchange eventExchange;
 
-        public SqLiteFlightRepository(IGetFlightsConfigService configService, IEventExchange eventExchange)
+        public SqLiteFlightRepository(IGetFlightsConfigService configService, EventExchange eventExchange)
         {
             dbLocation = configService.config.StorageDirectory;
             dbfileName = "AmsGetFlights.sqlite";
@@ -57,6 +57,10 @@ namespace AMSGetFlights.Services
                     sdo                       TEXT,
                     sto                       TEXT,
                     lastupdate                TEXT
+                )");
+                sqliteConnection.Execute(
+                    @"create table Subcriptions(
+                    subscription                  TEXT PRIMARY KEY
                 )");
                 sqliteConnection.Close();
                 System.GC.Collect();
@@ -185,14 +189,59 @@ namespace AMSGetFlights.Services
 
             GC.Collect();
         }
+
+        public IEnumerable<string> GetAllSubscriptions()
+        {
+            using var cnn = SimpleDbConnection();
+            try
+            {
+                cnn.Open();
+                return cnn.Query<string>("SELECT subscription from Subcriptions ");
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            finally
+            {
+                cnn.Close();
+                System.GC.Collect();
+            }
+        }
+
+        public void SaveSubsciptions(List<string> subscriptions)
+        {
+            using (var cnn = SimpleDbConnection())
+            {
+                cnn.Open();
+                SqliteCommand sqlComm;
+                sqlComm = new SqliteCommand("begin", cnn);
+                sqlComm.ExecuteNonQuery();
+
+                cnn.Execute("DELETE FROM Subscriptions");
+
+                foreach (string s in subscriptions)
+                {
+                    string sql = $"INSERT INTO Subscriptions (subscription) VALUES ('{s}')";
+                    cnn.Execute(sql);
+                }
+
+
+                sqlComm = new SqliteCommand("end", cnn);
+                sqlComm.ExecuteNonQuery();
+                cnn.Close();
+            }
+
+            GC.Collect();
+        }
     }
     public class MSSQLFlightRepository : IFlightRepositoryDataAccessObject
     {
         private string? ConnectionString { get; set; }
 
-        private readonly IEventExchange eventExchange;
+        private readonly EventExchange eventExchange;
 
-        public MSSQLFlightRepository(IGetFlightsConfigService configService, IEventExchange eventExchange)
+        public MSSQLFlightRepository(IGetFlightsConfigService configService, EventExchange eventExchange)
         {
             ConnectionString = configService.config.SQLConnectionString;
             this.eventExchange = eventExchange;
@@ -210,8 +259,10 @@ namespace AMSGetFlights.Services
             //                    sdo                       date,
             //                    sto                       datetime,
             //                    lastupdate                datetime
-            //                )
-
+            //                );
+            //create table Subscriptions(
+            //                    subscription              TEXT            
+            //                );
             return new System.Data.SqlClient.SqlConnection(ConnectionString);
         }
 
@@ -320,6 +371,48 @@ namespace AMSGetFlights.Services
             cnn.Close();
 
             eventExchange.MonitorMessage($"Upsert of {fls.Count} flights");
+        }
+        public IEnumerable<string> GetAllSubscriptions()
+        {
+            using var cnn = SimpleDbConnection();
+            try
+            {
+                cnn.Open();
+                return cnn.Query<string>("SELECT  subscription  FROM Subscriptions");
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            finally
+            {
+                cnn.Close();
+                System.GC.Collect();
+            }
+        }
+
+        public void SaveSubsciptions(List<string> subscriptions)
+        {
+            try
+            {
+                using (var cnn = SimpleDbConnection())
+                {
+                    cnn.Open();
+                    cnn.Execute("DELETE FROM Subscriptions");
+
+                    foreach (string s in subscriptions)
+                    {
+                        string sql = $"INSERT INTO Subscriptions (subscription) VALUES ('{s}')";
+                        cnn.Execute(sql);
+                    }
+                    cnn.Close();
+                }
+
+                GC.Collect();
+            } catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }

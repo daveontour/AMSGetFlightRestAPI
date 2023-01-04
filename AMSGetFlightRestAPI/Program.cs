@@ -18,7 +18,7 @@ builder.Services.AddHostedService<AMSGetFlightsBackgroundService>();
 // Service to distribute updates 
 builder.Services.AddSingleton<SubscriptionDispatcher>();
 builder.Services.AddSingleton<SubscriptionManager>();
-builder.Services.AddSingleton<IEventExchange, EventExchange>();
+builder.Services.AddSingleton<EventExchange>();
 builder.Services.AddSingleton<IAMSGetFlightStatusService,AMSGetFlightsStatusService>();
 builder.Services.AddSingleton<IGetFlightsConfigService,GetFlightsConfigService>();
 builder.Services.AddSingleton<IFlightRepository, FlightRepository>();

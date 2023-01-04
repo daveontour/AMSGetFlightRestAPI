@@ -24,10 +24,10 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
    
     private static AMSGetFlightsStatusService Instance { get; set; }
 
-    private readonly IEventExchange eventExchange;
+    private readonly EventExchange eventExchange;
     private readonly IFlightRepository repo;
     private readonly IGetFlightsConfigService configService;
-    public AMSGetFlightsStatusService(IFlightRepository repo, IGetFlightsConfigService configService, IEventExchange eventExchange)
+    public AMSGetFlightsStatusService(IFlightRepository repo, IGetFlightsConfigService configService, EventExchange eventExchange)
     {
         this.repo = repo;
         this.configService = configService;

@@ -3,32 +3,32 @@ using AMSGetFlights.Services;
 
 namespace AMSGetFlights.Services
 {
-    public interface IEventExchange
-    {
-        event Action<AMSFlight> OnFlightDeleted;
-        event Action OnFlightRepositoryUpdated;
-        event Action<AMSFlight> OnFlightUpdatedOrAdded;
-        event Action<GetFlightQueryObject> OnAPIRequestMade;
-        event Action<string> OnAPIURLRequestMade;
-        event Action<string> OnMonitorMessage;
+    //public interface IEventExchange
+    //{
+    //    event Action<AMSFlight> OnFlightDeleted;
+    //    event Action OnFlightRepositoryUpdated;
+    //    event Action<AMSFlight> OnFlightUpdatedOrAdded;
+    //    event Action<GetFlightQueryObject> OnAPIRequestMade;
+    //    event Action<string> OnAPIURLRequestMade;
+    //    event Action<string> OnMonitorMessage;
 
-        event Action OnServerFlightsUpdates;
-        event Action OnServerNoFlightsUpdates;
-        event Action<bool> OnFlightServiceRunning;
-        event Action<string> OnConsoleMessage;
+    //    event Action OnServerFlightsUpdates;
+    //    event Action OnServerNoFlightsUpdates;
+    //    event Action<bool> OnFlightServiceRunning;
+    //    event Action<string> OnConsoleMessage;
 
-        void URLRequestMade(string message);
-        void APIRequestMade(GetFlightQueryObject query);
-        void MonitorMessage(string message);
-        void FlightRepositoryUpdated();
-        void FlightUpdatedOrAdded(AMSFlight flt);
-        void FlightDeleted(AMSFlight flt);
-        void FlightServiceRunning(bool running);
-        void Log(string result, GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false, bool showQuery = false);
-    }
+    //    void URLRequestMade(string message);
+    //    void APIRequestMade(GetFlightQueryObject query);
+    //    void MonitorMessage(string message);
+    //    void FlightRepositoryUpdated();
+    //    void FlightUpdatedOrAdded(AMSFlight flt);
+    //    void FlightDeleted(AMSFlight flt);
+    //    void FlightServiceRunning(bool running);
+    //    void Log(string result, GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false, bool showQuery = false);
+    //}
 
-}
-public interface IAMSGetFlightStatusService
+
+    public interface IAMSGetFlightStatusService
     {
         bool Running { get; set; }
         Task BackgroundProcessing(CancellationToken stoppingToken);
@@ -46,6 +46,9 @@ public interface IAMSGetFlightStatusService
         void PruneRepo(int backWindow);
         void BulkUpdateOrInsert(List<AMSFlight> fls);
         int GetNumEntries();
+        List<Subscription> GetAllSubscriptions();
+        void SaveSubsciptions(List<Subscription> subscriptions);
+
     }
     public interface IFlightRepositoryDataAccessObject
     {
@@ -54,6 +57,8 @@ public interface IAMSGetFlightStatusService
         IEnumerable<StoredFlight> GetStoredFlights(GetFlightQueryObject query, string? kind);
         void Prune(int backWindow);
         void Upsert(List<AMSFlight> fls);
+        IEnumerable<string> GetAllSubscriptions();
+        void SaveSubsciptions(List<string> subscriptions);
     }
     public interface IFlightRequestHandler
     {
@@ -92,4 +97,4 @@ public interface IAMSGetFlightStatusService
         void SaveConfig(GetFlightsConfig localconfig = null);
 
     }
-
+}

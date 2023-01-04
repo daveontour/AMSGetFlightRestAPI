@@ -15,10 +15,10 @@ namespace AMSGetFlights.Controllers
     {
         private readonly IFlightRequestHandler handler;
         private readonly IGetFlightsConfigService configService;
-        private readonly IEventExchange eventExchange;
+        private readonly EventExchange eventExchange;
         private readonly IFlightRepository repo;
 
-        public FlightRequestAPIController(IFlightRequestHandler handler, IGetFlightsConfigService configService, IEventExchange eventExchange,IFlightRepository repo)
+        public FlightRequestAPIController(IFlightRequestHandler handler, IGetFlightsConfigService configService, EventExchange eventExchange,IFlightRepository repo)
         {
             this.handler = handler;
             this.configService = configService;

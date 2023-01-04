@@ -1,7 +1,7 @@
 {
   "EnableSubscriptions": true,
   "IsTest": true,
-  "Storage": "SQLite",
+  "Storage": "SQL",
   "SQLConnectionString": "Integrated Security=SSPI;Persist Security Info=False;Database=FLIGHTRESTAPIDB;Server=localhost;",
   "AdminPass": "omnipass",
   "AllowAMSXFormat": true,

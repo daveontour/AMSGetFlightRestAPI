@@ -1,34 +1,32 @@
 ﻿using AMSGetFlights.Model;
-using Microsoft.AspNetCore.Mvc.Formatters;
 using Newtonsoft.Json;
-using Radzen;
-using System.Collections;
-using System.Collections.Generic;
 using System.Net;
-using System.Reflection.PortableExecutable;
-using System.Security.Policy;
 using System.Text;
-using System.Threading;
-using System.Xml.Linq;
+
 
 namespace AMSGetFlights.Services
 {
     public class SubscriptionDispatcher : IDisposable
     {
         FooQueue<AMSFlight> queue = new();
-        IEventExchange eventExchange;
+        EventExchange eventExchange;
         private SubscriptionManager subManager;
         private IGetFlightsConfigService configService;
 
-        private List<Subscription> Subscriptions { get; set; } = new();
+      //  private List<Subscription> Subscriptions { get; set; } = new();
 
-        public SubscriptionDispatcher(IEventExchange eventExchange, SubscriptionManager subManager, IGetFlightsConfigService configService)
+        public SubscriptionDispatcher(EventExchange eventExchange, IGetFlightsConfigService configService)
         {
 
             this.eventExchange = eventExchange;
             this.subManager = subManager;
             this.configService = configService;
-            Subscriptions = subManager.Subscriptions;
+            
+        }
+
+        public void SetSubscriptionManager(SubscriptionManager subManager)
+        {
+            this.subManager = subManager;
         }
 
         public async Task BackgroundProcessing(CancellationToken stoppingToken)
@@ -48,7 +46,7 @@ namespace AMSGetFlights.Services
             Console.WriteLine("Subscription Service Update Received");
             //The subclass Enqueue also fires an event to initiate the transfer
             queue.Enqueue(obj);
-            
+
         }
 
 
@@ -63,7 +61,7 @@ namespace AMSGetFlights.Services
             if (!sub.IsEnabled || sub.ValidUntil < DateTime.Now) return;
 
             //Enqueue the ne flight, and then process the Backlog queue until empty
-            sub.BackLog.Enqueue(flight);
+            if (flight != null) sub.BackLog.Enqueue(flight);
 
             foreach (AMSFlight fl in sub.BackLog)
             {
@@ -223,14 +221,27 @@ namespace AMSGetFlights.Services
         }
 
 
+        public string SendBacklog(Subscription s)
+        {
+
+            ThreadPool.SetMinThreads(Math.Min(subManager.Subscriptions.Count, 5), 0);
+            ThreadPool.SetMaxThreads(Math.Min(subManager.Subscriptions.Count, 40), 0);
+
+            int depth = s.BackLog.Count;
+            Tuple<Subscription, AMSFlight> state = new Tuple<Subscription, AMSFlight>(s, null);
+            ThreadPool.QueueUserWorkItem(new WaitCallback(TaskCallBack), state);
+
+            return depth.ToString();
+
+        }
         private void UpdatedEnqueue()
         {
 
-            ThreadPool.SetMinThreads(Math.Min(Subscriptions.Count, 5), 0);
-            ThreadPool.SetMaxThreads(Math.Min(Subscriptions.Count, 40), 0);
+            ThreadPool.SetMinThreads(Math.Min(subManager.Subscriptions.Count, 5), 0);
+            ThreadPool.SetMaxThreads(Math.Min(subManager.Subscriptions.Count, 40), 0);
             AMSFlight obj = queue.Dequeue();
 
-            foreach (Subscription sub in Subscriptions)
+            foreach (Subscription sub in subManager.Subscriptions)
             {
                 Tuple<Subscription, AMSFlight> state = new Tuple<Subscription, AMSFlight>(sub, obj);
                 ThreadPool.QueueUserWorkItem(new WaitCallback(TaskCallBack), state);

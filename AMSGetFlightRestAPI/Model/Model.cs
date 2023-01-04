@@ -433,7 +433,6 @@ namespace AMSGetFlights.Model
         public bool IsEnabled { get; set; } = true;
         public string? AirlineIATA { get; set; }
         public string? AirportIATA { get; set; }
-        public string? GroundHandler { get; set; }
         public int MaxHorizonInHours { get; set; } = 24;
         public int MinHorizonInHours { get; set; } = -24;
         public string? AuthorizationHeaderName { get; set; }
@@ -448,6 +447,8 @@ namespace AMSGetFlights.Model
 
         [JsonIgnore]
         public ConcurrentQueue<AMSFlight> BackLog { get; set; } = new();
-        public string StatusMessage { get; internal set; }
+        [JsonIgnore]
+        public int BacklogSize { get => BackLog.Count; }
+        public string? StatusMessage { get; set; }
     }
 }

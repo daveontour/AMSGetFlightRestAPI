@@ -5,7 +5,7 @@ using NLog;
 
 namespace AMSGetFlights.Services
 {
-    public class EventExchange : IEventExchange
+    public class EventExchange 
     {
         public event Action<AMSFlight>? OnFlightDeleted;
         public event Action? OnFlightRepositoryUpdated;
@@ -18,6 +18,7 @@ namespace AMSGetFlights.Services
         public event Action? OnServerNoFlightsUpdates;
         public event Action<bool>? OnFlightServiceRunning;
         public event Action<string>? OnConsoleMessage;
+        public event Action<List<Subscription>> OnSubscriptionsChanged;
 
         private readonly Logger logger = LogManager.GetLogger("consoleLogger");
         public void URLRequestMade(string message)
@@ -78,6 +79,11 @@ namespace AMSGetFlights.Services
             if (error) logger.Error(JsonConvert.SerializeObject(lee,Formatting.Indented));
             if (warn) logger.Warn(JsonConvert.SerializeObject(lee, Formatting.Indented));
             if (info) logger.Info(JsonConvert.SerializeObject(lee, Formatting.Indented));
+        }
+
+        public void SubscriptionsChanged(List<Subscription> subs)
+        {
+            OnSubscriptionsChanged?.Invoke(subs);
         }
     }
 }
