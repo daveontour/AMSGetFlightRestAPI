@@ -19,6 +19,7 @@ namespace AMSGetFlights.Services
         public event Action<bool>? OnFlightServiceRunning;
         public event Action<string>? OnConsoleMessage;
         public event Action<List<Subscription>> OnSubscriptionsChanged;
+        public event Action? OnSubscriptionSend;
 
         private readonly Logger logger = LogManager.GetLogger("consoleLogger");
         public void URLRequestMade(string message)
@@ -30,6 +31,10 @@ namespace AMSGetFlights.Services
             OnMonitorMessage?.Invoke(message);
         }
 
+        public void SubscriptionSend()
+        {
+            OnSubscriptionSend?.Invoke();   
+        }
         public void APIRequestMade(GetFlightQueryObject query)
         {
             OnAPIRequestMade?.Invoke(query);

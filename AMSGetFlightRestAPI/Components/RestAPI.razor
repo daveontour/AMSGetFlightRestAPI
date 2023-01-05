@@ -1,6 +1,6 @@
 ﻿@inject DialogService dialogService;
 @inject IGetFlightsConfigService configService;
-@inject NavigationManager UriHelper;
+
 
 @if (initOK)
 {
@@ -9,24 +9,23 @@
             <div style="display:grid;grid-template-columns:auto auto;background:var(--topbarcolor);line-height:20px;margin-top:8px;width:100%">
                 <div style="display:grid;grid-template-rows:35px 30px;margin-top:5px">
                     <div style="display:flex;flex-direction:row">
-                        <RadzenIcon Icon="home" Style="margin-right:5px;margin-left:5px;color:goldenrod;font-size:30px;cursor:pointer;margin-top:-4px" onclick=@NavigateHome />
-                        <h1 style="font-size: 30px;color:goldenrod;font-family: Source Sans Pro;margin-right:25px;">Omni AMS GetFlights RestAPI</h1>
+                        <h1 style="font-size: 30px;color:goldenrod;font-family: Source Sans Pro;margin-right:25px;margin-left:10px;">Omni AMS GetFlights RestAPI</h1>
                         <div class="title" style="font-size: 20px;font-weight:200;font-family: Source Sans Pro"></div>
                     </div>
                     <div style="display:flex;flex-direction:row">
-                        <div class="title" style="margin-left:5px">Retrieve Flights from AMS via a RestAPI in JSON or XML</div>
+                        <div class="title" style="margin-left:10px">Retrieve Flights from AMS via a RestAPI in JSON or XML</div>
                         <div style="margin-left:45px;text-align:left">
                         </div>
                     </div>
                 </div>
                 <div style="display:flex;flex-direction:row-reverse;gap:5px">
                     <div style="display:grid;grid-template-columns:150px 150px 150px 150px;grid-template-rows:25px 25px;grid-column-gap:3px;grid-row-gap:3px;margin-right:10px">
-                        @*                        <RadzenButton Text="Create Flights" Icon="bolt" ButtonStyle="ButtonStyle.Secondary" Click="CreateFlights" Size="ButtonSize.ExtraSmall" Style="width:150px;padding-left:4px;padding-right:4px;font-size:9pt;grid-column:1;grid-row:1;" />
-                    <RadzenButton Text="Apply Undo File" Icon="undo" ButtonStyle="ButtonStyle.Secondary" Click="ApplyUndo" Size="ButtonSize.ExtraSmall" Style="width:150px;padding-left:4px;padding-right:4px;font-size:9pt;grid-column:1;grid-row:2" />
-                    <RadzenButton Text="Load Config" Icon="folder_open" Click="Load" Size="ButtonSize.ExtraSmall" Style="width:150px;padding-left:4px;padding-right:4px;font-size:9pt;grid-column:4;grid-row:1;background-color:var(--cntrlbtncolor);color:var(--cntrlbtnfontcolor)" />
-                    <RadzenButton Text="Save Config" Icon="save" Click="Save" Size="ButtonSize.ExtraSmall" Style="width:150px;padding-left:4px;padding-right:4px;font-size:9pt;grid-column:4;grid-row:2;background-color:var(--cntrlbtncolor);color:var(--cntrlbtnfontcolor)" />
-                    </div>
-                    *@
+                        @if (!AdminValidated)
+                        {
+                            <RadzenButton Text="Switch To Admin Mode" Icon="bolt" ButtonStyle="ButtonStyle.Secondary" Click="AdminMode" Size="ButtonSize.ExtraSmall" Style="width:200px;padding-left:4px;padding-right:4px;font-size:9pt;grid-column:1;grid-row:1;" />
+                        } else {
+                            <RadzenButton Text="Logout Admin Mode" Icon="bolt" ButtonStyle="ButtonStyle.Secondary" Click="AdminModeLogout" Size="ButtonSize.ExtraSmall" Style="width:200px;padding-left:4px;padding-right:4px;font-size:9pt;grid-column:1;grid-row:1;" />
+                        }
                     </div>
                 </div>
             </div>
@@ -34,8 +33,11 @@
         <div style="display:flex;flex-direction:column;grid-area:pop-body;margin-top:15px;height:calc(100vh - 250px);padding:10px">
             @if (AdminValidated)
             {
-                <RestAPIManagementComponent />
+                <RestAPIManagementComponent/>
+            } else {
+                <RestAPIUserComponent/>
             }
+
         </div>
     </div>
 }
@@ -57,16 +59,20 @@ else
         initOK = true;
     }
 
-    protected override async  Task OnAfterRenderAsync(bool firstRender)
+    private void AdminModeLogout(){
+        AdminValidated = false;
+        StateHasChanged();
+    }
+    private async Task AdminMode()
     {
-        if(firstRender){
-            await CheckPass();
+        string pass = (string)await dialogService.OpenAsync<GetAdminPassDialog>("Admin Password", null, new DialogOptions() { ShowTitle = true, Style = "min-height:auto;min-width:auto;width:530px", CloseDialogOnEsc = true });
+        if (pass == configService.config.AdminPass)
+        {
+            AdminValidated = true;
         }
+        StateHasChanged();
     }
-    public void NavigateHome()
-    {
-        UriHelper.NavigateTo("/omnihome");
-    }
+
 
     public async Task CheckPass()
     {

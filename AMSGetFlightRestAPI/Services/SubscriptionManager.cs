@@ -59,7 +59,7 @@ namespace AMSGetFlights.Services
             SaveSubscriptions();
         }
 
-        private void SaveSubscriptions()
+        public void SaveSubscriptions()
         {
             repo.SaveSubsciptions(Subscriptions);
             eventExchange.SubscriptionsChanged(Subscriptions);

@@ -10,18 +10,14 @@ namespace AMSGetFlights.Services
     {
         FooQueue<AMSFlight> queue = new();
         EventExchange eventExchange;
-        private SubscriptionManager subManager;
+        private SubscriptionManager? subManager;
         private IGetFlightsConfigService configService;
 
-      //  private List<Subscription> Subscriptions { get; set; } = new();
 
         public SubscriptionDispatcher(EventExchange eventExchange, IGetFlightsConfigService configService)
         {
-
             this.eventExchange = eventExchange;
-            this.subManager = subManager;
-            this.configService = configService;
-            
+            this.configService = configService;            
         }
 
         public void SetSubscriptionManager(SubscriptionManager subManager)
@@ -38,18 +34,14 @@ namespace AMSGetFlights.Services
         {
             eventExchange.OnFlightUpdatedOrAdded += FlightUpdateOrAdded;
             queue.OnChanged += UpdatedEnqueue;
-            Console.WriteLine("Subscription Service Started");
         }
 
         private void FlightUpdateOrAdded(AMSFlight obj)
         {
-            Console.WriteLine("Subscription Service Update Received");
             //The subclass Enqueue also fires an event to initiate the transfer
             queue.Enqueue(obj);
 
         }
-
-
 
         private void TaskCallBack(object state)
         {
@@ -60,7 +52,7 @@ namespace AMSGetFlights.Services
 
             if (!sub.IsEnabled || sub.ValidUntil < DateTime.Now) return;
 
-            //Enqueue the ne flight, and then process the Backlog queue until empty
+            //Enqueue the new flight, and then process the Backlog queue until empty
             if (flight != null) sub.BackLog.Enqueue(flight);
 
             foreach (AMSFlight fl in sub.BackLog)
@@ -211,6 +203,8 @@ namespace AMSGetFlights.Services
                     Console.WriteLine(content);
                 }
 
+                eventExchange.SubscriptionSend();
+
             }
         }
 
@@ -219,7 +213,6 @@ namespace AMSGetFlights.Services
             eventExchange.OnFlightUpdatedOrAdded -= FlightUpdateOrAdded;
             queue.OnChanged -= UpdatedEnqueue;
         }
-
 
         public string SendBacklog(Subscription s)
         {
