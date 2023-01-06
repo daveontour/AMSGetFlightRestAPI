@@ -11,7 +11,7 @@ using NLog;
 
 namespace AMSGetFlights.Services;
 
-public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
+public class AMSGetFlightsStatusService
 {
     public bool Running { get; set; } = false;
 
@@ -25,9 +25,9 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
     private static AMSGetFlightsStatusService Instance { get; set; }
 
     private readonly EventExchange eventExchange;
-    private readonly IFlightRepository repo;
-    private readonly IGetFlightsConfigService configService;
-    public AMSGetFlightsStatusService(IFlightRepository repo, IGetFlightsConfigService configService, EventExchange eventExchange)
+    private readonly FlightRepository repo;
+    private readonly GetFlightsConfigService configService;
+    public AMSGetFlightsStatusService(FlightRepository repo, GetFlightsConfigService configService, EventExchange eventExchange)
     {
         this.repo = repo;
         this.configService = configService;
@@ -116,6 +116,9 @@ public class AMSGetFlightsStatusService : IAMSGetFlightStatusService
     {
         DateTime FromTime = DateTime.UtcNow.AddDays(backWindow);
         DateTime ToTime = DateTime.UtcNow.AddDays(advanceWindow);
+
+        //Clear out the exisiting Cache
+        repo.ClearFlights();
 
         foreach (AirportSource airport in configService.config.GetAirports())
         {

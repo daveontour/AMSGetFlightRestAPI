@@ -1,0 +1,162 @@
+﻿@using AMSGetFlights.Model;
+@using Newtonsoft.Json;
+@using System.Net;
+@using System.Text;
+@using Newtonsoft.Json.Linq
+
+
+@inject NavigationManager UriHelper;
+@inject DialogService dialogService;
+@inject FlightRepository flightRepo;
+@inject FlightRequestHandler requestHandler;
+@inject GetFlightsConfigService configService;
+@inject AMSGetFlightsStatusService flightStatusService;
+@inject EventExchange eventExchange;
+
+<div style="height:calc(100vh - 195px);width:100%">
+    <div style="display:grid;grid-template-columns:150px auto 150px 300px 200px; grid-column-gap:5px; width:100%">
+        <div style="justify-content:end;display:flex">Request URL:</div>
+        <RadzenTextBox @bind-Value=@RequestURL />
+        <div style="justify-content:end;display:flex">Authorization Token:</div>
+        <RadzenTextBox @bind-Value=@Token />
+        <RadzenButton Text="Send Request" Click="Send" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" Style="margin-bottom:10px;width:200px" />
+    </div>
+    <div Style=@GetStyleJSON()>
+        <MonacoEditor @ref="jsonEditor" ConstructionOptions="JSONEditorConstructionOptions" CssClass="li-console-monaco-editor" />
+    </div>
+@*    <div Style=@GetStyleXML()>
+        <MonacoEditor @ref="xmlEditor" ConstructionOptions="XMLEditorConstructionOptions" CssClass="li-console-monaco-editor" />
+    </div> *@
+
+</div>
+
+@code {
+    private string RequestURL { get; set; } = "https://localhost:7095/GetFlightsJSON";
+    private string Token { get; set; }
+    private MonacoEditor jsonEditor;
+    private MonacoEditor xmlEditor;
+    private bool showJSON = true;
+
+    protected override void OnInitialized()
+    {
+        RequestURL = configService.config.TryItDefaultURL;
+        Token = configService.config.TryItDefaultToken;
+    }
+
+    private string GetStyleJSON(){
+        if (showJSON){
+            return "height:100%";
+        } else {
+            return "height:100%;display:none";
+        }
+    }
+    private string GetStyleXML()
+    {
+        if (showJSON)
+        {
+            return "height:100%;display:none";
+        }
+        else
+        {
+            return "height:100%";
+        }
+    }
+    private async Task Send()
+    {
+
+
+
+        //showJSON = RequestURL.Contains("GetFlightsJSON");
+        //await InvokeAsync(() => StateHasChanged());
+
+        string result = await SendRequest();
+        if (RequestURL.Contains("GetFlightsJSON") || RequestURL.ToLower().Contains("subscription"))
+            try
+            {
+                string jsonFormatted = JValue.Parse(result).ToString(Formatting.Indented);
+                jsonEditor?.SetValue(jsonFormatted);
+
+                await InvokeAsync(() => StateHasChanged());
+            }
+            catch (Exception) { }
+
+        if (RequestURL.Contains("GetFlightsXML"))
+            try
+            {
+              //  xmlEditor?.SetValue(result);
+               jsonEditor?.SetValue(result);
+                await InvokeAsync(() => StateHasChanged());
+            }
+            catch (Exception) { }
+
+
+    }
+    private async Task<string> SendRequest()
+    {
+
+        try
+        {
+            using var client = new HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(30);
+            HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Get, RequestURL);
+            requestMessage.Headers.Add("Authorization", Token);
+            requestMessage.Headers.Add("Accept", "*/*");
+
+            using (requestMessage)
+            {
+                try
+                {
+                    using HttpResponseMessage response = client.SendAsync(requestMessage).Result;
+                    if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted)
+                    {
+                        return await response.Content.ReadAsStringAsync();
+                    }
+                    else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        return await response.Content.ReadAsStringAsync();
+                    }
+                    else
+                    {
+                        return $"Error. HTTP Staus Code: {response.StatusCode.ToString()}";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return $"{ex.StackTrace}";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            return $"{ex.StackTrace}";
+        }
+    }
+
+    private StandaloneEditorConstructionOptions XMLEditorConstructionOptions(MonacoEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Minimap = new EditorMinimapOptions() { Enabled = false },
+                FontSize = 10,
+                Language = "xml",
+                Find = new EditorFindOptions() { SeedSearchStringFromSelection = true },
+                ReadOnly = true,
+                ScrollBeyondLastLine = false,
+            };
+    }
+
+    private StandaloneEditorConstructionOptions JSONEditorConstructionOptions(MonacoEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Minimap = new EditorMinimapOptions() { Enabled = false },
+                FontSize = 10,
+                Language = "json",
+                Find = new EditorFindOptions() { SeedSearchStringFromSelection = true },
+                ReadOnly = true,
+                ScrollBeyondLastLine = false,
+            };
+    }
+}

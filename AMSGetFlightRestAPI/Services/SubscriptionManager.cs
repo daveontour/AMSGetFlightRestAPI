@@ -8,18 +8,15 @@ namespace AMSGetFlights.Services
 {
     public class SubscriptionManager
     {
-        private IFlightRepository repo;
-        private SubscriptionDispatcher dispatcher;
+        private FlightRepository repo;
         private EventExchange eventExchange;
 
         public List<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 
-        public SubscriptionManager(IFlightRepository repo, SubscriptionDispatcher dispatcher, EventExchange eventExchange)
+        public SubscriptionManager(FlightRepository repo,  EventExchange eventExchange)
         {
             this.repo = repo;
-            this.dispatcher = dispatcher;
             this.eventExchange = eventExchange;
-            this.dispatcher.SetSubscriptionManager(this);
             LoadSubscriptions();
 
         }
@@ -300,8 +297,8 @@ namespace AMSGetFlights.Services
                 {
                     if (s.SubscriberToken == userToken)
                     {
-                        string depth = dispatcher.SendBacklog(s);
-                        return $"Success. {depth} messages to send";
+                        eventExchange.SendBacklog(s);
+                        return $"Success.";
                     }
                     else
                     {

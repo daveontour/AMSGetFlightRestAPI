@@ -19,10 +19,10 @@ builder.Services.AddHostedService<AMSGetFlightsBackgroundService>();
 builder.Services.AddSingleton<SubscriptionDispatcher>();
 builder.Services.AddSingleton<SubscriptionManager>();
 builder.Services.AddSingleton<EventExchange>();
-builder.Services.AddSingleton<IAMSGetFlightStatusService,AMSGetFlightsStatusService>();
-builder.Services.AddSingleton<IGetFlightsConfigService,GetFlightsConfigService>();
-builder.Services.AddSingleton<IFlightRepository, FlightRepository>();
-
+builder.Services.AddSingleton<AMSGetFlightsStatusService>();
+builder.Services.AddSingleton<GetFlightsConfigService>();
+builder.Services.AddSingleton<FlightRepository>();
+builder.Services.AddSingleton<FlightRequestHandler>();
 
 if (config.Storage ==  "SQLite")
 {
@@ -32,7 +32,7 @@ if (config.Storage == "SQL")
 {
     builder.Services.AddSingleton<IFlightRepositoryDataAccessObject, MSSQLFlightRepository>();
 }
-builder.Services.AddSingleton<IFlightRequestHandler,FlightRequestHandler>();
+
 
 builder.Services.AddServerSideBlazor();
 builder.Services.AddControllersWithViews().AddNewtonsoftJson(options =>

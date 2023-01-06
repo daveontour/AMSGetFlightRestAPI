@@ -28,28 +28,20 @@ namespace AMSGetFlights.Services
     //}
 
 
-    public interface IAMSGetFlightStatusService
-    {
-        bool Running { get; set; }
-        Task BackgroundProcessing(CancellationToken stoppingToken);
-        void PopulateFlightCache();
-        Task Start();
-        void UpdateFlightCache();
-    }
-    public interface IFlightRepository
-    {
-        DateTime MaxDateTime { get; set; }
-        DateTime MinDateTime { get; set; }
-        void DeleteFlight(AMSFlight flt);
-        List<AMSFlight> GetFlights(GetFlightQueryObject query);
-        void UpdateOrAddFlight(AMSFlight flt);
-        void PruneRepo(int backWindow);
-        void BulkUpdateOrInsert(List<AMSFlight> fls);
-        int GetNumEntries();
-        List<Subscription> GetAllSubscriptions();
-        void SaveSubsciptions(List<Subscription> subscriptions);
+    //public interface IFlightRepository
+    //{
+    //    DateTime MaxDateTime { get; set; }
+    //    DateTime MinDateTime { get; set; }
+    //    void DeleteFlight(AMSFlight flt);
+    //    List<AMSFlight> GetFlights(GetFlightQueryObject query);
+    //    void UpdateOrAddFlight(AMSFlight flt);
+    //    void PruneRepo(int backWindow);
+    //    void BulkUpdateOrInsert(List<AMSFlight> fls);
+    //    int GetNumEntries();
+    //    List<Subscription> GetAllSubscriptions();
+    //    void SaveSubsciptions(List<Subscription> subscriptions);
 
-    }
+    //}
     public interface IFlightRepositoryDataAccessObject
     {
         void DeleteRecord(AMSFlight record);
@@ -59,42 +51,43 @@ namespace AMSGetFlights.Services
         void Upsert(List<AMSFlight> fls);
         IEnumerable<string> GetAllSubscriptions();
         void SaveSubsciptions(List<string> subscriptions);
+        void ClearFlights();
     }
-    public interface IFlightRequestHandler
-    {
-        string CheckQueryStatus(GetFlightQueryObject q);
-        List<AMSFlight> GetFlights(GetFlightQueryObject query, bool IsXml = false);
-        List<AMSFlight> GetSingleFlight(string xml, string token, bool IsXml = false);
-        List<AMSFlight> GetFlightsFromXML(string xml, GetFlightQueryObject query, bool IsXml = false);
-        GetFlightQueryObject GetQueryObject(HttpRequest request, string format);
+    //public interface IFlightRequestHandler
+    //{
+    //    string CheckQueryStatus(GetFlightQueryObject q);
+    //    List<AMSFlight> GetFlights(GetFlightQueryObject query, bool IsXml = false);
+    //    List<AMSFlight> GetSingleFlight(string xml, string token, bool IsXml = false);
+    //    List<AMSFlight> GetFlightsFromXML(string xml, GetFlightQueryObject query, bool IsXml = false);
+    //    GetFlightQueryObject GetQueryObject(HttpRequest request, string format);
 
-    }
-    public interface IGetFlightsConfig
-    {
-        string AdminPass { get; set; }
-        List<AirportSource> Airports { get; set; }
-        bool AllowAMSXFormat { get; set; }
-        bool AllowAnnonymousUsers { get; set; }
-        bool AllowJSONFormat { get; set; }
-        int BackwardWindowInDays { get; set; }
-        int ChunkSizeInDays { get; set; }
-        string? ConfigurationFile { get; set; }
-        Dictionary<string, string> CustomFieldToParameter { get; set; }
-        int ForewardWindowInDays { get; set; }
-        Dictionary<string, string> MappedQueryParameters { get; set; }
-        string? RefreshCron { get; set; }
-        string? StorageDirectory { get; set; }
-        Dictionary<string, User> Users { get; set; }
-        double UTCOffset { get; set; }
+    //}
+    //public interface IGetFlightsConfig
+    //{
+    //    string AdminPass { get; set; }
+    //    List<AirportSource> Airports { get; set; }
+    //    bool AllowAMSXFormat { get; set; }
+    //    bool AllowAnnonymousUsers { get; set; }
+    //    bool AllowJSONFormat { get; set; }
+    //    int BackwardWindowInDays { get; set; }
+    //    int ChunkSizeInDays { get; set; }
+    //    string? ConfigurationFile { get; set; }
+    //    Dictionary<string, string> CustomFieldToParameter { get; set; }
+    //    int ForewardWindowInDays { get; set; }
+    //    Dictionary<string, string> MappedQueryParameters { get; set; }
+    //    string? RefreshCron { get; set; }
+    //    string? StorageDirectory { get; set; }
+    //    Dictionary<string, User> Users { get; set; }
+    //    double UTCOffset { get; set; }
 
-        object Clone();
-    }
-    public interface IGetFlightsConfigService
-    {
-        string? CurrentConfigFile { get; set; }
-        GetFlightsConfig config { get; set; }
-        void ApplyConfig(GetFlightsConfig? newconfig);
-        void SaveConfig(GetFlightsConfig localconfig = null);
+    //    object Clone();
+    //}
+    //public interface IGetFlightsConfigService
+    //{
+    //    string? CurrentConfigFile { get; set; }
+    //    GetFlightsConfig config { get; set; }
+    //    void ApplyConfig(GetFlightsConfig? newconfig);
+    //    void SaveConfig(GetFlightsConfig localconfig = null);
 
-    }
+    //}
 }

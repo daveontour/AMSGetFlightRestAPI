@@ -2,9 +2,9 @@
 {
     public class AMSGetFlightsBackgroundService : BackgroundService
     {
-        private readonly IAMSGetFlightStatusService service;
+        private readonly AMSGetFlightsStatusService service;
 
-        public AMSGetFlightsBackgroundService(IAMSGetFlightStatusService service)
+        public AMSGetFlightsBackgroundService(AMSGetFlightsStatusService service)
         {
             this.service = service;
 

@@ -243,11 +243,11 @@ namespace AMSGetFlights.Model
                 }
             }
 
-            if (_queryParams.ContainsKey("updatedFrom"))
+            if (_queryParams.ContainsKey("updatedfrom"))
             {
                 try
                 {
-                    updatedFrom = DateTime.Parse(_queryParams["updatedFrom"]);
+                    updatedFrom = DateTime.Parse(_queryParams["updatedfrom"]);
                 } catch (Exception)
                 {
                     updatedFrom = DateTime.MinValue;

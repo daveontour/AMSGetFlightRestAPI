@@ -11,19 +11,21 @@ namespace AMSGetFlights.Services
         FooQueue<AMSFlight> queue = new();
         EventExchange eventExchange;
         private SubscriptionManager? subManager;
-        private IGetFlightsConfigService configService;
+        private GetFlightsConfigService configService;
 
 
-        public SubscriptionDispatcher(EventExchange eventExchange, IGetFlightsConfigService configService)
+        public SubscriptionDispatcher(EventExchange eventExchange, GetFlightsConfigService configService, SubscriptionManager subManager)
         {
             this.eventExchange = eventExchange;
-            this.configService = configService;            
-        }
-
-        public void SetSubscriptionManager(SubscriptionManager subManager)
-        {
+            this.configService = configService; 
             this.subManager = subManager;
         }
+
+        private void SendBacklogRequest(Subscription sub)
+        {
+            SendBacklog(sub);
+        }
+
 
         public async Task BackgroundProcessing(CancellationToken stoppingToken)
         {
@@ -32,6 +34,7 @@ namespace AMSGetFlights.Services
 
         public async Task Start()
         {
+            eventExchange.OnSendBacklog += SendBacklogRequest;
             eventExchange.OnFlightUpdatedOrAdded += FlightUpdateOrAdded;
             queue.OnChanged += UpdatedEnqueue;
         }
@@ -59,19 +62,16 @@ namespace AMSGetFlights.Services
             {
                 if (!sub.IsArrival && flight.flightId.flightkind.ToLower() == "arrival")
                 {
-                    Console.WriteLine("Arrival Check Failure");
                     continue;
                 }
                 if (!sub.IsDeparture && flight.flightId.flightkind.ToLower() == "departure")
                 {
-                    Console.WriteLine("Departure Check Failure");
                     continue;
                 }
                 if (sub.AirportIATA != null)
                 {
                     if (sub.AirportIATA != flight.flightId.iatalocalairport)
                     {
-                        Console.WriteLine("Airport Check Failure");
                         continue;
                     }
                 }
@@ -79,7 +79,6 @@ namespace AMSGetFlights.Services
                 {
                     if (sub.AirlineIATA != flight.flightId.iataAirline)
                     {
-                        Console.WriteLine("Airline Check Failure");
                         continue;
                     }
                 }
@@ -87,13 +86,11 @@ namespace AMSGetFlights.Services
                 TimeSpan? ts = flight.flightId.scheduleDateTime - DateTime.Now;
                 if (ts.Value.TotalHours > sub.MaxHorizonInHours)
                 {
-                    Console.WriteLine("Max Window Check Failure");
                     continue;
                 }
                 ts = DateTime.Now - flight.flightId.scheduleDateTime;
                 if (ts.Value.TotalHours < sub.MinHorizonInHours)
                 {
-                    Console.WriteLine("Min Check Failure");
                     continue;
                 }
 
@@ -211,6 +208,7 @@ namespace AMSGetFlights.Services
         public void Dispose()
         {
             eventExchange.OnFlightUpdatedOrAdded -= FlightUpdateOrAdded;
+            eventExchange.OnSendBacklog -= SendBacklogRequest;
             queue.OnChanged -= UpdatedEnqueue;
         }
 
@@ -229,9 +227,16 @@ namespace AMSGetFlights.Services
         }
         private void UpdatedEnqueue()
         {
-
-            ThreadPool.SetMinThreads(Math.Min(subManager.Subscriptions.Count, 5), 0);
-            ThreadPool.SetMaxThreads(Math.Min(subManager.Subscriptions.Count, 40), 0);
+    
+            try
+            {
+                ThreadPool.SetMinThreads(Math.Min(subManager.Subscriptions.Count, 5), 0);
+                ThreadPool.SetMaxThreads(Math.Min(subManager.Subscriptions.Count, 40), 0);
+            } catch (Exception ex)
+            {
+                ThreadPool.SetMinThreads(5, 0);
+                ThreadPool.SetMaxThreads(40, 0);
+            }
             AMSFlight obj = queue.Dequeue();
 
             foreach (Subscription sub in subManager.Subscriptions)

@@ -20,11 +20,17 @@ namespace AMSGetFlights.Services
         public event Action<string>? OnConsoleMessage;
         public event Action<List<Subscription>> OnSubscriptionsChanged;
         public event Action? OnSubscriptionSend;
+        public event Action<Subscription>? OnSendBacklog;
 
         private readonly Logger logger = LogManager.GetLogger("consoleLogger");
         public void URLRequestMade(string message)
         {
             OnAPIURLRequestMade?.Invoke(message);
+        }
+
+        public void SendBacklog(Subscription sub)
+        {
+            OnSendBacklog?.Invoke(sub);  
         }
         public void MonitorMessage(string? message)
         {

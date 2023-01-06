@@ -1,9 +1,9 @@
 ﻿@inject NavigationManager UriHelper;
 @inject DialogService dialogService;
-@inject IFlightRepository flightRepo;
-@inject IFlightRequestHandler requestHandler;
-@inject IGetFlightsConfigService configService;
-@inject IAMSGetFlightStatusService flightStatusService;
+@inject FlightRepository flightRepo;
+@inject FlightRequestHandler requestHandler;
+@inject GetFlightsConfigService configService;
+@inject AMSGetFlightsStatusService flightStatusService;
 @inject EventExchange eventExchange;
 
 
@@ -51,7 +51,7 @@
             </div>
         </RadzenTabsItem>
          <RadzenTabsItem Text="Try It!">
-
+            <TryItComponent />
          </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>

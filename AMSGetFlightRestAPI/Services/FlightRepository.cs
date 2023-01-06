@@ -3,16 +3,16 @@ using Newtonsoft.Json;
 
 namespace AMSGetFlights.Services
 {
-    public class FlightRepository : IFlightRepository
+    public class FlightRepository 
     {
-        private readonly IGetFlightsConfigService configService;
+        private readonly GetFlightsConfigService configService;
         private readonly IFlightRepositoryDataAccessObject flightRepo;
         private readonly EventExchange eventExchange;
 
         public DateTime MaxDateTime { get; set; } = DateTime.MaxValue;
         public DateTime MinDateTime { get; set; } = DateTime.MinValue;
 
-        public FlightRepository(IFlightRepositoryDataAccessObject flightRepo, IGetFlightsConfigService configService, EventExchange eventExchange)
+        public FlightRepository(IFlightRepositoryDataAccessObject flightRepo, GetFlightsConfigService configService, EventExchange eventExchange)
         {
             this.configService = configService;
             this.flightRepo = flightRepo;
@@ -101,7 +101,10 @@ namespace AMSGetFlights.Services
 
             //Extra Dynamic Custom Field queries
             Dictionary<string, string> allowedExtras = configService.config.GetMappedExtras();
-
+            if (allowedExtras.ContainsKey("callsign"))
+            {
+                allowedExtras.Remove("callsign");
+            }
 
             foreach (string xtra in query.queryParams.Keys)
             {
@@ -117,6 +120,11 @@ namespace AMSGetFlights.Services
         public void PruneRepo(int backWindow)
         {
             flightRepo.Prune(backWindow);
+        }
+
+        public void ClearFlights()
+        {
+            flightRepo.ClearFlights();
         }
         public int GetNumEntries()
         {

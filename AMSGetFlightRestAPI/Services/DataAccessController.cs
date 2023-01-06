@@ -16,7 +16,7 @@ namespace AMSGetFlights.Services
         private static string? dbfileName;
         private readonly  EventExchange eventExchange;
 
-        public SqLiteFlightRepository(IGetFlightsConfigService configService, EventExchange eventExchange)
+        public SqLiteFlightRepository(GetFlightsConfigService configService, EventExchange eventExchange)
         {
             dbLocation = configService.config.StorageDirectory;
             dbfileName = "AmsGetFlights.sqlite";
@@ -174,8 +174,8 @@ namespace AMSGetFlights.Services
 
                 foreach (AMSFlight record in fls)
                 {
-                    string sql = $"INSERT INTO StoredFlights (flightID, XML,al,apt,fltNum,type, sdo,sto, lastupdate) VALUES ('{record.flightId.flightID}', '{record.XmlRaw}','{record.flightId.iataAirline}','{record.flightId.iatalocalairport}','{record.flightId.flightNumber}','{record.flightId.flightkind}','{record.flightId.scheduleDate}', '{record.flightId.scheduleTime}',datetime('now'))" +
-                        $"ON CONFLICT(flightID) DO UPDATE SET XML = '{record.XmlRaw}', sto = '{record.flightId.scheduleTime}', sdo = '{record.flightId.scheduleDate}', lastupdate = datetime('now')";
+                    string sql = $"INSERT INTO StoredFlights (flightID, callsign, XML,al,apt,fltNum,type, sdo,sto, lastupdate) VALUES ('{record.flightId.flightID}','{record.callsign}', '{record.XmlRaw}','{record.flightId.iataAirline}','{record.flightId.iatalocalairport}','{record.flightId.flightNumber}','{record.flightId.flightkind}','{record.flightId.scheduleDate}', '{record.flightId.scheduleTime}',datetime('now'))" +
+                        $"ON CONFLICT(flightID) DO UPDATE SET XML = '{record.XmlRaw}', callsign = '{record.callsign}', sto = '{record.flightId.scheduleTime}', sdo = '{record.flightId.scheduleDate}', lastupdate = datetime('now')";
                     cnn.Execute(sql);
                 }
 
@@ -189,6 +189,7 @@ namespace AMSGetFlights.Services
 
             GC.Collect();
         }
+
 
         public IEnumerable<string> GetAllSubscriptions()
         {
@@ -234,6 +235,29 @@ namespace AMSGetFlights.Services
 
             GC.Collect();
         }
+
+        public void ClearFlights()
+        {
+            using (var cnn = SimpleDbConnection())
+            {
+                cnn.Open();
+                SqliteCommand sqlComm;
+                sqlComm = new SqliteCommand("begin", cnn);
+                sqlComm.ExecuteNonQuery();
+
+
+                    string sql = $"DELETE from StoredFlights";
+                    cnn.Execute(sql);
+            
+
+
+                sqlComm = new SqliteCommand("end", cnn);
+                sqlComm.ExecuteNonQuery();
+                cnn.Close();
+            }
+
+            GC.Collect();
+        }
     }
     public class MSSQLFlightRepository : IFlightRepositoryDataAccessObject
     {
@@ -241,7 +265,7 @@ namespace AMSGetFlights.Services
 
         private readonly EventExchange eventExchange;
 
-        public MSSQLFlightRepository(IGetFlightsConfigService configService, EventExchange eventExchange)
+        public MSSQLFlightRepository(GetFlightsConfigService configService, EventExchange eventExchange)
         {
             ConnectionString = configService.config.SQLConnectionString;
             this.eventExchange = eventExchange;
@@ -352,14 +376,15 @@ namespace AMSGetFlights.Services
             {
                 foreach (AMSFlight record in fls)
                 {
-                    sql = $" INSERT INTO StoredFlights (flightID, XML,al,apt,fltNum,type, sdo,sto,lastupdate) VALUES ('{record.Key}', '{record.XmlRaw}','{record.flightId.iataAirline}','{record.flightId.iatalocalairport}','{record.flightId.flightNumber}','{record.flightId.flightkind}','{record.flightId.scheduleDate}', '{record.flightId.scheduleTime}',GETDATE());";
+                        sql = $" INSERT INTO StoredFlights (flightID, callsign, XML,al,apt,fltNum,type, sdo,sto,lastupdate) VALUES ('{record.Key}','{record.callsign}', '{record.XmlRaw}','{record.flightId.iataAirline}','{record.flightId.iatalocalairport}','{record.flightId.flightNumber}','{record.flightId.flightkind}','{record.flightId.scheduleDate}', '{record.flightId.scheduleTime}',GETDATE());";
                     try
                     {
                         cnn.Execute(sql);
                     }
                     catch (System.Data.SqlClient.SqlException ex)
                     {
-                        sql = $" UPDATE StoredFlights SET XML = '{record.XmlRaw}', al = '{record.flightId.iataAirline}', apt = '{record.flightId.iatalocalairport}', fltNum = '{record.flightId.flightNumber}', type = '{record.flightId.flightkind}', sdo = '{record.flightId.scheduleDate}', sto ='{record.flightId.scheduleTime}', lastupdate = GETDATE() WHERE flightID = '{record.Key}';";
+                    sql = $" UPDATE StoredFlights SET XML = '{record.XmlRaw}', callsign='{record.callsign}', al = '{record.flightId.iataAirline}', apt = '{record.flightId.iatalocalairport}', fltNum = '{record.flightId.flightNumber}', type = '{record.flightId.flightkind}', sdo = '{record.flightId.scheduleDate}', sto ='{record.flightId.scheduleTime}', lastupdate = GETDATE() WHERE flightID = '{record.Key}';";
+
                         cnn.Execute(sql);
                     }
                 }
@@ -372,6 +397,7 @@ namespace AMSGetFlights.Services
 
             eventExchange.MonitorMessage($"Upsert of {fls.Count} flights");
         }
+
         public IEnumerable<string> GetAllSubscriptions()
         {
             using var cnn = SimpleDbConnection();
@@ -412,6 +438,25 @@ namespace AMSGetFlights.Services
             } catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+            }
+        }
+
+        public void ClearFlights()
+        {
+            using var cnn = SimpleDbConnection();
+            try
+            {
+                cnn.Open();
+                cnn.Execute("DELETE from StoredFlights");
+            }
+            catch (Exception)
+            {
+                //return null;
+            }
+            finally
+            {
+                cnn.Close();
+                System.GC.Collect();
             }
         }
     }

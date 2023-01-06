@@ -333,6 +333,20 @@ namespace AMSGetFlights.Model
             }
         }
         public FlightID flightId { get; set; }
+        public string? callsign
+        {
+            get
+            {
+                if (Values.ContainsKey("callsign"))
+                {
+                    return Values["callsign"];
+                }
+                else
+                {
+                    return $"{flightId.iataAirline}{flightId.flightNumber}";
+                }
+            }
+        }
         public string domesticintcode { get; set; }
         public string aircrafttypeicao { get; set; }
         public string aircrafttypeiata { get; set; }

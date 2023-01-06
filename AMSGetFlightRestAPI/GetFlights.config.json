@@ -16,6 +16,8 @@
   "ConfigurationFile": "GetFlights.config.json",
   "EnableDirectAMSLookukOnSingleFlightCacheFailure": true,
   "EnableDirectAMSLookukOnMultiFlightCacheFailure": true,
+  "TryItDefaultURL": "https://localhost:7095/api/GetFlightsJSON",
+  "TryItDefaultToken": "1ecf91df-cbc1-4a2d-bf61-5a2dc8ae2e33",
   "MappedQueryParameters": {
     "qa": "S--G_QualifierCategory",
     "status": "S--G_Status",
@@ -155,6 +157,7 @@
       "Token": "1ecf91df-cbc1-4a2d-bf61-5a2dc8ae2e33",
       "Name": "swissport",
       "Enabled": true,
+      "AllowXML": true,
       "AllowedAirports": [
         "DOH"
       ],

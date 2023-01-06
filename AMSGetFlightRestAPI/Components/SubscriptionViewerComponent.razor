@@ -10,16 +10,12 @@
             <Template Context="data">
                 <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => EditRow(data))" @onclick:stopPropagation="true">
                 </RadzenButton>
-                @*   <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" Class="my-1 ms-1" Click="@(args => DeleteRow(data))" @onclick:stopPropagation="true">
-                </RadzenButton>*@
             </Template>
             <EditTemplate Context="data">
                 <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@((args) => SaveRow(data))">
                 </RadzenButton>
                 <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Class="my-1 ms-1" Click="@((args) => CancelEdit(data))">
                 </RadzenButton>
-                @*    <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.ExtraSmall" Class="my-1 ms-1" Click="@(args => DeleteRow(data))">
-                </RadzenButton> *@
             </EditTemplate>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Subscription" Title="Enabled" Property="IsEnabled" TextAlign="TextAlign.Center" Width="100px">

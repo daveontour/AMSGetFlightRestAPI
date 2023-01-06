@@ -3,8 +3,10 @@ using Newtonsoft.Json;
 
 namespace AMSGetFlights.Services
 {
-    public class GetFlightsConfig : ICloneable, IGetFlightsConfig
+    public class GetFlightsConfig : ICloneable
     {
+        public string TryItDefaultURL { get; set; }
+        public string TryItDefaultToken { get; set; }
         public string? SQLConnectionString { get; set; }
         public string AdminPass { get; set; } = "admin";
         public bool AllowAMSXFormat { get; set; } = true;
@@ -74,7 +76,7 @@ namespace AMSGetFlights.Services
             return clone;
         }
     }
-    public class GetFlightsConfigService : IGetFlightsConfigService
+    public class GetFlightsConfigService 
     {
         public string? CurrentConfigFile { get; set; } = null;
 

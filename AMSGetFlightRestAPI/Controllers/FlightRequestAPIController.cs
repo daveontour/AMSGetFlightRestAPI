@@ -13,12 +13,12 @@ namespace AMSGetFlights.Controllers
     [ApiController]
     public partial class FlightRequestAPIController : ControllerBase
     {
-        private readonly IFlightRequestHandler handler;
-        private readonly IGetFlightsConfigService configService;
+        private readonly FlightRequestHandler handler;
+        private readonly GetFlightsConfigService configService;
         private readonly EventExchange eventExchange;
-        private readonly IFlightRepository repo;
+        private readonly FlightRepository repo;
 
-        public FlightRequestAPIController(IFlightRequestHandler handler, IGetFlightsConfigService configService, EventExchange eventExchange,IFlightRepository repo)
+        public FlightRequestAPIController(FlightRequestHandler handler, GetFlightsConfigService configService, EventExchange eventExchange,FlightRepository repo)
         {
             this.handler = handler;
             this.configService = configService;

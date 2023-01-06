@@ -4,13 +4,13 @@ using System.Xml;
 
 namespace AMSGetFlights.Services
 {
-    public class FlightRequestHandler : IFlightRequestHandler
+    public class FlightRequestHandler 
     {
-        private readonly IFlightRepository repo;
-        private readonly IGetFlightsConfigService configService;
+        private readonly FlightRepository repo;
+        private readonly GetFlightsConfigService configService;
         private readonly EventExchange eventExchange;
 
-        public FlightRequestHandler(IFlightRepository repo, IGetFlightsConfigService configService,EventExchange eventExchange)
+        public FlightRequestHandler(FlightRepository repo, GetFlightsConfigService configService,EventExchange eventExchange)
         {
             this.repo = repo;
             this.configService = configService;
