@@ -19,6 +19,9 @@ namespace AMSGetFlights.Services
             this.eventExchange = eventExchange;
             this.configService = configService; 
             this.subManager = subManager;
+
+            ThreadPool.SetMinThreads(configService.config.MinNumSubscriptionThreads, 0);
+            ThreadPool.SetMaxThreads(configService.config.MaxNumSubscriptionThreads, 0);
         }
 
         private void SendBacklogRequest(Subscription sub)
@@ -35,13 +38,30 @@ namespace AMSGetFlights.Services
         public async Task Start()
         {
             eventExchange.OnSendBacklog += SendBacklogRequest;
-            eventExchange.OnFlightUpdatedOrAdded += FlightUpdateOrAdded;
+            eventExchange.OnFlightUpdated += FlightUpdated;
+            eventExchange.OnFlightDeleted += FlightDeleted;
+            eventExchange.OnFlightInserted += FlightAdded;
             queue.OnChanged += UpdatedEnqueue;
         }
 
-        private void FlightUpdateOrAdded(AMSFlight obj)
+        private void FlightAdded(AMSFlight obj)
         {
             //The subclass Enqueue also fires an event to initiate the transfer
+            obj.Action = "insert";
+            queue.Enqueue(obj);
+
+        }
+        private void FlightUpdated(AMSFlight obj)
+        {
+            //The subclass Enqueue also fires an event to initiate the transfer
+            obj.Action = "update";
+            queue.Enqueue(obj);
+
+        }
+        private void FlightDeleted(AMSFlight obj)
+        {
+            //The subclass Enqueue also fires an event to initiate the transfer
+            obj.Action = "delete";
             queue.Enqueue(obj);
 
         }
@@ -53,170 +73,195 @@ namespace AMSGetFlights.Services
             Subscription sub = info.Item1;
             AMSFlight flight = info.Item2;
 
-            if (!sub.IsEnabled || sub.ValidUntil < DateTime.Now) return;
+            Console.WriteLine($"Processing subscription {sub.SubscriptionID}. Flight {flight?.callsign}");
 
-            //Enqueue the new flight, and then process the Backlog queue until empty
-            if (flight != null) sub.BackLog.Enqueue(flight);
-
-            foreach (AMSFlight fl in sub.BackLog)
+            if (!sub.IsEnabled || sub.ValidUntil < DateTime.Now)
             {
-                if (!sub.IsArrival && flight.flightId.flightkind.ToLower() == "arrival")
+                Console.WriteLine($"Subscription: {sub.SubscriptionID}. Disabled");
+                return;
+            }
+
+
+
+            lock (sub.BackLog)
+            {
+                //Enqueue the new flight, and then process the Backlog queue until empty
+                if (flight != null) sub.BackLog.Enqueue(flight);
+
+                while (sub.BackLog.Count > 0)
                 {
-                    continue;
-                }
-                if (!sub.IsDeparture && flight.flightId.flightkind.ToLower() == "departure")
-                {
-                    continue;
-                }
-                if (sub.AirportIATA != null)
-                {
-                    if (sub.AirportIATA != flight.flightId.iatalocalairport)
+                    AMSFlight fl;
+                    if (!sub.BackLog.TryDequeue(out fl)) continue;
+
+                    // Check whether the Flight has changes that the user is interested in
+                    if (!fl.HasUserInterestedChanges(sub))
                     {
+                        if (configService.config.IsTest) Console.WriteLine($"Sub:{sub.SubscriptionID} Failed HAS Interest");
                         continue;
                     }
-                }
-                if (sub.AirlineIATA != null)
-                {
-                    if (sub.AirlineIATA != flight.flightId.iataAirline)
+                    if (!sub.IsArrival && flight.flightId.flightkind.ToLower() == "arrival")
                     {
+                        if (configService.config.IsTest) Console.WriteLine($"Subscription: {sub.SubscriptionID} Failed Arrival");
                         continue;
                     }
-                }
-
-                TimeSpan? ts = flight.flightId.scheduleDateTime - DateTime.Now;
-                if (ts.Value.TotalHours > sub.MaxHorizonInHours)
-                {
-                    continue;
-                }
-                ts = DateTime.Now - flight.flightId.scheduleDateTime;
-                if (ts.Value.TotalHours < sub.MinHorizonInHours)
-                {
-                    continue;
-                }
-
-                // Customise for user
-                // Adjust the result so only elements the user is allowed to see are set
-                List<string> validFields = configService.config.ValidUserFields(sub.SubscriberToken);
-                List<string> validCustomFields = configService.config.ValidUserCustomFields(sub.SubscriberToken);
-                foreach (var prop in flight.GetType().GetProperties())
-                {
-                    if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
+                    if (!sub.IsDeparture && flight.flightId.flightkind.ToLower() == "departure")
                     {
-                        if (prop.Name == "XmlRaw")
+                        if (configService.config.IsTest) Console.WriteLine($"Subscription: {sub.SubscriptionID} Failed Departure");
+                        continue;
+                    }
+                    if (sub.AirportIATA != null)
+                    {
+                        if (sub.AirportIATA != flight.flightId.iatalocalairport)
                         {
+                            if (configService.config.IsTest) Console.WriteLine($"Subscription: {sub.SubscriptionID} Failed Airport");
                             continue;
                         }
-                        prop.SetValue(flight, null);
                     }
-                }
-                if (flight.Values != null && validCustomFields.Count() > 0)
-                {
-                    Dictionary<string, string> fields = new Dictionary<string, string>();
-                    foreach (string key in flight.Values.Keys)
+                    if (sub.AirlineIATA != null)
                     {
-                        if (validCustomFields.Contains(key))
+                        if (sub.AirlineIATA != flight.flightId.iataAirline)
                         {
-                            fields.Add(key, flight.Values[key]);
+                            if (configService.config.IsTest) Console.WriteLine($"Subscription: {sub.SubscriptionID} Failed Airline");
+                            continue;
                         }
                     }
-                    flight.Values = fields;
-                    // flight.Values = flight.Values.Where(f => validCustomFields.Contains(f.name)).ToList();
-                }
 
-                // Made it this far, so OK to try send the message
-
-                string content = flight.XmlRaw;
-                string mediaType = "text/xml";
-
-                if (sub.DataFormat.ToLower() == "json")
-                {
-                    mediaType = "text/json";
-                    content = JsonConvert.SerializeObject(flight, Formatting.Indented, new JsonSerializerSettings
+                    TimeSpan? ts = flight.flightId.scheduleDateTime - DateTime.Now;
+                    if (ts.Value.TotalHours > sub.MaxHorizonInHours)
                     {
-                        NullValueHandling = NullValueHandling.Ignore
-                    });
-                }
-
-                if (!configService.config.IsTest)
-                {
-                    try
+                        continue;
+                    }
+                    ts = DateTime.Now - flight.flightId.scheduleDateTime;
+                    if (ts.Value.TotalHours < sub.MinHorizonInHours)
                     {
-                        using var client = new HttpClient();
-                        client.Timeout = TimeSpan.FromSeconds(30);
+                        if (configService.config.IsTest) Console.WriteLine($"Subscription: {sub.SubscriptionID} Failed Timespan");
+                        continue;
+                    }
 
-                        HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, sub.CallBackURL)
+                    // Customise for user
+                    // Adjust the result so only elements the user is allowed to see are set
+                    List<string> validFields = configService.config.ValidUserFields(sub.SubscriberToken);
+                    List<string> validCustomFields = configService.config.ValidUserCustomFields(sub.SubscriberToken);
+                    foreach (var prop in flight.GetType().GetProperties())
+                    {
+                        if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
                         {
-                            Content = new StringContent(content, Encoding.UTF8, mediaType)
-                        };
-
-                        if (sub.AuthorizationHeaderName != null)
-                        {
-
-                            requestMessage.Headers.Add(sub.AuthorizationHeaderName, sub.AuthorizationHeaderValue);
-
-                        }
-
-                        using (requestMessage)
-                        {
-                            try
+                            if (prop.Name == "XmlRaw" || prop.Name=="Action")
                             {
-                                using HttpResponseMessage response = client.SendAsync(requestMessage).Result;
-                                if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted)
+                                continue;
+                            }
+                            prop.SetValue(flight, null);
+                        }
+                    }
+                    if (flight.Values != null && validCustomFields.Count() > 0)
+                    {
+                        Dictionary<string, string> fields = new Dictionary<string, string>();
+                        foreach (string key in flight.Values.Keys)
+                        {
+                            if (validCustomFields.Contains(key))
+                            {
+                                fields.Add(key, flight.Values[key]);
+                            }
+                        }
+                        flight.Values = fields;
+                        // flight.Values = flight.Values.Where(f => validCustomFields.Contains(f.name)).ToList();
+                    }
+
+                    // Made it this far, so OK to try send the message
+
+                    string content = flight.XmlRaw;
+                    string mediaType = "text/xml";
+
+                    if (sub.DataFormat.ToLower() == "json")
+                    {
+                        mediaType = "text/json";
+                        content = JsonConvert.SerializeObject(flight, Formatting.Indented, new JsonSerializerSettings
+                        {
+                            NullValueHandling = NullValueHandling.Ignore
+                        });
+                    }
+
+                    if (!configService.config.IsTest)
+                    {
+                        try
+                        {
+                            using var client = new HttpClient();
+                            client.Timeout = TimeSpan.FromSeconds(30);
+
+                            HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, sub.CallBackURL)
+                            {
+                                Content = new StringContent(content, Encoding.UTF8, mediaType)
+                            };
+
+                            if (sub.AuthorizationHeaderName != null)
+                            {
+
+                                requestMessage.Headers.Add(sub.AuthorizationHeaderName, sub.AuthorizationHeaderValue);
+
+                            }
+
+                            using (requestMessage)
+                            {
+                                try
                                 {
-                                    sub.ConsecutiveSuccessfullCalls++;
-                                    sub.LastSuccess = DateTime.Now;
-                                    sub.ConsecutiveUnsuccessfullCalls = 0;
+                                    using HttpResponseMessage response = client.SendAsync(requestMessage).Result;
+                                    if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted)
+                                    {
+                                        sub.ConsecutiveSuccessfullCalls++;
+                                        sub.LastSuccess = DateTime.Now;
+                                        sub.ConsecutiveUnsuccessfullCalls = 0;
+                                    }
+                                    else
+                                    {
+                                        sub.ConsecutiveSuccessfullCalls = 0;
+                                        sub.ConsecutiveUnsuccessfullCalls++;
+                                        sub.LastFailure = DateTime.Now;
+                                        sub.LastError = $"HTTP Status Code: {response.StatusCode}";
+                                        sub.BackLog.Enqueue(fl);
+                                    }
                                 }
-                                else
+                                catch (Exception ex)
                                 {
                                     sub.ConsecutiveSuccessfullCalls = 0;
                                     sub.ConsecutiveUnsuccessfullCalls++;
                                     sub.LastFailure = DateTime.Now;
-                                    sub.LastError = $"HTTP Status Code: {response.StatusCode}";
+                                    sub.LastError = ex.Message;
                                     sub.BackLog.Enqueue(fl);
                                 }
                             }
-                            catch (Exception ex)
-                            {
-                                sub.ConsecutiveSuccessfullCalls = 0;
-                                sub.ConsecutiveUnsuccessfullCalls++;
-                                sub.LastFailure = DateTime.Now;
-                                sub.LastError = ex.Message;
-                                sub.BackLog.Enqueue(fl);
-                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            sub.ConsecutiveSuccessfullCalls = 0;
+                            sub.ConsecutiveUnsuccessfullCalls++;
+                            sub.LastFailure = DateTime.Now;
+                            sub.LastError = ex.Message;
+                            sub.BackLog.Enqueue(fl);
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        sub.ConsecutiveSuccessfullCalls = 0;
-                        sub.ConsecutiveUnsuccessfullCalls++;
-                        sub.LastFailure = DateTime.Now;
-                        sub.LastError = ex.Message;
-                        sub.BackLog.Enqueue(fl);
+                        Console.WriteLine($"Writing {sub.SubscriptionID}. Flight {flight.callsign}. Action = {flight.Action}");
+                        //Console.WriteLine(content);
                     }
-                }
-                else
-                {
-                    Console.WriteLine(content);
-                }
 
-                eventExchange.SubscriptionSend();
+                    eventExchange.SubscriptionSend();
 
+                }
             }
         }
 
         public void Dispose()
         {
-            eventExchange.OnFlightUpdatedOrAdded -= FlightUpdateOrAdded;
+            eventExchange.OnFlightUpdated -= FlightUpdated;
+            eventExchange.OnFlightInserted -= FlightAdded;
+            eventExchange.OnFlightDeleted -= FlightDeleted;
             eventExchange.OnSendBacklog -= SendBacklogRequest;
             queue.OnChanged -= UpdatedEnqueue;
         }
 
         public string SendBacklog(Subscription s)
         {
-
-            ThreadPool.SetMinThreads(Math.Min(subManager.Subscriptions.Count, 5), 0);
-            ThreadPool.SetMaxThreads(Math.Min(subManager.Subscriptions.Count, 40), 0);
 
             int depth = s.BackLog.Count;
             Tuple<Subscription, AMSFlight> state = new Tuple<Subscription, AMSFlight>(s, null);
@@ -228,15 +273,6 @@ namespace AMSGetFlights.Services
         private void UpdatedEnqueue()
         {
     
-            try
-            {
-                ThreadPool.SetMinThreads(Math.Min(subManager.Subscriptions.Count, 5), 0);
-                ThreadPool.SetMaxThreads(Math.Min(subManager.Subscriptions.Count, 40), 0);
-            } catch (Exception ex)
-            {
-                ThreadPool.SetMinThreads(5, 0);
-                ThreadPool.SetMaxThreads(40, 0);
-            }
             AMSFlight obj = queue.Dequeue();
 
             foreach (Subscription sub in subManager.Subscriptions)

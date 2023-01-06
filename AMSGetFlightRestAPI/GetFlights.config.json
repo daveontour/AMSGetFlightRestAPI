@@ -1,4 +1,6 @@
 {
+  "MinNumSubscriptionThreads": 5,
+  "MaxNumSubscriptionThreads": 40,
   "EnableSubscriptions": true,
   "IsTest": true,
   "Storage": "SQL",

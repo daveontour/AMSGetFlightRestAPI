@@ -144,6 +144,7 @@ public class AMSGetFlightsStatusService
                 chunkToTime = chunkFromTime.AddHours(24);
 
             } while (ToTime.AddDays(1) > chunkToTime.AddDays(1));
+            eventExchange.MonitorMessage($"Completed initial population of cache");
         }
 
         repo.PruneRepo(backWindow);
@@ -233,20 +234,29 @@ public class AMSGetFlightsStatusService
         {
             return;
         }
-        if (xml.Contains("FlightDeletedNotification"))
-        {
-            XmlDocument xmlDocd = new XmlDocument();
-            xmlDocd.LoadXml(xml);
 
-            AMSFlight fld = new AMSFlight(xmlDocd, configService.config);
-            repo.DeleteFlight(fld);
-            return;
-        }
         XmlDocument xmlDoc = new XmlDocument();
         xmlDoc.LoadXml(xml);
-
         AMSFlight fl = new AMSFlight(xmlDoc, configService.config);
-        repo.UpdateOrAddFlight(fl);
+
+        if (xml.Contains("FlightDeletedNotification"))
+        {
+            fl.Action = "delete";
+            repo.DeleteFlight(fl);
+            return;
+        }
+        if (xml.Contains("FlightUpdatedNotification"))
+        {
+            fl.Action = "update";
+            repo.UpdateOrAddFlight(fl);
+            return;
+        }
+        if (xml.Contains("FlightCreatedNotification"))
+        {
+            fl.Action = "insert";
+            repo.InsertOrUpdateFlight(fl);
+            return;
+        }
         System.GC.Collect();
     }
     private void ProcessMessageGet(string xml)

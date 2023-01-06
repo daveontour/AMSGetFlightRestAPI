@@ -14,7 +14,7 @@ namespace AMSGetFlights.Services
     {
         private static string? dbLocation;
         private static string? dbfileName;
-        private readonly  EventExchange eventExchange;
+        private readonly EventExchange eventExchange;
 
         public SqLiteFlightRepository(GetFlightsConfigService configService, EventExchange eventExchange)
         {
@@ -162,7 +162,7 @@ namespace AMSGetFlights.Services
             GC.Collect();
         }
 
-        public void Upsert(List<AMSFlight> fls)
+        public void Indate(List<AMSFlight> fls)
         {
             using (var cnn = SimpleDbConnection())
             {
@@ -170,7 +170,7 @@ namespace AMSGetFlights.Services
                 SqliteCommand sqlComm;
                 sqlComm = new SqliteCommand("begin", cnn);
                 sqlComm.ExecuteNonQuery();
-            
+
 
                 foreach (AMSFlight record in fls)
                 {
@@ -179,7 +179,34 @@ namespace AMSGetFlights.Services
                     cnn.Execute(sql);
                 }
 
-        
+
+                sqlComm = new SqliteCommand("end", cnn);
+                sqlComm.ExecuteNonQuery();
+                cnn.Close();
+
+                eventExchange.MonitorMessage($"Bulk Update of {fls.Count} flights");
+            }
+
+            GC.Collect();
+        }
+        public void Upsert(List<AMSFlight> fls)
+        {
+            using (var cnn = SimpleDbConnection())
+            {
+                cnn.Open();
+                SqliteCommand sqlComm;
+                sqlComm = new SqliteCommand("begin", cnn);
+                sqlComm.ExecuteNonQuery();
+
+
+                foreach (AMSFlight record in fls)
+                {
+                    string sql = $"INSERT INTO StoredFlights (flightID, callsign, XML,al,apt,fltNum,type, sdo,sto, lastupdate) VALUES ('{record.flightId.flightID}','{record.callsign}', '{record.XmlRaw}','{record.flightId.iataAirline}','{record.flightId.iatalocalairport}','{record.flightId.flightNumber}','{record.flightId.flightkind}','{record.flightId.scheduleDate}', '{record.flightId.scheduleTime}',datetime('now'))" +
+                        $"ON CONFLICT(flightID) DO UPDATE SET XML = '{record.XmlRaw}', callsign = '{record.callsign}', sto = '{record.flightId.scheduleTime}', sdo = '{record.flightId.scheduleDate}', lastupdate = datetime('now')";
+                    cnn.Execute(sql);
+                }
+
+
                 sqlComm = new SqliteCommand("end", cnn);
                 sqlComm.ExecuteNonQuery();
                 cnn.Close();
@@ -246,9 +273,9 @@ namespace AMSGetFlights.Services
                 sqlComm.ExecuteNonQuery();
 
 
-                    string sql = $"DELETE from StoredFlights";
-                    cnn.Execute(sql);
-            
+                string sql = $"DELETE from StoredFlights";
+                cnn.Execute(sql);
+
 
 
                 sqlComm = new SqliteCommand("end", cnn);
@@ -367,6 +394,36 @@ namespace AMSGetFlights.Services
             cnn.Execute(sql);
             cnn.Close();
         }
+        public void Indate(List<AMSFlight> fls)
+        {
+            using var cnn = SimpleDbConnection();
+            cnn.Open();
+            string sql;
+            try
+            {
+                foreach (AMSFlight record in fls)
+                {
+                    sql = $" INSERT INTO StoredFlights (flightID, callsign, XML,al,apt,fltNum,type, sdo,sto,lastupdate) VALUES ('{record.Key}','{record.callsign}', '{record.XmlRaw}','{record.flightId.iataAirline}','{record.flightId.iatalocalairport}','{record.flightId.flightNumber}','{record.flightId.flightkind}','{record.flightId.scheduleDate}', '{record.flightId.scheduleTime}',GETDATE());";
+                    try
+                    {
+                        cnn.Execute(sql);
+                    }
+                    catch (System.Data.SqlClient.SqlException ex)
+                    {
+                        sql = $" UPDATE StoredFlights SET XML = '{record.XmlRaw}', callsign='{record.callsign}', al = '{record.flightId.iataAirline}', apt = '{record.flightId.iatalocalairport}', fltNum = '{record.flightId.flightNumber}', type = '{record.flightId.flightkind}', sdo = '{record.flightId.scheduleDate}', sto ='{record.flightId.scheduleTime}', lastupdate = GETDATE() WHERE flightID = '{record.Key}';";
+
+                        cnn.Execute(sql);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                eventExchange.MonitorMessage(ex.Message);
+            }
+            cnn.Close();
+
+            eventExchange.MonitorMessage($"Upsert of {fls.Count} flights");
+        }
         public void Upsert(List<AMSFlight> fls)
         {
             using var cnn = SimpleDbConnection();
@@ -376,14 +433,14 @@ namespace AMSGetFlights.Services
             {
                 foreach (AMSFlight record in fls)
                 {
-                        sql = $" INSERT INTO StoredFlights (flightID, callsign, XML,al,apt,fltNum,type, sdo,sto,lastupdate) VALUES ('{record.Key}','{record.callsign}', '{record.XmlRaw}','{record.flightId.iataAirline}','{record.flightId.iatalocalairport}','{record.flightId.flightNumber}','{record.flightId.flightkind}','{record.flightId.scheduleDate}', '{record.flightId.scheduleTime}',GETDATE());";
+                    sql = $" INSERT INTO StoredFlights (flightID, callsign, XML,al,apt,fltNum,type, sdo,sto,lastupdate) VALUES ('{record.Key}','{record.callsign}', '{record.XmlRaw}','{record.flightId.iataAirline}','{record.flightId.iatalocalairport}','{record.flightId.flightNumber}','{record.flightId.flightkind}','{record.flightId.scheduleDate}', '{record.flightId.scheduleTime}',GETDATE());";
                     try
                     {
                         cnn.Execute(sql);
                     }
                     catch (System.Data.SqlClient.SqlException ex)
                     {
-                    sql = $" UPDATE StoredFlights SET XML = '{record.XmlRaw}', callsign='{record.callsign}', al = '{record.flightId.iataAirline}', apt = '{record.flightId.iatalocalairport}', fltNum = '{record.flightId.flightNumber}', type = '{record.flightId.flightkind}', sdo = '{record.flightId.scheduleDate}', sto ='{record.flightId.scheduleTime}', lastupdate = GETDATE() WHERE flightID = '{record.Key}';";
+                        sql = $" UPDATE StoredFlights SET XML = '{record.XmlRaw}', callsign='{record.callsign}', al = '{record.flightId.iataAirline}', apt = '{record.flightId.iatalocalairport}', fltNum = '{record.flightId.flightNumber}', type = '{record.flightId.flightkind}', sdo = '{record.flightId.scheduleDate}', sto ='{record.flightId.scheduleTime}', lastupdate = GETDATE() WHERE flightID = '{record.Key}';";
 
                         cnn.Execute(sql);
                     }
@@ -435,7 +492,8 @@ namespace AMSGetFlights.Services
                 }
 
                 GC.Collect();
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }

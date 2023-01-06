@@ -27,18 +27,27 @@ namespace AMSGetFlights.Services
             }
 
             flightRepo.Upsert(new List<AMSFlight>() { flt });
-            eventExchange.FlightUpdatedOrAdded(flt);
-            eventExchange.FlightRepositoryUpdated();
+            eventExchange.FlightUpdated(flt);
+        }
+        public void InsertOrUpdateFlight(AMSFlight flt)
+        {
+
+            if (flt.flightId.scheduleDateTime < MinDateTime || flt.flightId.scheduleDateTime > MaxDateTime)
+            {
+                return;
+            }
+
+            flightRepo.Indate(new List<AMSFlight>() { flt });
+            eventExchange.FlightInserted(flt);
         }
         public void DeleteFlight(AMSFlight flt)
         {
             flightRepo.DeleteRecord(flt);
             eventExchange.FlightDeleted(flt);
-            eventExchange.FlightRepositoryUpdated();
         } 
         public void BulkUpdateOrInsert(List<AMSFlight> fls)
         {
-            flightRepo.Upsert(fls);
+            flightRepo.Indate(fls);
         }
         public List<AMSFlight> GetFlights(GetFlightQueryObject query)
         {

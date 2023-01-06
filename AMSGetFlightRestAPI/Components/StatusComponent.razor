@@ -1,0 +1,22 @@
+﻿@inject EventExchange eventExchange
+@implements IDisposable;
+
+<label>Status: </label><span style="margin-left:10px">@Status</span>
+
+@code {
+    public string? Status { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Status = eventExchange.LastMonitorMessage;
+        eventExchange.OnMonitorMessage += MonitorMessage;
+    }
+    public void MonitorMessage(string mess){
+        Status = mess;
+        InvokeAsync(() => StateHasChanged());
+    }
+
+    public void Dispose (){
+        eventExchange.OnMonitorMessage -= MonitorMessage;
+    }
+}

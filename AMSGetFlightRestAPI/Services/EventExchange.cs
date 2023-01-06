@@ -5,11 +5,11 @@ using NLog;
 
 namespace AMSGetFlights.Services
 {
-    public class EventExchange 
+    public class EventExchange :IDisposable
     {
         public event Action<AMSFlight>? OnFlightDeleted;
-        public event Action? OnFlightRepositoryUpdated;
-        public event Action<AMSFlight>? OnFlightUpdatedOrAdded;
+        public event Action<AMSFlight>? OnFlightUpdated;
+        public event Action<AMSFlight>? OnFlightInserted;
         public event Action<GetFlightQueryObject>? OnAPIRequestMade;
         public event Action<GetFlightQueryObject>? OnAPIRequestResult;
         public event Action<string>? OnAPIURLRequestMade;
@@ -23,6 +23,25 @@ namespace AMSGetFlights.Services
         public event Action<Subscription>? OnSendBacklog;
 
         private readonly Logger logger = LogManager.GetLogger("consoleLogger");
+
+        public string LastMonitorMessage { get; set; }
+
+        public EventExchange()
+        {
+            OnMonitorMessage += SetLastMonitorMessage;
+        }
+
+        public void Dispose()
+        {
+            OnMonitorMessage -= SetLastMonitorMessage;
+        }
+    
+
+        private void SetLastMonitorMessage(string obj)
+        {
+            LastMonitorMessage = obj;
+        }
+
         public void URLRequestMade(string message)
         {
             OnAPIURLRequestMade?.Invoke(message);
@@ -49,14 +68,14 @@ namespace AMSGetFlights.Services
         {
             OnAPIRequestResult?.Invoke(query);
         }
-        public void FlightRepositoryUpdated()
-        {
-            OnFlightRepositoryUpdated?.Invoke();
-        }
 
-        public void FlightUpdatedOrAdded(AMSFlight flt)
+        public void FlightUpdated(AMSFlight flt)
         {
-            OnFlightUpdatedOrAdded?.Invoke(flt);
+            OnFlightUpdated?.Invoke(flt);
+        }
+        public void FlightInserted(AMSFlight flt)
+        {
+            OnFlightInserted?.Invoke(flt);
         }
 
         public void FlightDeleted(AMSFlight flt)

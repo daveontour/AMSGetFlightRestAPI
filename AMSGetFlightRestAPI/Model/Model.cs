@@ -62,6 +62,49 @@ namespace AMSGetFlights.Model
 
         }
 
+        public bool HasUserInterestedChanges(Subscription sub )
+        {
+            // No filters are set, so pass the flight
+            if( !sub.ChangeEstimated 
+                && !sub.ChangeResourceBaggageReclaim 
+                && !sub.ChangeResourceCheckIn 
+                && !sub.ChangeResourceGate 
+                && !sub.ChangeResourceStand)
+            {
+                return true;
+            }
+
+            if (sub.ChangeEstimated)
+            {
+                if (flightId.flightkind.ToLower().StartsWith("arr"))
+                {
+                    if(XmlRaw.Contains("<Change propertyName=\"de-G_MostConfidentArrivalTime\">")) return true;
+                }
+                if (flightId.flightkind.ToLower().StartsWith("dep"))
+                {
+                    if (XmlRaw.Contains("<Change propertyName=\"de-G_MostConfidentDepartureTime\">")) return true;
+                }
+            }
+            if (sub.ChangeResourceStand)
+            {
+                if (XmlRaw.Contains("<StandSlotsChange>")) return true;
+            } 
+            if (sub.ChangeResourceCheckIn)
+            {
+                if (XmlRaw.Contains("<CheckInSlotsChange>")) return true;
+            } 
+            if (sub.ChangeResourceGate)
+            {
+                if (XmlRaw.Contains("<GateSlotsChange>")) return true;
+            } 
+            if (sub.ChangeResourceBaggageReclaim)
+            {
+                if (XmlRaw.Contains("<CarouselSlotsChange>")) return true;
+            }
+
+            return false;
+        }
+
         public AMSFlight(string xml, GetFlightsConfig config)
         {
             XmlDocument doc = new XmlDocument();
@@ -222,7 +265,7 @@ namespace AMSGetFlights.Model
                     string end = row.SelectSingleNode("./Value[@propertyName='EndTime']").InnerText;
                     string cat = row.SelectSingleNode("./Value[@propertyName='Category']")?.InnerText;
                     string stand = row.SelectSingleNode("./Stand/Value[@propertyName='Name']")?.InnerText;
-                    string area = row.SelectSingleNode("./Area/Value[@propertyName='Name']")?.InnerText;
+                    string area = row.SelectSingleNode("./Stand/Area/Value[@propertyName='Name']")?.InnerText;
 
                     dict.Add("StartTime", start);
                     dict.Add("EndTime", end);
@@ -243,9 +286,13 @@ namespace AMSGetFlights.Model
                     string start = row.SelectSingleNode("./Value[@propertyName='StartTime']").InnerText;
                     string end = row.SelectSingleNode("./Value[@propertyName='EndTime']").InnerText;
                     string cat = row.SelectSingleNode("./Value[@propertyName='Category']")?.InnerText;
+                    string name = row.SelectSingleNode("./Carousel/Value[@propertyName='Name']")?.InnerText;
+                    string area = row.SelectSingleNode("./Carousel/Area/Value[@propertyName='Name']")?.InnerText;
 
                     dict.Add("StartTime", start);
                     dict.Add("EndTime", end);
+                    if (name != null) dict.Add("Carousel", name);
+                    if (area != null) dict.Add("Area", area);
                     if (cat != null) dict.Add("Category", cat);
 
                     CarouselSlots.Add(dict);
@@ -260,10 +307,14 @@ namespace AMSGetFlights.Model
                     string start = row.SelectSingleNode("./Value[@propertyName='StartTime']").InnerText;
                     string end = row.SelectSingleNode("./Value[@propertyName='EndTime']").InnerText;
                     string cat = row.SelectSingleNode("./Value[@propertyName='Category']")?.InnerText;
+                    string name = row.SelectSingleNode("./Gate/Value[@propertyName='Name']")?.InnerText;
+                    string area = row.SelectSingleNode("./Gate/Area/Value[@propertyName='Name']")?.InnerText;
 
                     dict.Add("StartTime", start);
                     dict.Add("EndTime", end);
                     if (cat != null) dict.Add("Category", cat);
+                    if (name != null) dict.Add("Gate", name);
+                    if (area != null) dict.Add("Area", area);
 
                     GateSlots.Add(dict);
                 }
@@ -373,6 +424,7 @@ namespace AMSGetFlights.Model
         public string XmlRaw { get; set; }
         public string LastUpdated { get; private set; }
 
+        public string Action { get;set; }
         public object Clone()
         {
             return (AMSFlight)MemberwiseClone();
@@ -442,6 +494,12 @@ namespace AMSGetFlights.Model
         public string? SubscriberName { get; set; }
         public string? SubscriptionID { get; set; }
         public string DataFormat { get; set; }  //JSON or XML
+        public bool ChangeResourceGate { get; set; } = false;
+        public bool ChangeResourceStand { get; set; } = false;
+        public bool ChangeResourceCheckIn { get; set; } = false;
+
+        public bool ChangeResourceBaggageReclaim { get; set; } = false;
+        public bool ChangeEstimated { get; set; } = false;    
         public bool IsArrival { get; set; } = false;
         public bool IsDeparture { get; set; } = false;
         public bool IsEnabled { get; set; } = true;

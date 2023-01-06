@@ -5,6 +5,8 @@ namespace AMSGetFlights.Services
 {
     public class GetFlightsConfig : ICloneable
     {
+        public int MinNumSubscriptionThreads { get; set; } = 5;
+        public int MaxNumSubscriptionThreads { get; set; } = 40;
         public string TryItDefaultURL { get; set; }
         public string TryItDefaultToken { get; set; }
         public string? SQLConnectionString { get; set; }
