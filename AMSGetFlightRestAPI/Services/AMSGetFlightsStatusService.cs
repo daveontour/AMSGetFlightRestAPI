@@ -129,6 +129,7 @@ public class AMSGetFlightsStatusService
             do
             {
                 eventExchange.MonitorMessage($"Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
+                eventExchange.TopStatusMessage($"Loading: {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
                 Console.WriteLine($"Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
                 logger.Info($"Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
 
@@ -144,7 +145,7 @@ public class AMSGetFlightsStatusService
                 chunkToTime = chunkFromTime.AddHours(24);
 
             } while (ToTime.AddDays(1) > chunkToTime.AddDays(1));
-            eventExchange.MonitorMessage($"Completed initial population of cache");
+            eventExchange.TopStatusMessage($"Completed initial population of cache");
         }
 
         repo.PruneRepo(backWindow);
@@ -159,6 +160,7 @@ public class AMSGetFlightsStatusService
         DateTime FromTime = DateTime.UtcNow.AddDays(advanceWindow - 2);
         DateTime ToTime = DateTime.UtcNow.AddDays(advanceWindow);
 
+        eventExchange.TopStatusMessage($"Updating Flight Cache");
         foreach (AirportSource airport in configService.config.GetAirports())
         {
 
@@ -168,6 +170,7 @@ public class AMSGetFlightsStatusService
             do
             {
                 eventExchange.MonitorMessage($"Update Job Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
+                eventExchange.TopStatusMessage($"Loading: {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
                 logger.Info($"Update Job Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
                 string xml = GetFlightsXML(chunkFromTime, chunkToTime, airport.AptCode, airport.Token, airport.WSURL).Result;
                 if (xml != null)
@@ -183,7 +186,7 @@ public class AMSGetFlightsStatusService
 
         }
         repo.PruneRepo(backWindow);
-
+        eventExchange.TopStatusMessage($"Updating Flight Cache Complete");
         repo.MinDateTime = DateTime.UtcNow.AddDays(backWindow);
         repo.MaxDateTime = DateTime.UtcNow.AddDays(advanceWindow);
     }
@@ -241,18 +244,21 @@ public class AMSGetFlightsStatusService
 
         if (xml.Contains("FlightDeletedNotification"))
         {
+            eventExchange.TopStatusMessage($"Delete for flight {fl.callsign}");
             fl.Action = "delete";
             repo.DeleteFlight(fl);
             return;
         }
         if (xml.Contains("FlightUpdatedNotification"))
         {
+            eventExchange.TopStatusMessage($"Update for flight {fl.callsign}");
             fl.Action = "update";
             repo.UpdateOrAddFlight(fl);
             return;
         }
         if (xml.Contains("FlightCreatedNotification"))
         {
+            eventExchange.TopStatusMessage($"Create for flight {fl.callsign}");
             fl.Action = "insert";
             repo.InsertOrUpdateFlight(fl);
             return;

@@ -14,6 +14,7 @@ namespace AMSGetFlights.Services
         public event Action<GetFlightQueryObject>? OnAPIRequestResult;
         public event Action<string>? OnAPIURLRequestMade;
         public event Action<string>? OnMonitorMessage;
+        public event Action<string>? OnTopStatus;
         public event Action? OnServerFlightsUpdates;
         public event Action? OnServerNoFlightsUpdates;
         public event Action<bool>? OnFlightServiceRunning;
@@ -24,22 +25,22 @@ namespace AMSGetFlights.Services
 
         private readonly Logger logger = LogManager.GetLogger("consoleLogger");
 
-        public string LastMonitorMessage { get; set; }
+        public string LastTopMessage { get; set; }
 
         public EventExchange()
         {
-            OnMonitorMessage += SetLastMonitorMessage;
+            OnTopStatus += SetTopStatusMessage;
         }
 
         public void Dispose()
         {
-            OnMonitorMessage -= SetLastMonitorMessage;
+            OnTopStatus -= SetTopStatusMessage;
         }
     
 
-        private void SetLastMonitorMessage(string obj)
+        private void SetTopStatusMessage(string obj)
         {
-            LastMonitorMessage = obj;
+            LastTopMessage = obj;
         }
 
         public void URLRequestMade(string message)
@@ -55,7 +56,10 @@ namespace AMSGetFlights.Services
         {
             OnMonitorMessage?.Invoke(message);
         }
-
+        public void TopStatusMessage(string? message)
+        {
+            OnTopStatus?.Invoke(message);
+        }
         public void SubscriptionSend()
         {
             OnSubscriptionSend?.Invoke();   

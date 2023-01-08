@@ -17,7 +17,7 @@ namespace AMSGetFlights.Services
         public SubscriptionDispatcher(EventExchange eventExchange, GetFlightsConfigService configService, SubscriptionManager subManager)
         {
             this.eventExchange = eventExchange;
-            this.configService = configService; 
+            this.configService = configService;
             this.subManager = subManager;
 
             ThreadPool.SetMinThreads(configService.config.MinNumSubscriptionThreads, 0);
@@ -86,12 +86,37 @@ namespace AMSGetFlights.Services
             lock (sub.BackLog)
             {
                 //Enqueue the new flight, and then process the Backlog queue until empty
-                if (flight != null) sub.BackLog.Enqueue(flight);
 
-                while (sub.BackLog.Count > 0)
+                bool initByPassBacklog = flight == null;
+
+                if (sub.BackLog.Count == 0)
                 {
-                    AMSFlight fl;
-                    if (!sub.BackLog.TryDequeue(out fl)) continue;
+                    initByPassBacklog = true;
+                }
+                else
+                {
+                    // Put the flight omto the backlog so any exisiting messages are processed first 
+                    sub.BackLog.Put(flight);
+                }
+
+
+                while (sub.BackLog.Count > 0 || initByPassBacklog)
+                {
+                    // If the Backlog is empty, then we canjust use the flight
+                    AMSFlight fl = flight;
+
+                    if (initByPassBacklog)
+                    {
+                        //Unset the flag so it doesn't keep repeating
+                        initByPassBacklog = false;
+                    }
+                    else
+                    {
+                        // We are using the backlog, so get the next flight
+                        fl = sub.BackLog.Next(configService.config);
+                    }
+
+                    if (fl is null) continue;
 
                     // Check whether the Flight has changes that the user is interested in
                     if (!fl.HasUserInterestedChanges(sub))
@@ -99,19 +124,19 @@ namespace AMSGetFlights.Services
                         if (configService.config.IsTest) Console.WriteLine($"Sub:{sub.SubscriptionID} Failed HAS Interest");
                         continue;
                     }
-                    if (!sub.IsArrival && flight.flightId.flightkind.ToLower() == "arrival")
+                    if (!sub.IsArrival && fl.flightId.flightkind.ToLower() == "arrival")
                     {
                         if (configService.config.IsTest) Console.WriteLine($"Subscription: {sub.SubscriptionID} Failed Arrival");
                         continue;
                     }
-                    if (!sub.IsDeparture && flight.flightId.flightkind.ToLower() == "departure")
+                    if (!sub.IsDeparture && fl.flightId.flightkind.ToLower() == "departure")
                     {
                         if (configService.config.IsTest) Console.WriteLine($"Subscription: {sub.SubscriptionID} Failed Departure");
                         continue;
                     }
                     if (sub.AirportIATA != null)
                     {
-                        if (sub.AirportIATA != flight.flightId.iatalocalairport)
+                        if (sub.AirportIATA != fl.flightId.iatalocalairport)
                         {
                             if (configService.config.IsTest) Console.WriteLine($"Subscription: {sub.SubscriptionID} Failed Airport");
                             continue;
@@ -119,19 +144,19 @@ namespace AMSGetFlights.Services
                     }
                     if (sub.AirlineIATA != null)
                     {
-                        if (sub.AirlineIATA != flight.flightId.iataAirline)
+                        if (sub.AirlineIATA != fl.flightId.iataAirline)
                         {
                             if (configService.config.IsTest) Console.WriteLine($"Subscription: {sub.SubscriptionID} Failed Airline");
                             continue;
                         }
                     }
 
-                    TimeSpan? ts = flight.flightId.scheduleDateTime - DateTime.Now;
+                    TimeSpan? ts = fl.flightId.scheduleDateTime - DateTime.Now;
                     if (ts.Value.TotalHours > sub.MaxHorizonInHours)
                     {
                         continue;
                     }
-                    ts = DateTime.Now - flight.flightId.scheduleDateTime;
+                    ts = DateTime.Now - fl.flightId.scheduleDateTime;
                     if (ts.Value.TotalHours < sub.MinHorizonInHours)
                     {
                         if (configService.config.IsTest) Console.WriteLine($"Subscription: {sub.SubscriptionID} Failed Timespan");
@@ -142,40 +167,41 @@ namespace AMSGetFlights.Services
                     // Adjust the result so only elements the user is allowed to see are set
                     List<string> validFields = configService.config.ValidUserFields(sub.SubscriberToken);
                     List<string> validCustomFields = configService.config.ValidUserCustomFields(sub.SubscriberToken);
-                    foreach (var prop in flight.GetType().GetProperties())
+                    foreach (var prop in fl.GetType().GetProperties())
                     {
                         if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
                         {
-                            if (prop.Name == "XmlRaw" || prop.Name=="Action")
+                            if (prop.Name == "XmlRaw" || prop.Name == "Action")
                             {
                                 continue;
                             }
-                            prop.SetValue(flight, null);
+                            prop.SetValue(fl, null);
                         }
                     }
-                    if (flight.Values != null && validCustomFields.Count() > 0)
+                    if (fl.Values != null && validCustomFields.Count() > 0)
                     {
                         Dictionary<string, string> fields = new Dictionary<string, string>();
-                        foreach (string key in flight.Values.Keys)
+                        foreach (string key in fl.Values.Keys)
                         {
                             if (validCustomFields.Contains(key))
                             {
-                                fields.Add(key, flight.Values[key]);
+                                fields.Add(key, fl.Values[key]);
                             }
                         }
-                        flight.Values = fields;
+                        fl.Values = fields;
                         // flight.Values = flight.Values.Where(f => validCustomFields.Contains(f.name)).ToList();
                     }
 
                     // Made it this far, so OK to try send the message
+                    eventExchange.TopStatusMessage($"Sending Subscription Update for {fl.callsign}. Action = {fl.Action}");
 
-                    string content = flight.XmlRaw;
+                    string content = fl.XmlRaw;
                     string mediaType = "text/xml";
 
                     if (sub.DataFormat.ToLower() == "json")
                     {
                         mediaType = "text/json";
-                        content = JsonConvert.SerializeObject(flight, Formatting.Indented, new JsonSerializerSettings
+                        content = JsonConvert.SerializeObject(fl, Formatting.Indented, new JsonSerializerSettings
                         {
                             NullValueHandling = NullValueHandling.Ignore
                         });
@@ -217,7 +243,8 @@ namespace AMSGetFlights.Services
                                         sub.ConsecutiveUnsuccessfullCalls++;
                                         sub.LastFailure = DateTime.Now;
                                         sub.LastError = $"HTTP Status Code: {response.StatusCode}";
-                                        sub.BackLog.Enqueue(fl);
+                                        sub.BackLog.Put(fl);
+                                        break;
                                     }
                                 }
                                 catch (Exception ex)
@@ -226,7 +253,8 @@ namespace AMSGetFlights.Services
                                     sub.ConsecutiveUnsuccessfullCalls++;
                                     sub.LastFailure = DateTime.Now;
                                     sub.LastError = ex.Message;
-                                    sub.BackLog.Enqueue(fl);
+                                    sub.BackLog.Put(fl);
+                                    break;
                                 }
                             }
                         }
@@ -236,13 +264,13 @@ namespace AMSGetFlights.Services
                             sub.ConsecutiveUnsuccessfullCalls++;
                             sub.LastFailure = DateTime.Now;
                             sub.LastError = ex.Message;
-                            sub.BackLog.Enqueue(fl);
+                            sub.BackLog.Put(fl);
+                            break;
                         }
                     }
                     else
                     {
-                        Console.WriteLine($"Writing {sub.SubscriptionID}. Flight {flight.callsign}. Action = {flight.Action}");
-                        //Console.WriteLine(content);
+                        Console.WriteLine($"Writing {sub.SubscriptionID}. Flight {fl.callsign}. Action = {fl.Action}");
                     }
 
                     eventExchange.SubscriptionSend();
@@ -272,7 +300,7 @@ namespace AMSGetFlights.Services
         }
         private void UpdatedEnqueue()
         {
-    
+
             AMSFlight obj = queue.Dequeue();
 
             foreach (Subscription sub in subManager.Subscriptions)

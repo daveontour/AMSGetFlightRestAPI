@@ -29,7 +29,9 @@ namespace AMSGetFlights.Services
         public List<AirportSource> Airports { get; set; } = new List<AirportSource>();
         public Dictionary<string, User> Users { get; set; } = new Dictionary<string, User>();
         public bool IsTest { get; set; } = false;
-        public bool EnableSubscriptions { get; set; } = false;  
+        public bool EnableSubscriptions { get; set; } = false;
+        public bool TestBacklog { get; set; } = false;
+        public int BacklogMaxDepth { get; set; } = 10000;
 
         public List<string> ValidUserFields(string user)
         {

@@ -67,7 +67,7 @@ namespace AMSGetFlights.Controllers
         [HttpGet("GetFlightsJSON")]
         public ActionResult<GetFlightsResponse> Get()
         {
-
+            eventExchange.TopStatusMessage($"JSON API Request Received");
             eventExchange.URLRequestMade(Request.GetDisplayUrl());
 
             // Are JSON requests allowed
@@ -192,6 +192,8 @@ namespace AMSGetFlights.Controllers
         [HttpGet("GetFlightsXML")]
         public IActionResult GetXML()
         {
+            eventExchange.TopStatusMessage($"XML API Request Received");
+
             eventExchange.URLRequestMade(Request.GetDisplayUrl());
 
             if (!configService.config.AllowAMSXFormat)

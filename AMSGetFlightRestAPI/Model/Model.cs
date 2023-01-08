@@ -55,7 +55,8 @@ namespace AMSGetFlights.Model
         public string Result { get; set; }
         public int RecordsReturned { get; set; } = 0;
     }
-    public class AMSFlight : ICloneable
+  
+    public partial class AMSFlight : ICloneable
     {
         public AMSFlight()
         {
@@ -139,8 +140,6 @@ namespace AMSGetFlights.Model
             ConfigFlight(node, config);
             XmlRaw = node.OuterXml;
         }
-
-
         public void ConfigFlight(XmlNode node, GetFlightsConfig config)
         {
             if (node == null)
@@ -357,9 +356,7 @@ namespace AMSGetFlights.Model
                     CheckInSlots.Add(dict);
                 }
             }
-
         }
-
         private string GetValue(string xpath, XmlNode node, XmlNamespaceManager nsmgr)
         {
             string value = node.SelectSingleNode(xpath)?.InnerText;
@@ -497,7 +494,6 @@ namespace AMSGetFlights.Model
         public bool ChangeResourceGate { get; set; } = false;
         public bool ChangeResourceStand { get; set; } = false;
         public bool ChangeResourceCheckIn { get; set; } = false;
-
         public bool ChangeResourceBaggageReclaim { get; set; } = false;
         public bool ChangeEstimated { get; set; } = false;    
         public bool IsArrival { get; set; } = false;
@@ -518,9 +514,13 @@ namespace AMSGetFlights.Model
         public DateTime ValidUntil { get; set; } = DateTime.MaxValue;
 
         [JsonIgnore]
-        public ConcurrentQueue<AMSFlight> BackLog { get; set; } = new();
-        [JsonIgnore]
-        public int BacklogSize { get => BackLog.Count; }
+        public SubscriptionBacklog BackLog { get; set; } = new();
+
         public string? StatusMessage { get; set; }
+
+        internal void SetConfig(GetFlightsConfig? config)
+        {
+            BackLog.SetConfig(config, SubscriptionID, SubscriberToken);
+        }
     }
 }

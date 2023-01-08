@@ -1,8 +1,10 @@
 {
+  "IsTest": false,
+  "TestBacklog": false,
   "MinNumSubscriptionThreads": 5,
   "MaxNumSubscriptionThreads": 40,
   "EnableSubscriptions": true,
-  "IsTest": true,
+  "BacklogMaxDepth": 1000,
   "Storage": "SQL",
   "SQLConnectionString": "Integrated Security=SSPI;Persist Security Info=False;Database=FLIGHTRESTAPIDB;Server=localhost;",
   "AdminPass": "omnipass",

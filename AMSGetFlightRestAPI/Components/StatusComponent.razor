@@ -8,15 +8,15 @@
 
     protected override void OnInitialized()
     {
-        Status = eventExchange.LastMonitorMessage;
-        eventExchange.OnMonitorMessage += MonitorMessage;
+        Status = $"[{DateTime.Now.ToString("HH:mm:ss")}] {eventExchange.LastTopMessage}";
+        eventExchange.OnTopStatus += MonitorMessage;
     }
     public void MonitorMessage(string mess){
-        Status = mess;
+        Status = $"[{DateTime.Now.ToString("HH:mm:ss")}] {mess}";
         InvokeAsync(() => StateHasChanged());
     }
 
     public void Dispose (){
-        eventExchange.OnMonitorMessage -= MonitorMessage;
+        eventExchange.OnTopStatus -= MonitorMessage;
     }
 }

@@ -8,13 +8,15 @@ namespace AMSGetFlights.Services
 {
     public class SubscriptionManager
     {
+        private GetFlightsConfigService configService;
         private FlightRepository repo;
         private EventExchange eventExchange;
 
         public List<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 
-        public SubscriptionManager(FlightRepository repo,  EventExchange eventExchange)
+        public SubscriptionManager(FlightRepository repo,  EventExchange eventExchange, GetFlightsConfigService configService)
         {
+            this.configService = configService;
             this.repo = repo;
             this.eventExchange = eventExchange;
             LoadSubscriptions();
@@ -24,35 +26,10 @@ namespace AMSGetFlights.Services
         private void LoadSubscriptions()
         {
             Subscriptions = repo.GetAllSubscriptions();
-            //Subscription s = new();
-            //s.SubscriptionID = "1";
-            //s.SubscriberName = "Test";
-            //s.SubscriberToken = "1ecf91df-cbc1-4a2d-bf61-5a2dc8ae2e33";
-            //s.IsArrival = true;
-            //s.IsDeparture = true;
-            //s.AirportIATA = "DOH";
-            //s.AirlineIATA = "QF";
-            //s.IsEnabled = true;
-            //s.DataFormat = "JSON";
-            //s.MaxHorizonInHours = 2000;
-            //s.MinHorizonInHours = -2000;
-
-            //Subscriptions.Add(s);
-
-            //Subscription s2 = new();
-            //s2.SubscriptionID = "2";
-            //s2.SubscriberName = "default";
-            //s2.SubscriberToken = "default";
-            //s2.IsArrival = true;
-            //s2.IsDeparture = true;
-            //s2.AirportIATA = "DOH";
-            //s2.IsEnabled = true;
-            //s2.DataFormat = "XML";
-            //s2.MaxHorizonInHours = 2000;
-            //s2.MinHorizonInHours = -2000;
-
-            //Subscriptions.Add(s2);
-
+            foreach (var subscription in Subscriptions)
+            {
+                subscription.SetConfig(configService.config);
+            }
             SaveSubscriptions();
         }
 
@@ -136,11 +113,11 @@ namespace AMSGetFlights.Services
             Subscription s = Subscriptions.Where(s => s.SubscriptionID == sub.SubscriptionID)?.First();
             if (s is null)
             {
-                return new StatusCodeResult(404);
+                return new Subscription() { StatusMessage = $"Error. Subscription ID {sub.SubscriptionID} not found", IsArrival = false, IsDeparture = false, IsEnabled = false, ValidUntil = DateTime.MinValue, MaxHorizonInHours = 0, MinHorizonInHours = 0 };
             }
             if (s.SubscriberToken != userToken)
             {
-                return new StatusCodeResult(403);
+                return new Subscription() { StatusMessage = $"Error. User not authorised to make changes", IsArrival = false, IsDeparture = false, IsEnabled = false, ValidUntil = DateTime.MinValue, MaxHorizonInHours = 0, MinHorizonInHours = 0 };
             }
 
             if (!sub.IsArrival && !sub.IsDeparture)
@@ -187,7 +164,9 @@ namespace AMSGetFlights.Services
                 Subscription s = Subscriptions.Where(s => s.SubscriptionID == sub.SubscriptionID)?.First();
                 if (s is not null)
                 {
-                    return new Subscription() { StatusMessage = $"Error. Subscription ID {sub.SubscriptionID}. Already Exists", IsArrival = false, IsDeparture = false, IsEnabled = false, ValidUntil = DateTime.MinValue, MaxHorizonInHours = 0, MinHorizonInHours = 0 };
+                    Subscription newsub = new Subscription() { StatusMessage = $"Error. Subscription ID {sub.SubscriptionID}. Already Exists", IsArrival = false, IsDeparture = false, IsEnabled = false, ValidUntil = DateTime.MinValue, MaxHorizonInHours = 0, MinHorizonInHours = 0 };
+                    newsub.SetConfig(configService.config);
+                    return newsub; 
                 }
             }
             catch (Exception)
@@ -244,7 +223,7 @@ namespace AMSGetFlights.Services
                     }
                     else
                     {
-                        return $"User not authorised to delete subscription";
+                        return $"Error. User not authorised to delete subscription";
                     }
                 }
                 else
