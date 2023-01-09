@@ -21,14 +21,14 @@
                     </div>
                 </div>
                 <div style="display:flex;flex-direction:row-reverse;gap:5px">
-                    <div style="display:grid;grid-template-columns:150px 150px 150px 150px;grid-template-rows:25px 25px;grid-column-gap:3px;grid-row-gap:3px;margin-right:10px">
+
                         @if (!AdminValidated)
                         {
-                            <RadzenButton Text="Switch To Admin Mode" Icon="bolt" ButtonStyle="ButtonStyle.Secondary" Click="AdminMode" Size="ButtonSize.ExtraSmall" Style="width:200px;padding-left:4px;padding-right:4px;font-size:9pt;grid-column:1;grid-row:1;" />
+                        <RadzenButton Text="Switch To Admin Mode" Icon="login" ButtonStyle="ButtonStyle.Secondary" Click="AdminMode" Size="ButtonSize.ExtraSmall" Style="width:200px;padding-left:4px;padding-right:4px;font-size:9pt;height:25px;margin-right:5px;background-color:var(--cntrlbtncolor);color:var(--cntrlbtnfontcolor)" />
                         } else {
-                            <RadzenButton Text="Logout Admin Mode" Icon="bolt" ButtonStyle="ButtonStyle.Secondary" Click="AdminModeLogout" Size="ButtonSize.ExtraSmall" Style="width:200px;padding-left:4px;padding-right:4px;font-size:9pt;grid-column:1;grid-row:1;" />
+                        <RadzenButton Text="Logout Admin Mode" Icon="logout" ButtonStyle="ButtonStyle.Secondary" Click="AdminModeLogout" Size="ButtonSize.ExtraSmall" Style="width:200px;padding-left:4px;padding-right:4px;font-size:9pt;height:25px;margin-right:5px;background-color:var(--cntrlbtncolor);color:var(--cntrlbtnfontcolor)" />
                         }
-                    </div>
+
                 </div>
             </div>
         </div>

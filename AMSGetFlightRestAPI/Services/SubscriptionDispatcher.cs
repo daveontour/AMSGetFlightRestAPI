@@ -73,7 +73,16 @@ namespace AMSGetFlights.Services
             Subscription sub = info.Item1;
             AMSFlight flight = info.Item2;
 
+
             Console.WriteLine($"Processing subscription {sub.SubscriptionID}. Flight {flight?.callsign}");
+            eventExchange.TopStatusMessage($"Processing subscriptions for  {flight?.callsign}");
+
+            if (!configService.config.Users.ContainsKey(sub.SubscriberToken))
+            {
+                Console.WriteLine("User not found for subscription token");
+                eventExchange.TopStatusMessage("User not found for subscription token");
+                return;
+            }
 
             if (!sub.IsEnabled || sub.ValidUntil < DateTime.Now)
             {
@@ -171,11 +180,17 @@ namespace AMSGetFlights.Services
                     {
                         if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
                         {
-                            if (prop.Name == "XmlRaw" || prop.Name == "Action")
+                            try
                             {
-                                continue;
+                                if (prop.Name == "XmlRaw" || prop.Name == "Action")
+                                {
+                                    continue;
+                                }
+                                prop.SetValue(fl, null);
+                            } catch(Exception ex)
+                            {
+                                Console.WriteLine(ex.Message);   
                             }
-                            prop.SetValue(fl, null);
                         }
                     }
                     if (fl.Values != null && validCustomFields.Count() > 0)
@@ -235,6 +250,7 @@ namespace AMSGetFlights.Services
                                     {
                                         sub.ConsecutiveSuccessfullCalls++;
                                         sub.LastSuccess = DateTime.Now;
+                                        sub.LastError = null;
                                         sub.ConsecutiveUnsuccessfullCalls = 0;
                                     }
                                     else
@@ -272,11 +288,10 @@ namespace AMSGetFlights.Services
                     {
                         Console.WriteLine($"Writing {sub.SubscriptionID}. Flight {fl.callsign}. Action = {fl.Action}");
                     }
-
-                    eventExchange.SubscriptionSend();
-
                 }
             }
+            eventExchange.TopStatusMessage($"Processing subscriptions for  {flight?.callsign} completed");
+            eventExchange.SubscriptionSend();
         }
 
         public void Dispose()

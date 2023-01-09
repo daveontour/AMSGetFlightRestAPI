@@ -4,11 +4,11 @@
 
 @implements IDisposable;
 
-<div style="display:flex;flex-direction:row;gap:10px">
-    <RadzenButton Text="New Subscription" Click="AddNewSub" />
-    <RadzenButton Text="Reload" Click="Reload" />
+<div style="display:flex;flex-direction:row;gap:10px;margin-bottom:10px">
+    <RadzenButton Icon="add" style="padding-left:4px;padding-right:4px;width:200px" Text="New Subscription" Click="AddNewSub" />
+    <RadzenButton Icon="sync" style="padding-left:4px;padding-right:4px;width:200px" Text="Reload" Click="Reload" />
 </div>
-<RadzenDataGrid @ref="subscriptionGrid" AllowColumnResize="true" Data="@items" TItem="Subscription" ColumnWidth="300px" Style="height:600px;margin-bottom:20px">
+<RadzenDataGrid @ref="subscriptionGrid" AllowColumnResize="true" Data="@items" TItem="Subscription">
     <Columns>
         <RadzenDataGridColumn TItem="Subscription" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="180px">
             <Template Context="data">
@@ -16,100 +16,36 @@
                 <RadzenButton Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => CopyRow(data))" @onclick:stopPropagation="true" />
                 <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => DeleteRow(data))" @onclick:stopPropagation="true" />
             </Template>
-            <EditTemplate Context="data">
-                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@((args) => SaveRow(data))" />
-                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Class="my-1 ms-1" Click="@((args) => CancelEdit(data))" />
-            </EditTemplate>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Subscription" Title="Enabled" Property="IsEnabled" TextAlign="TextAlign.Center" Width="100px">
-            <EditTemplate Context="data">
-                <div style="align-content:center;display:inline-block">
-                    <RadzenCheckBox @bind-Value="data.IsEnabled" Data="@items" TextProperty="Enabled" ValueProperty="IsEnabled"  />
-                </div>
-            </EditTemplate>
+        <RadzenDataGridColumn TItem="Subscription" Title="Enabled" Property="IsEnabled" TextAlign="TextAlign.Center" Width="70px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Subscriber Token" Property="SubscriberToken" TextAlign="TextAlign.Left" Width="220px">          
+            <Template Context="data">
+                <div style="font-size:9pt;word-wrap: break-word;width:180px;height:auto;white-space:pre-wrap">@data.SubscriberToken</div>
+            </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Subscription" Title="Subscriber Token" Property="SubscriberToken" TextAlign="TextAlign.Left" Width="300px" >
-            <EditTemplate Context="data">
-                <div style="align-content:center;display:inline-block">
-                    <RadzenTextBox @bind-Value="data.SubscriberToken" Data="@items" TextProperty="SubscriberToken" ValueProperty="SubscriberToken" Style="width:300px;height:28px; display: block;" />
-                </div>
-            </EditTemplate>
+        <RadzenDataGridColumn TItem="Subscription" Title="Subscription ID" Property="SubscriptionID" TextAlign="TextAlign.Left" Width="150px">
+            <Template Context="data">
+                <div style="font-size:9pt;word-wrap: break-word;width:150px;height:auto;white-space:pre-wrap">@data.SubscriptionID</div>
+            </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Subscription" Title="Subscription ID" Property="SubscriptionID" TextAlign="TextAlign.Left" Width="300px" >
-            <EditTemplate Context="data">
-                <div style="align-content:center;display:inline-block">
-                    <RadzenTextBox @bind-Value="data.SubscriptionID" Data="@items" TextProperty="SubscriptionID" ValueProperty="AuthorizationHeaderName" Style="width:300px;height:28px; display: block;" />
-                </div>
-            </EditTemplate>
+        <RadzenDataGridColumn TItem="Subscription" Title="Data Type" Property="DataFormat" TextAlign="TextAlign.Center" Width="120px" />
+        <RadzenDataGridColumn TItem="Subscription" Title="Last Send" TextAlign="TextAlign.Center" Width="200px">
+            <Template Context="data">
+                <span style="color:aqua">@GetLatestSuccess(data)</span><br />
+                <span style="color:#ff827a">@GetLatestFailure(data)</span>
+            </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Subscription" Title="Data Type" Property="DataFormat" TextAlign="TextAlign.Center" Width="120px">
-            <EditTemplate Context="data">
-                <div style="align-content:center;display:inline-block">
-                    <RadzenTextBox @bind-Value="data.DataFormat" Data="@items" TextProperty="DataFormat" ValueProperty="DataFormat" Style="width:300px;height:28px; display: block;" />
-                </div>
-            </EditTemplate>
+        <RadzenDataGridColumn TItem="Subscription" Title="Consecutive Sends" TextAlign="TextAlign.Center" Width="180px">
+            <Template Context="data">
+                <span style="color:aqua">@data.ConsecutiveSuccessfullCalls</span><br />
+                <span style="color:#ff827a">@data.ConsecutiveUnsuccessfullCalls</span>
+            </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Subscription" Title="CallBack URL" Property="CallBackURL">
-            <EditTemplate Context="data">
-                <div style="align-content:center;display:inline-block">
-                    <RadzenTextBox @bind-Value="data.CallBackURL" Data="@items" ValueProperty="CallBackURL" Style="width:300px;height:28px; display: block;" />
-                </div>
-            </EditTemplate>
+        <RadzenDataGridColumn TItem="Subscription" Title="Last Error Message" Width="260px">
+            <Template Context="data">
+                <div style="font-size:9pt;word-wrap: break-word;width:250px;height:auto;white-space:pre-wrap">@data.LastError</div>
+            </Template>
         </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Subscription" Title="Valid Until" Property="ValidUntil" TextAlign="TextAlign.Center" Width="250px" >
-            <EditTemplate Context="data">
-                <div style="align-content:center;display:inline-block">
-                    <RadzenDatePicker @bind-Value="data.ValidUntil" Data="@items" TextProperty="ValidUntil" ValueProperty="ValidUntil" Style="width:250px;" />
-                </div>
-            </EditTemplate>
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Subscription" Title="Authorisation Header" Property="AuthorizationHeaderName" TextAlign="TextAlign.Left" Width="200px">
-            <EditTemplate Context="data">
-                <div style="align-content:center;display:inline-block">
-                    <RadzenTextBox @bind-Value="data.AuthorizationHeaderName" Data="@items" ValueProperty="AuthorizationHeaderName" Style="width:300px;" />
-                </div>
-            </EditTemplate>
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Subscription" Title="Authorisation Value" Property="AuthorizationHeaderValue" TextAlign="TextAlign.Left" Width="200px">
-            <EditTemplate Context="data">
-                <div style="align-content:center;display:inline-block">
-                    <RadzenTextBox @bind-Value="data.AuthorizationHeaderValue" Data="@items" TextProperty="Header Value" ValueProperty="AuthorizationHeaderValue" Style="width:300px;height:28px; display: block;" />
-                </div>
-            </EditTemplate>
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Subscription" Title="Airport" Property="AirportIATA" TextAlign="TextAlign.Center" Width="120px">
-            <EditTemplate Context="data">
-                <div style="align-content:center;display:inline-block">
-                    <RadzenTextBox @bind-Value="data.AirportIATA" Data="@items" ValueProperty="AirportIATA" Style="width:120px;" />
-                </div>
-            </EditTemplate>
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Subscription" Title="Airline" Property="AirlineIATA" TextAlign="TextAlign.Center" Width="120px">
-            <EditTemplate Context="data">
-                <div style="align-content:center;display:inline-block">
-                    <RadzenTextBox @bind-Value="data.AirlineIATA" Data="@items" ValueProperty="AirlineIATA" Style="width:120px;" />
-                </div>
-            </EditTemplate>
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Subscription" Title="Arrivals" Property="IsArrival" TextAlign="TextAlign.Center" Width="100px">
-            <EditTemplate Context="data">
-                <div style="align-content:center;display:inline-block">
-                    <RadzenCheckBox @bind-Value="data.IsArrival" Data="@items" TextProperty="Arrival" ValueProperty="IsArrival" />
-                </div>
-            </EditTemplate>
-        </RadzenDataGridColumn>
-        <RadzenDataGridColumn TItem="Subscription" Title="Departures" Property="IsDeparture" TextAlign="TextAlign.Center" Width="100px">
-            <EditTemplate Context="data">
-                <div style="align-content:center;display:inline-block">
-                    <RadzenCheckBox @bind-Value="data.IsDeparture" Data="@items" TextProperty="Departure" ValueProperty="IsDeparture" />
-                </div>
-            </EditTemplate>
-        </RadzenDataGridColumn>
-         <RadzenDataGridColumn TItem="Subscription" Title="Last Successful Send" Property="LastSuccess" TextAlign="TextAlign.Center" Width="200px" />
-        <RadzenDataGridColumn TItem="Subscription" Title="Consecutive Successful Sends" Property="ConsecutiveSuccessfullCalls" TextAlign="TextAlign.Center" Width="120px" />
-        <RadzenDataGridColumn TItem="Subscription" Title="Last Failed Send" Property="LastFailure" TextAlign="TextAlign.Center" Width="200px" />
-        <RadzenDataGridColumn TItem="Subscription" Title="Last Error Message" Property="LastError" />
-        <RadzenDataGridColumn TItem="Subscription" Title="Consecutive Failed Sends" Property="ConsecutiveUnsuccessfullCalls" TextAlign="TextAlign.Center" Width="120px" />
         <RadzenDataGridColumn TItem="Subscription" Title="Backlog Size" Property="BacklogSize" TextAlign="TextAlign.Center" Width="120px" />
     </Columns>
 </RadzenDataGrid>
@@ -118,7 +54,6 @@
 
     public List<Subscription>? items { get; set; }
     public RadzenDataGrid<Subscription>? subscriptionGrid;
-    private Subscription subOg;
 
     protected override void OnInitialized()
     {
@@ -138,7 +73,29 @@
         InvokeAsync(() => StateHasChanged());
     }
 
-    public void Reload()
+    private string GetLatestSuccess(Subscription sub)
+    {
+        if (sub.LastSuccess.HasValue)
+        {
+            return sub.LastSuccess.Value.ToString("yyyy-MM-dd hhmm:ss");
+        }
+        else
+        {
+            return "-";
+        }
+    }
+    private string GetLatestFailure(Subscription sub)
+    {
+        if (sub.LastFailure.HasValue)
+        {
+            return sub.LastFailure.Value.ToString("yyyy-MM-dd hhmm:ss");
+        }
+        else
+        {
+            return "-";
+        }
+    }
+    private void Reload()
     {
         items = subscriptionManager.Subscriptions;
         subscriptionGrid?.Reload();
@@ -150,9 +107,9 @@
         eventExchange.OnSubscriptionSend -= SubsSend;
     }
 
-    async Task EditRow(Subscription sub)
+    private async Task EditRow(Subscription sub)
     {
-        subOg = new Subscription()
+        Subscription subOg = new Subscription()
             {
                 DataFormat = sub.DataFormat,
                 SubscriberName = sub.SubscriberName,
@@ -163,27 +120,65 @@
                 AuthorizationHeaderValue = sub.AuthorizationHeaderValue,
                 IsEnabled = sub.IsEnabled,
                 IsDeparture = sub.IsDeparture,
+                IsArrival = sub.IsArrival,
+                ChangeEstimated = sub.ChangeEstimated,
+                ChangeResourceBaggageReclaim = sub.ChangeResourceBaggageReclaim,
+                ChangeResourceCheckIn = sub.ChangeResourceCheckIn,
+                ChangeResourceGate = sub.ChangeResourceGate,
+                ChangeResourceStand = sub.ChangeResourceCheckIn,
+                MinHorizonInHours = sub.MinHorizonInHours,
+                MaxHorizonInHours = sub.MaxHorizonInHours
+            };
+
+        Dictionary<string, object> parameters = new();
+        parameters.Add("sub", sub);
+        var res = await DialogService.OpenAsync<SubscriptionEditorDialog>("Edit Subscription", parameters, new DialogOptions() { Height = "620px", Width = "900px" });
+        if (res == null)
+        {
+            sub.DataFormat = subOg.DataFormat;
+            sub.IsEnabled = subOg.IsEnabled;
+            sub.SubscriberName = subOg.SubscriberName;
+            sub.SubscriberToken = subOg.SubscriberToken;
+            sub.CallBackURL = subOg.CallBackURL;
+            sub.AirportIATA = subOg.AirportIATA;
+            sub.AuthorizationHeaderName = subOg.AuthorizationHeaderName;
+            sub.AuthorizationHeaderValue = subOg.AuthorizationHeaderValue;
+            sub.IsDeparture = subOg.IsDeparture;
+            sub.IsArrival = subOg.IsArrival;
+            sub.ChangeEstimated = sub.ChangeEstimated;
+            sub.ChangeResourceBaggageReclaim = subOg.ChangeResourceBaggageReclaim;
+            sub.ChangeResourceCheckIn = subOg.ChangeResourceCheckIn;
+            sub.ChangeResourceGate = subOg.ChangeResourceGate;
+            sub.ChangeResourceStand = subOg.ChangeResourceCheckIn;
+            sub.MinHorizonInHours = subOg.MinHorizonInHours;
+            sub.MaxHorizonInHours = subOg.MaxHorizonInHours;
+        }
+        else
+        {
+            subscriptionManager.SaveSubscriptions();
+            Reload();
+        }
+    }
+    private void CopyRow(Subscription sub)
+    {
+        Subscription s = new Subscription()
+            {
+                SubscriberName = sub.SubscriberName,
+                SubscriberToken = sub.SubscriberToken,
+                CallBackURL = sub.CallBackURL,
+                AirportIATA = sub.AirportIATA,
+                DataFormat = sub.DataFormat,
+                AuthorizationHeaderName = sub.AuthorizationHeaderName,
+                AuthorizationHeaderValue = sub.AuthorizationHeaderValue,
+                IsEnabled = false,
+                IsDeparture = sub.IsDeparture,
                 IsArrival = sub.IsArrival
             };
-        await subscriptionGrid.EditRow(sub);
-    }
-    void  CopyRow(Subscription sub)
-    {
-        Subscription s = new Subscription() { SubscriberName = sub.SubscriberName, 
-            SubscriberToken = sub.SubscriberToken, 
-            CallBackURL = sub.CallBackURL,
-            AirportIATA = sub.AirportIATA, 
-            AuthorizationHeaderName = sub.AuthorizationHeaderName,
-            AuthorizationHeaderValue = sub.AuthorizationHeaderValue,
-            IsEnabled = false, 
-            IsDeparture = sub.IsDeparture, 
-            IsArrival = sub.IsArrival
-        };
         subscriptionManager.Subscriptions.Add(s);
         subscriptionManager.SaveSubscriptions();
         Reload();
     }
-    async void DeleteRow(Subscription sub)
+    private async void DeleteRow(Subscription sub)
     {
         bool? res = await DialogService.Confirm("Are you sure?", "Delete Subscription", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
         if (res.Value)
@@ -193,34 +188,11 @@
             Reload();
         }
     }
-
-    void OnUpdateRow(Subscription sub)
+    private void AddNewSub()
     {
-    }
-    void AddNewSub(){
-        Subscription s = new Subscription() {  IsArrival = true, IsDeparture = true, IsEnabled = false, ValidUntil = DateTime.MinValue, MaxHorizonInHours = 0, MinHorizonInHours = 0, AirportIATA = "XXX" };
+        Subscription s = new Subscription() { IsArrival = true, IsDeparture = true, IsEnabled = false, ValidUntil = DateTime.MinValue, MaxHorizonInHours = 0, MinHorizonInHours = 0, AirportIATA = "XXX" };
         subscriptionManager.Subscriptions.Add(s);
         subscriptionManager.SaveSubscriptions();
         Reload();
-    }
-    async Task SaveRow(Subscription sub)
-    {
-        await subscriptionGrid.UpdateRow(sub);
-        subscriptionManager.SaveSubscriptions();
-    }
-
-    void CancelEdit(Subscription sub)
-    {
-        sub.DataFormat = subOg.DataFormat;
-        sub.IsEnabled = subOg.IsEnabled;
-        sub.SubscriberName = subOg.SubscriberName;
-        sub.SubscriberToken = subOg.SubscriberToken;
-        sub.CallBackURL = subOg.CallBackURL;
-        sub.AirportIATA = subOg.AirportIATA;
-        sub.AuthorizationHeaderName = subOg.AuthorizationHeaderName;
-        sub.AuthorizationHeaderValue = subOg.AuthorizationHeaderValue;
-        sub.IsDeparture = subOg.IsDeparture;
-        sub.IsArrival = subOg.IsArrival;
-        subscriptionGrid.CancelEditRow(sub);
     }
 }

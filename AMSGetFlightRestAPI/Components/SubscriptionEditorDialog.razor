@@ -1,0 +1,64 @@
+﻿@inject SubscriptionManager subscriptionManager;
+@inject DialogService DialogService;
+
+<div>
+    <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 50px 100px 1fr">
+        <div class="li-form-category-title">Subscription </div>
+        <div class="li-form-title">Enabled:</div><RadzenCheckBox class="li-form-body" Style="grid-column:2" @bind-Value=@sub.IsEnabled />
+        <div class="li-form-title" style="grid-column:3">Valid Until:</div><RadzenDatePicker class="li-form-body" Style="grid-column:4" @bind-Value=@sub.ValidUntil @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+    </div>
+    <div class="li-editor-grid" >
+        <div class="li-form-title">Subscription ID:</div><RadzenTextBox class="li-form-body" @bind-Value=@sub.SubscriptionID @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+        <div class="li-form-title">Subscriber Token:</div><RadzenTextBox class="li-form-body" @bind-Value=@sub.SubscriberToken @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+        <div class="li-form-title">Subscriber Name:</div><RadzenTextBox class="li-form-body" @bind-Value=@sub.SubscriberName @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+        <div class="li-form-title">Callback URL:</div><RadzenTextBox class="li-form-body" @bind-Value=@sub.CallBackURL @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+        <div class="li-form-title">Data Format:</div><RadzenDropDown class="li-form-body" TValue="string" Style="width:300px;height:25px" Placeholder="Select..." Data=@dataTypes TextProperty="Key" ValueProperty="Value" @bind-Value=@sub.DataFormat />
+    </div>
+    <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 1fr 200px 1fr">
+        <div class="li-form-title">Authorization Header Name:</div><RadzenTextBox class="li-form-body" style="grid-column:2" @bind-Value=@sub.AuthorizationHeaderName @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+        <div class="li-form-title" style="grid-column:3">Authorization Header Value:</div><RadzenTextBox class="li-form-body" style="grid-column:4" @bind-Value=@sub.AuthorizationHeaderValue @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+    </div>
+    <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 1fr 200px 1fr">
+        <div class="li-form-title">STO Earliest Horizon (hours):</div><RadzenNumeric class="li-form-body" style="grid-column:2" @bind-Value=@sub.MinHorizonInHours @onkeydown="(args) => DataChanged()" />
+        <div class="li-form-title" style="grid-column:3">STO Latest Horizon (hours):</div><RadzenNumeric class="li-form-body" style="grid-column:4" @bind-Value=@sub.MaxHorizonInHours @onkeydown="(args) => DataChanged()"  />
+    </div>
+    <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 1fr 200px 1fr">
+        <div class="li-form-category-title">Subscription Filters</div>
+        <div class="li-form-title">IATA Airport Code:</div><RadzenTextBox class="li-form-body" style="grid-column:2" @bind-Value=@sub.AirportIATA @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+        <div class="li-form-title" style="grid-column:3">IATA Airline Code (optional):</div><RadzenTextBox class="li-form-body" style="grid-column:4" @bind-Value=@sub.AirportIATA @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+    </div>
+    <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 50px 80px 50px">
+        <div class="li-form-title">Arrivals:</div><RadzenCheckBox class="li-form-body" Style="grid-column:2" @bind-Value=@sub.IsArrival />
+        <div class="li-form-title" style="grid-column:3">Departures:</div><RadzenCheckBox class="li-form-body" Style="grid-column:4" @bind-Value=@sub.IsDeparture />
+    </div>
+    <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 50px 220px 50px">
+        <div class="li-form-category-title">Exclusive Subscription Filters</div>
+        <div class="li-form-title">Estimate Operating Time Change:</div><RadzenCheckBox class="li-form-body" @bind-Value=@sub.ChangeEstimated />
+        <div class="li-form-title">Checkin Resource Change:</div><RadzenCheckBox class="li-form-body" Style="grid-column:2" @bind-Value=@sub.ChangeResourceCheckIn />
+        <div class="li-form-title" style="grid-column:3">Gate Resource Change:</div><RadzenCheckBox class="li-form-body" Style="grid-column:4" @bind-Value=@sub.ChangeResourceGate />
+        <div class="li-form-title">Stand Resource Change:</div><RadzenCheckBox class="li-form-body" Style="grid-column:2" @bind-Value=@sub.ChangeResourceStand />
+        <div class="li-form-title" style="grid-column:3">Baggage Reclaim Change:</div><RadzenCheckBox class="li-form-body" Style="grid-column:4" @bind-Value=@sub.ChangeResourceBaggageReclaim />
+    </div>
+    <div class="li-dialog-footer">
+        <div class="row my-2" style="min-height:20px"><div class="col-12"><span style="color:red"></span></div></div>
+        <div class="row">
+            <div class="col-4 d-flex justify-content-start"><RadzenButton Text="Update" Size="ButtonSize.Small" Click="() => DialogService.Close(sub)" Style="width:150px;" /></div>
+            <div class="col-4 d-flex justify-content-center"></div>
+            <div class="col-4 d-flex justify-content-end"><RadzenButton Text="Cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="()=>DialogService.Close()" Style="width:150px" /></div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public Subscription? sub { get; set; }
+
+    public List<KeyValuePair<string, string>> dataTypes = new()
+        {
+            new KeyValuePair<string, string>("JSON", "JSON"),
+            new KeyValuePair<string, string>("XML", "XML")
+        };
+
+    public void DataChanged() { }
+}

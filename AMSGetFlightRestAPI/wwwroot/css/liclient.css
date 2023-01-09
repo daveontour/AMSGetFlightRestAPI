@@ -14,13 +14,12 @@
 div.rz-dialog{
     z-index:2000;
 }
-
 #modelXML {
     height: 568px;
 }
 
 div {
-    user-select: none;
+    //user-select: none;
 }
 
 .flex-container {
@@ -797,4 +796,9 @@ div.switchholder .rz-switch .rz-switch-circle {
 
 .li-validation-ok .rz-dialog-content {
     background-color: lawngreen !important;
+}
+
+.rz-calendar input.rz-inputtext {
+    font-size:10pt;
+    height:25px;
 }

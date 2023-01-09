@@ -385,12 +385,19 @@ namespace AMSGetFlights.Model
         {
             get
             {
-                if (Values.ContainsKey("callsign"))
+                try
                 {
-                    return Values["callsign"];
-                }
-                else
+                    if (Values.ContainsKey("callsign"))
+                    {
+                        return Values["callsign"];
+                    }
+                    else
+                    {
+                        return $"{flightId.iataAirline}{flightId.flightNumber}";
+                    }
+                } catch (Exception ex)
                 {
+                    Console.WriteLine(ex.Message);
                     return $"{flightId.iataAirline}{flightId.flightNumber}";
                 }
             }
@@ -508,8 +515,8 @@ namespace AMSGetFlights.Model
         public string? CallBackURL { get; set; }
         public int ConsecutiveUnsuccessfullCalls { get; set; } = 0;
         public int ConsecutiveSuccessfullCalls { get; set; } = 0;
-        public DateTime? LastSuccess { get; set; }
-        public DateTime? LastFailure { get; set; }
+        public DateTime? LastSuccess { get; set; } = DateTime.MinValue;
+        public DateTime? LastFailure { get; set; } = DateTime.MinValue;
         public string? LastError { get; set; }
         public DateTime ValidUntil { get; set; } = DateTime.MaxValue;
 

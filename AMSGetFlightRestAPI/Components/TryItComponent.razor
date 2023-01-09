@@ -16,9 +16,9 @@
 <div style="height:calc(100vh - 195px);width:100%">
     <div style="display:grid;grid-template-columns:150px auto 150px 300px 200px; grid-column-gap:5px; width:100%">
         <div style="justify-content:end;display:flex">Request URL:</div>
-        <RadzenTextBox @bind-Value=@RequestURL />
+        <RadzenTextBox @bind-Value=@RequestURL Style="font-size:10pt"/>
         <div style="justify-content:end;display:flex">Authorization Token:</div>
-        <RadzenTextBox @bind-Value=@Token />
+        <RadzenTextBox @bind-Value=@Token Style="font-size:10pt" />
         <RadzenButton Text="Send Request" Click="Send" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Small" Style="margin-bottom:10px;width:200px" />
     </div>
     <div Style=@GetStyleJSON()>

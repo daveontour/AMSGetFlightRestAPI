@@ -1,0 +1,58 @@
+﻿@inject GetFlightsConfigService configService;
+
+
+<div style="height:calc(100vh - 195px);width:calc(100vw - 80px);max-width:calc(100vw - 80px);font-size:10pt">
+    <div class="pop-editor-grid" style="display:grid;grid-template-columns: 220px auto;row-gap:2px;width:100%;grid-auto-rows: 22px">
+        <div class="li-form-title">Examples:</div>
+        <div style="grid-column:2">http://hostname/GetFlightsJSON <span><i>(Results returned in JSON format)</i></span></div>
+        <div style="grid-column:2">http://hostname/GetFlightsXML<span><i>(Results returned in AMS-X XML format)</i></span></div>
+        <div style="grid-column:2">http://hostname/GetFlightsJSON?type=dep</div>
+        <div style="grid-column:2">http://hostname/GetFlightsJSON?type=dep&from=-3&to=6</div>
+        <div style="grid-column:2">http://hostname/GetFlightsJSON?al=QF</div>
+        <div style="grid-column:2">http://hostname/GetFlightsJSON?al=QF&type=arr</div>
+        <div style="grid-column:2">http://hostname/GetFlightsJSON?fromDate=2022-11-01T00:00&toTime=2022-11-02T23:59</div>
+        <div style="grid-column:2">http://hostname/GetFlightsJSON?updatedFrom=2022-01-01T06:30</div>
+        <div style="grid-column:2">http://hostname/GetFlightsJSON?schedDate=2022-11-19</div>
+    </div>
+    <div class="pop-editor-grid" style="display:grid;grid-template-columns: 220px 150px auto;row-gap:2px;width:100%;grid-auto-rows: 22px;margin-top:10px">
+        <div class="li-form-title">Available Query Paramters:</div>
+        <div style="grid-column:2">apt</div><div>The 3 letter IATA airport code</div>
+        <div style="grid-column:2">al</div><div>The 2 letter IATA airline code</div>
+        <div style="grid-column:2">type</div><div>"arr" or "dep". Default is both arrivals and departures</div>
+        <div style="grid-column:2">flt</div><div>The 3-4 digit flight number</div>
+        <div style="grid-column:2">route</div><div>The 3 letter IATA airport code for the origin or destination</div>
+        <div style="grid-column:2">from</div><div>Integer offset in hour from <i>NOW</i> for the start of the window for the operating time of the flight</div>
+        <div style="grid-column:2">to</div><div>Integer offset in hour from <i>NOW</i> for the end of the window for the operating time of the flight</div>
+        <div style="grid-column:2">fromTime</div><div>Time from <i>NOW</i> for the start of the window for the operating time of the flight</div>
+        <div style="grid-column:2">toTime</div><div>Time from <i>NOW</i> for the end of the window for the operating time of the flight</div>
+        <div style="grid-column:2">schedDate</div><div>The scheduled date of operation of the flight</div>
+        <div style="grid-column:2">updatedFrom</div><div>Earliest time the flight was last updated</div>
+        @if (config.MappedQueryParameters.Count > 0)
+        {
+            <div class="li-form-title">Configurable Query Parameters:</div>
+        }
+        @foreach (string key in config.MappedQueryParameters.Keys)
+        {
+            <div style="grid-column:2">@key</div>
+            <div>Mapped to custom field @config.MappedQueryParameters[key]</div>
+        }
+
+    </div>
+</div>
+
+@code {
+
+    public GetFlightsConfig? config;
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            config = (GetFlightsConfig)configService.config.Clone();
+        }
+        catch (Exception)
+        {
+            config = new GetFlightsConfig();
+        }
+    }
+}
