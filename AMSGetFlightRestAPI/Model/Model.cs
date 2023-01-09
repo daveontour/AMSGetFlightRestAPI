@@ -514,6 +514,14 @@ namespace AMSGetFlights.Model
         public DateTime ValidUntil { get; set; } = DateTime.MaxValue;
 
         [JsonIgnore]
+        public int BacklogSize
+        {
+            get {
+                return BackLog.Count;
+                }
+        }
+
+        [JsonIgnore]
         public SubscriptionBacklog BackLog { get; set; } = new();
 
         public string? StatusMessage { get; set; }
