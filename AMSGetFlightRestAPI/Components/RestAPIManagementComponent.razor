@@ -12,8 +12,11 @@
 <RadzenTabs RenderMode="TabRenderMode.Client" Change="(int  index) => TabChange(index)">
     <Tabs>
 
-        <RadzenTabsItem Text="Reference and Help">
+        <RadzenTabsItem Text="API Reference and Help">
             <HelpAndReferenceComponent />
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Subscriptions Reference and Help">
+            <HelpSubscriptionComponent />
         </RadzenTabsItem>
         <RadzenTabsItem Text="Configuration">
             <div style="width:calc(100vw - 80px);max-width:calc(100vw - 80px)">
