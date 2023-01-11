@@ -1,0 +1,15 @@
+﻿create table StoredFlights(
+    flightID                  varchar(255) NOT NULL PRIMARY KEY,
+    XML                       TEXT,
+    callsign                  varchar(16),
+    al                        varchar(8),
+    apt                       varchar(10),
+    fltNum                    varchar(8),
+    type                      varchar(10),
+    sdo                       date,
+    sto                       datetime,
+    lastupdate                datetime
+    );
+ create table Subscriptions(
+    subscription              TEXT            
+    );
