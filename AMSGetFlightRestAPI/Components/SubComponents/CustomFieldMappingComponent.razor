@@ -37,26 +37,13 @@
     private RadzenDataGrid<Pair>? mappingGrid;
     private List<Pair> mappingItems = new();
     private string? mappingRowKey;
-    public GetFlightsConfig? config;
 
     protected override void OnInitialized()
     {
-        try
-        {
-            config = (GetFlightsConfig)configService.config.Clone();
-        }
-        catch (Exception)
-        {
-            config = new GetFlightsConfig();
-        }
-
-
-
-        foreach (KeyValuePair<string, string> kvp in config.CustomFieldToParameter)
+        foreach (KeyValuePair<string, string> kvp in configService.config.CustomFieldToParameter)
         {
             mappingItems.Add(new Pair(kvp.Key, kvp.Value));
         }
-
     }
 
     private async void DeleteMappingRow(Pair row)
@@ -67,7 +54,7 @@
         {
             try
             {
-                config.CustomFieldToParameter.Remove(row.P1);
+                configService.config.CustomFieldToParameter.Remove(row.P1);
                 mappingRowKey = null;
             }
 
@@ -84,8 +71,8 @@
     private void SaveMappingRow(Pair row)
     {
         mappingGrid.CancelEditRow(row);
-        config.CustomFieldToParameter.Remove(mappingRowKey);
-        config.CustomFieldToParameter.Add(row.P1, row.P2);
+        configService.config.CustomFieldToParameter.Remove(mappingRowKey);
+        configService.config.CustomFieldToParameter.Add(row.P1, row.P2);
         mappingRowKey = null;
         configService.SaveConfig();
         RefreshMappingGrid();
@@ -100,7 +87,7 @@
     private void RefreshMappingGrid()
     {
         mappingItems.Clear();
-        foreach (KeyValuePair<string, string> kvp in config.CustomFieldToParameter)
+        foreach (KeyValuePair<string, string> kvp in configService.config.CustomFieldToParameter)
         {
             mappingItems.Add(new Pair(kvp.Key, kvp.Value));
         }
@@ -111,14 +98,14 @@
         string keyCore = "AMSCustomFieldName";
         string key = keyCore;
         int idx = 1;
-        while (config.CustomFieldToParameter.ContainsKey(key))
+        while (configService.config.CustomFieldToParameter.ContainsKey(key))
         {
             key = $"{keyCore}_{idx}";
             idx++;
         }
         try
         {
-            config.CustomFieldToParameter.Add(key, "NiceName");
+            configService.config.CustomFieldToParameter.Add(key, "NiceName");
         }
         catch (Exception)
         {

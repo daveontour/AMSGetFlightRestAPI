@@ -1,7 +1,8 @@
 ﻿@inject DialogService DialogService;
 @inject GetFlightsConfigService configService;
+@inject EventExchange eventExchange;
 
-
+@implements IDisposable;
 
 <div style="display:flex;flex-direction:row;gap:10px;margin-bottom:10px">
     <RadzenButton Icon="add" style="padding-left:4px;padding-right:4px;width:200px" Text="New User" Click="AddUser" />
@@ -31,24 +32,18 @@
 
     public List<User>? items { get; set; }
     public RadzenDataGrid<User>? userGrid;
-    public GetFlightsConfig? config;
     protected override void OnInitialized()
     {
-
-        try
-        {
-            config = (GetFlightsConfig)configService.config.Clone();
-        }
-        catch (Exception)
-        {
-            config = new GetFlightsConfig();
-        }
-        items = config.Users.Values.ToList();
+        items = configService.config.Users.Values.ToList();
+        eventExchange.OnUserAPICallsUpdated += APICountUpdated;
     }
 
+    public void APICountUpdated(){
+        Reload();
+    }
     private void Reload()
     {
-        items = config.Users.Values.ToList();
+        items = configService.config.Users.Values.ToList();
         userGrid?.Reload();
         InvokeAsync(() => StateHasChanged());
     }
@@ -62,9 +57,12 @@
         var res = await DialogService.OpenAsync<UserEditorDialog>("Edit User", parameters, new DialogOptions() { Height = "700px", Width = "900px" });
         if (res == null)
         {
-            config.Users.Remove(user.Token);
-            config.Users.Add(userOG.Token, userOG);
+            configService.config.Users.Remove(user.Token);
+            configService.config.Users.Add(userOG.Token, userOG);
         } else {
+
+            configService.config.Users.Remove(user.Token);
+            configService.config.Users.Add(res.Token, res);
             configService.SaveConfig();
         }
 
@@ -77,7 +75,7 @@
         newUser.LastCall = DateTime.MinValue;
         newUser.NumCalls = 0;
         newUser.Token = Guid.NewGuid().ToString();
-        config.Users.Add(newUser.Token, newUser);
+        configService.config.Users.Add(newUser.Token, newUser);
         configService.SaveConfig();
         Reload();
     }
@@ -86,7 +84,7 @@
         bool? res = await DialogService.Confirm("Are you sure?", "Delete Subscription", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
         if (res.Value)
         {
-            config.Users.Remove(user.Token);
+            configService.config.Users.Remove(user.Token);
             configService.SaveConfig();
             Reload();
         }
@@ -100,8 +98,12 @@
         newUser.Name = "New User Name";
         newUser.Token = Guid.NewGuid().ToString();
 
-        config.Users.Add(newUser.Token, newUser);
+        configService.config.Users.Add(newUser.Token, newUser);
         configService.SaveConfig();
         Reload();
+    }
+
+    public void Dispose(){
+        eventExchange.OnUserAPICallsUpdated -= APICountUpdated;
     }
 }

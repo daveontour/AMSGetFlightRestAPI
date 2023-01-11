@@ -22,6 +22,7 @@ namespace AMSGetFlights.Services
         public event Action<List<Subscription>> OnSubscriptionsChanged;
         public event Action? OnSubscriptionSend;
         public event Action<Subscription>? OnSendBacklog;
+        public event Action? OnUserAPICallsUpdated;
 
         private readonly Logger logger = LogManager.GetLogger("consoleLogger");
 
@@ -43,6 +44,10 @@ namespace AMSGetFlights.Services
             LastTopMessage = obj;
         }
 
+        public void UserAPICallsUpdated()
+        {
+            OnUserAPICallsUpdated?.Invoke();
+        }
         public void URLRequestMade(string message)
         {
             OnAPIURLRequestMade?.Invoke(message);

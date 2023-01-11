@@ -52,6 +52,7 @@
                         <RadzenButton Text="Apply Config" Disabled=@DataClean ButtonStyle="ButtonStyle.Success" Click="ApplyConfig" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px" />
                         <RadzenButton Text="Save Config to File" Disabled=@UnsavedClean ButtonStyle="ButtonStyle.Success" Click="SaveConfig" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px" />
                         <RadzenButton Text="Reload Current Config" Disabled=@DataClean ButtonStyle="ButtonStyle.Success" Click="Reload" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px" />
+                        <RadzenButton Text="Repopulate Cache"ButtonStyle="ButtonStyle.Danger" Click="RePopulate" Style="padding-left:4px;padding-right:4px;width:180px;margin-top:5px;margin-left:100px" />
                     </div>
                 </div>
 
@@ -238,6 +239,14 @@
         StateHasChanged();
 
         dialogService.Alert($"User {userName} Added", "Add User", new AlertOptions() { OkButtonText = "OK" });
+    }
+
+    public async Task RePopulate(){
+
+        bool? res = await dialogService.Confirm("Please confirm you wish to repopulate the flight cache. This may impact AMS performace", "Confirm Cache Repopulation");
+        if (res.Value){
+            await Task.Run(() => { flightStatusService.PopulateFlightCache(); eventExchange.TopStatusMessage($"Completed repopulation of cache"); });
+        }
     }
 
     public void Dispose()

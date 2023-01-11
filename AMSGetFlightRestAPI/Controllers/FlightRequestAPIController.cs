@@ -100,6 +100,7 @@ namespace AMSGetFlights.Controllers
                 {
                     configService.config.Users[query.token].NumCalls++;
                     configService.config.Users[query.token].LastCall = DateTime.Now;
+                    eventExchange.UserAPICallsUpdated();
                 }
 
                 // Check the provided user token is enabled
@@ -239,6 +240,7 @@ namespace AMSGetFlights.Controllers
                 {
                     configService.config.Users[query.token].NumCalls++;
                     configService.config.Users[query.token].LastCall = DateTime.Now;
+                    eventExchange.UserAPICallsUpdated();
                 }
                 if (!configService.config.Users[query.token].Enabled)
                 {

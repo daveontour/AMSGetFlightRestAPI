@@ -13,36 +13,12 @@
         <RadzenTabsItem Text="Reference and Help">
             <HelpAndReferenceComponent />
         </RadzenTabsItem>
-         <RadzenTabsItem Text="Try It!">
+        <RadzenTabsItem Text="Try It!">
             <TryItComponent />
-         </RadzenTabsItem>
+        </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
 
 @code {
-    private bool initOK = false;
-
-    public GetFlightsConfig? config;
-
-    protected override void OnInitialized()
-    {
-        try
-        {
-            config = (GetFlightsConfig)configService.config.Clone();
-        }
-        catch (Exception)
-        {
-            config = new GetFlightsConfig();
-        }
-
-        initOK = true;
-
-
-    }
-
-    public void NavigateHome()
-    {
-        UriHelper.NavigateTo("/omnihome");
-    }
 
 }

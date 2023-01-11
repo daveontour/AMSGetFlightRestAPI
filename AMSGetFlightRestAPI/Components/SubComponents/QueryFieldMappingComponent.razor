@@ -37,22 +37,10 @@
     private RadzenDataGrid<Pair>? mappingGrid;
     private List<Pair> mappingItems = new();
     private string? mappingRowKey;
-    public GetFlightsConfig? config;
 
     protected override void OnInitialized()
     {
-        try
-        {
-            config = (GetFlightsConfig)configService.config.Clone();
-        }
-        catch (Exception)
-        {
-            config = new GetFlightsConfig();
-        }
-
-
-
-        foreach (KeyValuePair<string, string> kvp in config.MappedQueryParameters)
+        foreach (KeyValuePair<string, string> kvp in configService.config.MappedQueryParameters)
         {
             mappingItems.Add(new Pair(kvp.Value, kvp.Key));
         }
@@ -67,7 +55,7 @@
         {
             try
             {
-                config.MappedQueryParameters.Remove(row.P2);
+                configService.config.MappedQueryParameters.Remove(row.P2);
                 mappingRowKey = null;
             }
 
@@ -84,8 +72,8 @@
     private void SaveMappingRow(Pair row)
     {
         mappingGrid.CancelEditRow(row);
-        config.MappedQueryParameters.Remove(mappingRowKey);
-        config.MappedQueryParameters.Add(row.P2, row.P1);
+        configService.config.MappedQueryParameters.Remove(mappingRowKey);
+        configService.config.MappedQueryParameters.Add(row.P2, row.P1);
         mappingRowKey = null;
         configService.SaveConfig();
         RefreshMappingGrid();
@@ -100,7 +88,7 @@
     private void RefreshMappingGrid()
     {
         mappingItems.Clear();
-        foreach (KeyValuePair<string, string> kvp in config.MappedQueryParameters)
+        foreach (KeyValuePair<string, string> kvp in configService.config.MappedQueryParameters)
         {
             mappingItems.Add(new Pair(kvp.Value, kvp.Key));
         }
@@ -112,12 +100,13 @@
         string keyCore = "URLQueryParameter";
         string key = keyCore;
         int idx = 1;
-        while (config.MappedQueryParameters.ContainsKey(key)){
+        while (configService.config.MappedQueryParameters.ContainsKey(key))
+        {
             key = $"{keyCore}_{idx}";
             idx++;
         }
 
-        config.MappedQueryParameters.Add(key, "AMSCustomeFieldName");
+        configService.config.MappedQueryParameters.Add(key, "AMSCustomeFieldName");
         configService.SaveConfig();
         RefreshMappingGrid();
         StateHasChanged();

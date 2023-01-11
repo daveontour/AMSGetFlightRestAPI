@@ -6,7 +6,7 @@
 <div style="display:flex;flex-direction:row;gap:10px;margin-bottom:10px">
     <RadzenButton Icon="add" style="padding-left:4px;padding-right:4px;width:200px" Text="New Airport" Click="AddAirport" />
     <div style="font-size:9pt;font-style:italic">
-        Define the AMS details of the airports services by this instance
+        Define the AMS details of the airports services by this instance. Adding an airport requires a service restart to take affect.
     </div>
 </div>
 <RadzenDataGrid @ref="airportGrid" AllowColumnResize="true" Data="@items" TItem="AirportSource">
@@ -63,25 +63,15 @@
 
     public List<AirportSource>? items { get; set; }
     public RadzenDataGrid<AirportSource>? airportGrid;
-    public GetFlightsConfig? config;
     private AirportSource aOg;
     protected override void OnInitialized()
     {
-
-        try
-        {
-            config = (GetFlightsConfig)configService.config.Clone();
-        }
-        catch (Exception)
-        {
-            config = new GetFlightsConfig();
-        }
-        items = config.Airports;
+        items = configService.config.Airports;
     }
 
     private void Reload()
     {
-        items = config.Airports;
+        items = configService.config.Airports;
         airportGrid?.Reload();
         InvokeAsync(() => StateHasChanged());
     }
@@ -128,7 +118,7 @@
                 NotificationQueue = ap.NotificationQueue,
                 Token = ap.Token
             };
-        config.Airports.Add(a);
+        configService.config.Airports.Add(a);
         configService.SaveConfig();
         Reload();
     }
@@ -137,7 +127,7 @@
         bool? res = await DialogService.Confirm("Are you sure?", "Delete Airport", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
         if (res.Value)
         {
-            config.Airports.Remove(a);
+            configService.config.Airports.Remove(a);
             configService.SaveConfig();
             Reload();
         }
@@ -152,7 +142,7 @@
                 NotificationQueue = "AMSNotificationQueue",
                 Token = "AMSAPUAccessToken"
             };
-        config.Airports.Add(a);
+        configService.config.Airports.Add(a);
         configService.SaveConfig();
         Reload();
     }
