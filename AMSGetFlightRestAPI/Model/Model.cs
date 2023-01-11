@@ -11,6 +11,7 @@ namespace AMSGetFlights.Model
         public string? Token { get; set; }
         public string? WSURL { get; set; }
         public string? NotificationQueue { get; set; }
+        public bool IsEnabled { get; set; } = false;
 
         public object Clone()
         {
@@ -28,6 +29,8 @@ namespace AMSGetFlights.Model
         public List<string> AllowedCustomFields { get; set; } = new List<string>();
         public Dictionary<string, string> Defaults { get; set; } = new Dictionary<string, string>();
         public Dictionary<string, string> Overrides { get; set; } = new Dictionary<string, string>();
+        public int NumCalls { get; set; } = 0;
+        public DateTime LastCall { get; set; } = DateTime.MinValue; 
 
         public object Clone()
         {

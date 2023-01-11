@@ -1,0 +1,159 @@
+﻿@inject DialogService DialogService;
+@inject GetFlightsConfigService configService;
+
+
+
+<div style="display:flex;flex-direction:row;gap:10px;margin-bottom:10px">
+    <RadzenButton Icon="add" style="padding-left:4px;padding-right:4px;width:200px" Text="New Airport" Click="AddAirport" />
+    <div style="font-size:9pt;font-style:italic">
+        Define the AMS details of the airports services by this instance
+    </div>
+</div>
+<RadzenDataGrid @ref="airportGrid" AllowColumnResize="true" Data="@items" TItem="AirportSource">
+    <Columns>
+        <RadzenDataGridColumn TItem="AirportSource" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="100px">
+            <Template Context="data">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => EditRow(data))" @onclick:stopPropagation="true" />
+                <RadzenButton Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => CopyRow(data))" @onclick:stopPropagation="true" />
+                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => DeleteRow(data))" @onclick:stopPropagation="true" />
+            </Template>
+            <EditTemplate Context="data">
+                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@((args) => SaveRow(data))" />
+                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Class="my-1 ms-1" Click="@((args) => CancelEdits(data))" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AirportSource" Title="Enabled" Property="IsEnabled" TextAlign="TextAlign.Center" Width="70px">
+            <EditTemplate Context="data">
+                <RadzenCheckBox @bind-Value="data.IsEnabled" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AirportSource" Title="IATA Airport Code" Property="AptCode" TextAlign="TextAlign.Center" Width="120px">
+            <EditTemplate Context="data">
+                <RadzenTextBox @bind-Value="data.AptCode" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AirportSource" Title="AMSX Access Token" Property="Token" TextAlign="TextAlign.Left" Width="220px">
+            <Template Context="data">
+                <div style="font-size:9pt;word-wrap: break-word;width:100%;height:auto;white-space:pre-wrap">@data.Token</div>
+            </Template>
+            <EditTemplate Context="data">
+                <RadzenTextBox @bind-Value="data.Token" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AirportSource" Title="Web Services URL" Property="WSURL" TextAlign="TextAlign.Left" Width="220px">
+            <Template Context="data">
+                <div style="font-size:9pt;word-wrap: break-word;width:100%;height:auto;white-space:pre-wrap">@data.WSURL</div>
+            </Template>
+            <EditTemplate Context="data">
+                <RadzenTextBox @bind-Value="data.WSURL" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AirportSource" Title="Notification Queue" Property="NotificationQueue" TextAlign="TextAlign.Left" Width="220px">
+            <Template Context="data">
+                <div style="font-size:9pt;word-wrap: break-word;width:100%;height:auto;white-space:pre-wrap">@data.NotificationQueue</div>
+            </Template>
+            <EditTemplate Context="data">
+                <RadzenTextBox @bind-Value="data.NotificationQueue" Style="width:100%" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+
+    public List<AirportSource>? items { get; set; }
+    public RadzenDataGrid<AirportSource>? airportGrid;
+    public GetFlightsConfig? config;
+    private AirportSource aOg;
+    protected override void OnInitialized()
+    {
+
+        try
+        {
+            config = (GetFlightsConfig)configService.config.Clone();
+        }
+        catch (Exception)
+        {
+            config = new GetFlightsConfig();
+        }
+        items = config.Airports;
+    }
+
+    private void Reload()
+    {
+        items = config.Airports;
+        airportGrid?.Reload();
+        InvokeAsync(() => StateHasChanged());
+    }
+
+    private void SaveRow(AirportSource ap)
+    {
+        airportGrid.CancelEditRow(ap);
+        configService.SaveConfig();
+        Reload();
+    }
+
+    private void CancelEdits(AirportSource ap)
+    {
+        ap.AptCode = aOg.AptCode;
+        ap.IsEnabled = aOg.IsEnabled;
+        ap.WSURL = aOg.WSURL;
+        ap.NotificationQueue = aOg.NotificationQueue;
+        ap.Token = aOg.Token;
+        airportGrid.CancelEditRow(ap);
+        Reload();
+    }
+    private async Task EditRow(AirportSource ap)
+    {
+
+        aOg = new AirportSource()
+            {
+                AptCode = ap.AptCode,
+                IsEnabled = false,
+                WSURL = ap.WSURL,
+                NotificationQueue = ap.NotificationQueue,
+                Token = ap.Token
+            };
+
+        await airportGrid.EditRow(ap);
+
+    }
+    private void CopyRow(AirportSource ap)
+    {
+        AirportSource a = new AirportSource()
+            {
+                AptCode = ap.AptCode,
+                IsEnabled = false,
+                WSURL = ap.WSURL,
+                NotificationQueue = ap.NotificationQueue,
+                Token = ap.Token
+            };
+        config.Airports.Add(a);
+        configService.SaveConfig();
+        Reload();
+    }
+    private async void DeleteRow(AirportSource a)
+    {
+        bool? res = await DialogService.Confirm("Are you sure?", "Delete Airport", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (res.Value)
+        {
+            config.Airports.Remove(a);
+            configService.SaveConfig();
+            Reload();
+        }
+    }
+    private void AddAirport()
+    {
+        AirportSource a = new AirportSource()
+            {
+                AptCode = "XXX",
+                IsEnabled = false,
+                WSURL = "http://webservicices/url",
+                NotificationQueue = "AMSNotificationQueue",
+                Token = "AMSAPUAccessToken"
+            };
+        config.Airports.Add(a);
+        configService.SaveConfig();
+        Reload();
+    }
+}

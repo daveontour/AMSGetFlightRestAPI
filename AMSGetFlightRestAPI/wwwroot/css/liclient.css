@@ -802,3 +802,8 @@ div.switchholder .rz-switch .rz-switch-circle {
     font-size:10pt;
     height:25px;
 }
+
+div.rz-dropdown {
+    font-size: 10pt;
+    height: 25px;
+}

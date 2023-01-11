@@ -1,0 +1,221 @@
+﻿@inject SubscriptionManager subscriptionManager;
+@inject DialogService DialogService;
+@inject GetFlightsConfigService configService;
+
+<div>
+    <div class="li-editor-grid" style="display:grid; grid-template-columns:220px  50px 120px 1fr">
+        <div class="li-form-category-title">User</div>
+        <div class="li-form-title">Enabled:</div><RadzenCheckBox class="li-form-body" Style="grid-column:2" @bind-Value=@user.Enabled />
+        <div class="li-form-title" style="grid-column:3">User Name:</div><RadzenTextBox class="li-form-body" Style="grid-column:4" @bind-Value=@user.Name />
+    </div>
+    <div class="li-editor-grid" style="display:grid; grid-template-columns:220px  1fr">
+        <div class="li-form-title">Access Token:</div><div class="li-form-body">@user.Token</div>
+    </div>
+    <div class="li-editor-grid" style="display:grid; grid-template-columns:220px  1fr">
+        <div class="li-form-category-title">User Access and Restriction</div>
+        </div>
+    <div class="li-editor-grid" style="display:grid; grid-template-columns:220px  50px 120px 1fr">
+        <div class="li-form-title">Allow XML Access:</div><RadzenCheckBox class="li-form-body" Style="grid-column:2" @bind-Value=@user.AllowXML />
+        <div class="li-form-title" style="grid-column:3">Allowed Airports:</div>
+        <RadzenDropDown AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                        @bind-Value=@multipleValues Multiple="true" Placeholder="Select..." Data=@availAirports TextProperty="AptCode" ValueProperty="AptCode"
+                        Change=@(args => OnAllowedAirportChange(args)) Class="w-100" Style="grid-column:4" />
+
+    </div>
+    <div class="li-editor-grid" style="display:grid; grid-template-columns:220px  1fr">
+        <div class="li-form-title">Allowed Core Fields:</div>
+        <RadzenDropDown AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                        @bind-Value=@multipleFieldValues Multiple="true" Placeholder="Select..." Data=@availFields TextProperty="Value" ValueProperty="Key"
+                        Change=@(args => OnAllowedFieldChange(args)) />
+
+        <div class="li-form-title">Allowed Custom Fields:</div>
+        <RadzenDropDown AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                        @bind-Value=@multipleCustomFieldValues Multiple="true" Placeholder="Select..." Data=@availCustomFields TextProperty="Value" ValueProperty="Key"
+                        Change=@(args => OnAllowedCustomFieldChange(args)) />
+    </div>
+
+    <div class="li-editor-grid" style="display:grid; grid-template-columns:240px  1fr; grid-auto-rows:40px; margin-bottom:5px;margin-top:10px">
+        <div class="li-form-category-title" style="grid-column:1">Query Defaults and Overrides</div>
+        <div style="font-size:9pt;font-style:italic">Defaults will be used if the user does not provide a value for a specific lookup key<br/>
+        Overrides will be used for the specific lookup key no matter what the user provides.    
+        </div>
+    </div>
+    <div style="height:255px;overflow-y:scroll">
+        <RadzenDataGrid @ref="defaultsGrid" Data="@defaultItems" TItem="Defaults">
+            <Columns>
+                <RadzenDataGridColumn TItem="Defaults" TextAlign="TextAlign.Center" Width="180px">
+                    <Template Context="data">
+                        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => EditDefaultRow(data))" @onclick:stopPropagation="true" />
+                    </Template>
+                    <EditTemplate Context="data">
+                        <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@((args) => SaveDefaultRow(data))" />
+                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Class="my-1 ms-1" Click="@((args) => CancelDefaultEdits(data))" />
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="Defaults" Title="Lookup Key" Property="LookupKey" TextAlign="TextAlign.Left" Width="200px" />
+                <RadzenDataGridColumn TItem="Defaults" Title="Default" Property="DefaultValue" TextAlign="TextAlign.Center" Width="200px">
+                    <EditTemplate Context="data">
+                        <RadzenTextBox @bind-Value="data.DefaultValue" Style="width:100%" />
+                    </EditTemplate>
+
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="Defaults" Title="Override" Property="OverrideValue" TextAlign="TextAlign.Left" Width="200px">
+                    <EditTemplate Context="data">
+                        <RadzenTextBox @bind-Value="data.OverrideValue" Style="width:100%" />
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+            </Columns>
+        </RadzenDataGrid>
+    </div>
+</div>
+
+<div class="li-dialog-footer">
+    <div class="row my-2" style="min-height:20px"><div class="col-12"><span style="color:red"></span></div></div>
+    <div class="row">
+        <div class="col-4 d-flex justify-content-start"><RadzenButton Text="Update" Size="ButtonSize.Small" Click="() => DialogService.Close(user)" Style="width:150px;" /></div>
+        <div class="col-4 d-flex justify-content-center"></div>
+        <div class="col-4 d-flex justify-content-end"><RadzenButton Text="Cancel" Size="ButtonSize.Small" ButtonStyle="ButtonStyle.Danger" Click="()=>DialogService.Close()" Style="width:150px" /></div>
+    </div>
+</div>
+
+
+@code {
+
+    [Parameter]
+    public User? user { get; set; }
+
+    public RadzenDataGrid<Defaults>? defaultsGrid;
+    IEnumerable<string> multipleValues;
+    IEnumerable<string> multipleFieldValues;
+    IEnumerable<string> multipleCustomFieldValues;
+    IEnumerable<AirportSource> availAirports;
+    List<Defaults> defaultItems;
+
+    private string[] fields = new string[] {
+        "route",
+        "aircrafttypeiata",
+        "aircraftregistration",
+        "callsign",
+        "status",
+        "publicRemark",
+        "CustomTables",
+        "Events",
+        "CheckInSlots",
+        "StandSlots",
+        "CarouselSlots",
+        "GateSlots",
+        "LastUpdated",
+        "Values" };
+    private string[] queryValues = new string[] { "apt", "al", "type", "flt", "route", "from", "to", "fromTime", "toTime", "schedDate", "UpdatedFrom" };
+    public List<KeyValuePair<string, string>> availFields = new()
+        {
+            new KeyValuePair<string, string>("route", "Flight Route (route)"),
+            new KeyValuePair<string, string>("aircrafttypeiata", "IATA Aircraft Type (aircrafttypeiata)"),
+            new KeyValuePair<string, string>("aircraftregistration", "Aircraft Registration (aircraftregistration)"),
+            new KeyValuePair<string, string>("status", "Status (status)"),
+            new KeyValuePair<string, string>("Values", "Custom Fields (Values)"),
+            new KeyValuePair<string, string>("Events", "Status (callsign)"),
+            new KeyValuePair<string, string>("CheckInSlots", "CheckIn Slots"),
+            new KeyValuePair<string, string>("StandSlots", "Stand Slots"),
+            new KeyValuePair<string, string>("GateSlots", "Gate Slots"),
+            new KeyValuePair<string, string>("CarouselSlots", "Carousel Slots"),
+            new KeyValuePair<string, string>("CustomTables", "Custom Tables")
+        };
+    public List<KeyValuePair<string, string>> availCustomFields = new();
+    protected override void OnInitialized()
+    {
+        multipleValues = user.AllowedAirports;
+        availAirports = configService.config.Airports;
+        multipleFieldValues = user.AllowedFields;
+
+        defaultItems = new List<Defaults>();
+
+        // Set up the defaults and overrides for the user
+        foreach (string field in queryValues)
+        {
+            Defaults def = new Defaults() { LookupKey = field };
+            if (user.Defaults.ContainsKey(field))
+            {
+                def.DefaultValue = user.Defaults[field];
+            }
+            if (user.Overrides.ContainsKey(field))
+            {
+                def.OverrideValue = user.Overrides[field];
+            }
+            defaultItems.Add(def);
+        }
+        foreach (string field in configService.config.MappedQueryParameters.Keys)
+        {
+            Defaults def = new Defaults() { LookupKey = field };
+            if (user.Defaults.ContainsKey(field))
+            {
+                def.DefaultValue = user.Defaults[field];
+            }
+            if (user.Overrides.ContainsKey(field))
+            {
+                def.OverrideValue = user.Overrides[field];
+            }
+            defaultItems.Add(def);
+        }
+
+        foreach(string key in configService.config.CustomFieldToParameter.Values){
+            availCustomFields.Add(new KeyValuePair<string, string>(key,key));
+        }
+    }
+
+    private void OnAllowedAirportChange(object args)
+    {
+        IEnumerable<string> x = (IEnumerable<string>)args;
+        user.AllowedAirports = x.ToList();
+        multipleValues = user.AllowedAirports;
+    }
+    private void OnAllowedFieldChange(object args)
+    {
+        IEnumerable<string> x = (IEnumerable<string>)args;
+        user.AllowedFields = x.ToList();
+        multipleFieldValues = user.AllowedFields;
+    }
+    private void OnAllowedCustomFieldChange(object args)
+    {
+        IEnumerable<string> x = (IEnumerable<string>)args;
+        user.AllowedCustomFields = x.ToList();
+        multipleCustomFieldValues = user.AllowedCustomFields;
+    }
+    public async Task EditDefaultRow(Defaults def)
+    {
+        await defaultsGrid.EditRow(def);
+    }
+    public async Task CancelDefaultEdits(Defaults def)
+    {
+        defaultsGrid.CancelEditRow(def);
+    }
+    private void SaveDefaultRow(Defaults def)
+    {
+        string key = def.LookupKey;
+        string dv = def.DefaultValue;
+        string ov = def.OverrideValue;
+
+
+        user.Defaults.Remove(key);
+        user.Overrides.Remove(key);
+
+
+        if (!string.IsNullOrEmpty(dv))
+        {
+            user.Defaults.Add(key, dv);
+        }
+        if (!string.IsNullOrEmpty(ov))
+        {
+            user.Overrides.Add(key, ov);
+        }
+
+        defaultsGrid.CancelEditRow(def);
+        defaultsGrid.Reload();
+    }
+    public class Defaults
+    {
+        public string LookupKey { get; set; }
+        public string? DefaultValue { get; set; } = null;
+        public string? OverrideValue { get; set; } = null;
+    }
+}

@@ -1,0 +1,107 @@
+﻿@inject DialogService DialogService;
+@inject GetFlightsConfigService configService;
+
+
+
+<div style="display:flex;flex-direction:row;gap:10px;margin-bottom:10px">
+    <RadzenButton Icon="add" style="padding-left:4px;padding-right:4px;width:200px" Text="New User" Click="AddUser" />
+    <div style="font-size:9pt;font-style:italic">
+        Access to the API is controlled by user profiles. A user is identified by the token the "Authorization" header in the call made by the user.<br />
+    If the user does not provide a token in the header, they are allocated to the "default" profile, if Annonymous Requests is enabled    
+    </div>
+</div>
+<RadzenDataGrid @ref="userGrid" AllowColumnResize="true" Data="@items" TItem="User">
+    <Columns>
+        <RadzenDataGridColumn TItem="User" TextAlign="TextAlign.Center" Width="100px" Resizable=false>
+            <Template Context="data">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => EditRow(data))" @onclick:stopPropagation="true" />
+                <RadzenButton Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => CopyRow(data))" @onclick:stopPropagation="true" />
+                <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => DeleteRow(data))" @onclick:stopPropagation="true" />
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="User" Title="Enabled" Property="Enabled" TextAlign="TextAlign.Center" Width="70px" Resizable=false />
+        <RadzenDataGridColumn TItem="User" Title="Name" Property="Name" TextAlign="TextAlign.Center" Width="100px" />
+        <RadzenDataGridColumn TItem="User" Title="Token" Property="Token" TextAlign="TextAlign.Left" Width="200px" />
+        <RadzenDataGridColumn TItem="User" Title="API Calls" Property="NumCalls" TextAlign="TextAlign.Center" Width="80px" />
+        <RadzenDataGridColumn TItem="User" Title="Last Call" Property="LastCall" TextAlign="TextAlign.Center" Width="120px" />
+    </Columns>
+</RadzenDataGrid>
+
+@code {
+
+    public List<User>? items { get; set; }
+    public RadzenDataGrid<User>? userGrid;
+    public GetFlightsConfig? config;
+    protected override void OnInitialized()
+    {
+
+        try
+        {
+            config = (GetFlightsConfig)configService.config.Clone();
+        }
+        catch (Exception)
+        {
+            config = new GetFlightsConfig();
+        }
+        items = config.Users.Values.ToList();
+    }
+
+    private void Reload()
+    {
+        items = config.Users.Values.ToList();
+        userGrid?.Reload();
+        InvokeAsync(() => StateHasChanged());
+    }
+
+    private async Task EditRow(User user)
+    {
+        User userOG = (User)user.Clone();
+
+        Dictionary<string, object> parameters = new();
+        parameters.Add("User", user);
+        var res = await DialogService.OpenAsync<UserEditorDialog>("Edit User", parameters, new DialogOptions() { Height = "700px", Width = "900px" });
+        if (res == null)
+        {
+            config.Users.Remove(user.Token);
+            config.Users.Add(userOG.Token, userOG);
+        } else {
+            configService.SaveConfig();
+        }
+
+        Reload();
+    }
+    private void CopyRow(User user)
+    {
+        User newUser = (User)user.Clone();
+        newUser.Enabled = false;
+        newUser.LastCall = DateTime.MinValue;
+        newUser.NumCalls = 0;
+        newUser.Token = Guid.NewGuid().ToString();
+        config.Users.Add(newUser.Token, newUser);
+        configService.SaveConfig();
+        Reload();
+    }
+    private async void DeleteRow(User user)
+    {
+        bool? res = await DialogService.Confirm("Are you sure?", "Delete Subscription", new ConfirmOptions() { OkButtonText = "Yes", CancelButtonText = "No" });
+        if (res.Value)
+        {
+            config.Users.Remove(user.Token);
+            configService.SaveConfig();
+            Reload();
+        }
+    }
+    private void AddUser()
+    {
+        User newUser = new User();
+        newUser.Enabled = false;
+        newUser.LastCall = DateTime.MinValue;
+        newUser.NumCalls = 0;
+        newUser.Name = "New User Name";
+        newUser.Token = Guid.NewGuid().ToString();
+
+        config.Users.Add(newUser.Token, newUser);
+        configService.SaveConfig();
+        Reload();
+    }
+}

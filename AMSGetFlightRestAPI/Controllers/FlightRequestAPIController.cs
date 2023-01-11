@@ -96,6 +96,10 @@ namespace AMSGetFlights.Controllers
                 {
                     Log("User Not Found", query, warn: true);
                     return new GetFlightsResponse() { error = "User Not Found" };
+                } else
+                {
+                    configService.config.Users[query.token].NumCalls++;
+                    configService.config.Users[query.token].LastCall = DateTime.Now;
                 }
 
                 // Check the provided user token is enabled
@@ -230,6 +234,11 @@ namespace AMSGetFlights.Controllers
                         ContentType = "text/xml",
                         StatusCode = 400
                     };
+                }
+                else
+                {
+                    configService.config.Users[query.token].NumCalls++;
+                    configService.config.Users[query.token].LastCall = DateTime.Now;
                 }
                 if (!configService.config.Users[query.token].Enabled)
                 {

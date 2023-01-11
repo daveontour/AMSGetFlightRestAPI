@@ -7,12 +7,16 @@
 <div style="display:flex;flex-direction:row;gap:10px;margin-bottom:10px">
     <RadzenButton Icon="add" style="padding-left:4px;padding-right:4px;width:200px" Text="New Subscription" Click="AddNewSub" />
     <RadzenButton Icon="sync" style="padding-left:4px;padding-right:4px;width:200px" Text="Reload" Click="Reload" />
+    <div style="font-size:9pt;font-style:italic">
+        Defined users can subscribe to flight updates. Updates will be pushed to the user via the defined Callback URL when changes to flights occur<br/>
+        Users can make multiple subscriptions with different filtering criteria. Users can manage their subscription via the API.
+    </div>
 </div>
 <RadzenDataGrid @ref="subscriptionGrid" AllowColumnResize="true" Data="@items" TItem="Subscription">
     <Columns>
         <RadzenDataGridColumn TItem="Subscription" Context="order" Filterable="false" Sortable="false" TextAlign="TextAlign.Center" Width="180px">
             <Template Context="data">
-                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => EditRow(data))" @onclick:stopPropagation="true" />
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => EditRow(data))" @onclick:stopPropagation="true"  />
                 <RadzenButton Icon="content_copy" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => CopyRow(data))" @onclick:stopPropagation="true" />
                 <RadzenButton Icon="delete" ButtonStyle="ButtonStyle.Danger" Variant="Variant.Flat" Size="ButtonSize.ExtraSmall" Click="@(args => DeleteRow(data))" @onclick:stopPropagation="true" />
             </Template>
@@ -20,12 +24,12 @@
         <RadzenDataGridColumn TItem="Subscription" Title="Enabled" Property="IsEnabled" TextAlign="TextAlign.Center" Width="70px" />
         <RadzenDataGridColumn TItem="Subscription" Title="Subscriber Token" Property="SubscriberToken" TextAlign="TextAlign.Left" Width="220px">          
             <Template Context="data">
-                <div style="font-size:9pt;word-wrap: break-word;width:180px;height:auto;white-space:pre-wrap">@data.SubscriberToken</div>
+                <div style="font-size:9pt;word-wrap: break-word;width:100%;height:auto;white-space:pre-wrap">@data.SubscriberToken</div>
             </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Subscription" Title="Subscription ID" Property="SubscriptionID" TextAlign="TextAlign.Left" Width="150px">
             <Template Context="data">
-                <div style="font-size:9pt;word-wrap: break-word;width:150px;height:auto;white-space:pre-wrap">@data.SubscriptionID</div>
+                <div style="font-size:9pt;word-wrap: break-word;width:100%;height:auto;white-space:pre-wrap">@data.SubscriptionID</div>
             </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Subscription" Title="Data Type" Property="DataFormat" TextAlign="TextAlign.Center" Width="120px" />
@@ -43,7 +47,7 @@
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Subscription" Title="Last Error Message" Width="260px">
             <Template Context="data">
-                <div style="font-size:9pt;word-wrap: break-word;width:250px;height:auto;white-space:pre-wrap">@data.LastError</div>
+                <div style="font-size:9pt;word-wrap: break-word;width:100%;height:auto;white-space:pre-wrap">@data.LastError</div>
             </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn TItem="Subscription" Title="Backlog Size" Property="BacklogSize" TextAlign="TextAlign.Center" Width="120px" />
@@ -77,7 +81,7 @@
     {
         if (sub.LastSuccess.HasValue)
         {
-            return sub.LastSuccess.Value.ToString("yyyy-MM-dd hhmm:ss");
+            return sub.LastSuccess.Value.ToString("yyyy-MM-dd hh:mm:ss");
         }
         else
         {
@@ -88,7 +92,7 @@
     {
         if (sub.LastFailure.HasValue)
         {
-            return sub.LastFailure.Value.ToString("yyyy-MM-dd hhmm:ss");
+            return sub.LastFailure.Value.ToString("yyyy-MM-dd hh:mm:ss");
         }
         else
         {

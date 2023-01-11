@@ -5,27 +5,27 @@
     <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 50px 100px 1fr">
         <div class="li-form-category-title">Subscription </div>
         <div class="li-form-title">Enabled:</div><RadzenCheckBox class="li-form-body" Style="grid-column:2" @bind-Value=@sub.IsEnabled />
-        <div class="li-form-title" style="grid-column:3">Valid Until:</div><RadzenDatePicker class="li-form-body" Style="grid-column:4" @bind-Value=@sub.ValidUntil @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+        <div class="li-form-title" style="grid-column:3">Valid Until:</div><RadzenDatePicker class="li-form-body" Style="grid-column:4" @bind-Value=@sub.ValidUntil />
     </div>
     <div class="li-editor-grid" >
-        <div class="li-form-title">Subscription ID:</div><RadzenTextBox class="li-form-body" @bind-Value=@sub.SubscriptionID @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
-        <div class="li-form-title">Subscriber Token:</div><RadzenTextBox class="li-form-body" @bind-Value=@sub.SubscriberToken @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
-        <div class="li-form-title">Subscriber Name:</div><RadzenTextBox class="li-form-body" @bind-Value=@sub.SubscriberName @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
-        <div class="li-form-title">Callback URL:</div><RadzenTextBox class="li-form-body" @bind-Value=@sub.CallBackURL @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+        <div class="li-form-title">Subscription ID:</div><RadzenTextBox class="li-form-body" @bind-Value=@sub.SubscriptionID />
+        <div class="li-form-title">Subscriber Token:</div><RadzenTextBox class="li-form-body" @bind-Value=@sub.SubscriberToken />
+        <div class="li-form-title">Subscriber Name:</div><RadzenTextBox class="li-form-body" @bind-Value=@sub.SubscriberName/>
+        <div class="li-form-title">Callback URL:</div><RadzenTextBox class="li-form-body" @bind-Value=@sub.CallBackURL />
         <div class="li-form-title">Data Format:</div><RadzenDropDown class="li-form-body" TValue="string" Style="width:300px;height:25px" Placeholder="Select..." Data=@dataTypes TextProperty="Key" ValueProperty="Value" @bind-Value=@sub.DataFormat />
     </div>
     <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 1fr 200px 1fr">
-        <div class="li-form-title">Authorization Header Name:</div><RadzenTextBox class="li-form-body" style="grid-column:2" @bind-Value=@sub.AuthorizationHeaderName @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
-        <div class="li-form-title" style="grid-column:3">Authorization Header Value:</div><RadzenTextBox class="li-form-body" style="grid-column:4" @bind-Value=@sub.AuthorizationHeaderValue @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+        <div class="li-form-title">Authorization Header Name:</div><RadzenTextBox class="li-form-body" style="grid-column:2" @bind-Value=@sub.AuthorizationHeaderName />
+        <div class="li-form-title" style="grid-column:3">Authorization Header Value:</div><RadzenTextBox class="li-form-body" style="grid-column:4" @bind-Value=@sub.AuthorizationHeaderValue />
     </div>
     <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 1fr 200px 1fr">
-        <div class="li-form-title">STO Earliest Horizon (hours):</div><RadzenNumeric class="li-form-body" style="grid-column:2" @bind-Value=@sub.MinHorizonInHours @onkeydown="(args) => DataChanged()" />
-        <div class="li-form-title" style="grid-column:3">STO Latest Horizon (hours):</div><RadzenNumeric class="li-form-body" style="grid-column:4" @bind-Value=@sub.MaxHorizonInHours @onkeydown="(args) => DataChanged()"  />
+        <div class="li-form-title">STO Earliest Horizon (hours):</div><RadzenNumeric class="li-form-body" style="grid-column:2" @bind-Value=@sub.MinHorizonInHours />
+        <div class="li-form-title" style="grid-column:3">STO Latest Horizon (hours):</div><RadzenNumeric class="li-form-body" style="grid-column:4" @bind-Value=@sub.MaxHorizonInHours />
     </div>
     <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 1fr 200px 1fr">
         <div class="li-form-category-title">Subscription Filters</div>
-        <div class="li-form-title">IATA Airport Code:</div><RadzenTextBox class="li-form-body" style="grid-column:2" @bind-Value=@sub.AirportIATA @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
-        <div class="li-form-title" style="grid-column:3">IATA Airline Code (optional):</div><RadzenTextBox class="li-form-body" style="grid-column:4" @bind-Value=@sub.AirportIATA @onkeydown="(args) => DataChanged()" Change="(args) => DataChanged()" />
+        <div class="li-form-title">IATA Airport Code:</div><RadzenTextBox class="li-form-body" style="grid-column:2" @bind-Value=@sub.AirportIATA />
+        <div class="li-form-title" style="grid-column:3">IATA Airline Code (optional):</div><RadzenTextBox class="li-form-body" style="grid-column:4" @bind-Value=@sub.AirportIATA />
     </div>
     <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 50px 80px 50px">
         <div class="li-form-title">Arrivals:</div><RadzenCheckBox class="li-form-body" Style="grid-column:2" @bind-Value=@sub.IsArrival />
@@ -59,6 +59,4 @@
             new KeyValuePair<string, string>("JSON", "JSON"),
             new KeyValuePair<string, string>("XML", "XML")
         };
-
-    public void DataChanged() { }
 }
