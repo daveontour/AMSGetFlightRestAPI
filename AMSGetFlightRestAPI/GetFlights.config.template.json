@@ -1,0 +1,167 @@
+{
+  "MinNumSubscriptionThreads": 5,
+  "MaxNumSubscriptionThreads": 40,
+  "TryItDefaultURL": "https://localhost:7095/api/GetFlightsJSON",
+  "TryItDefaultToken": "1ecf91df-cbc1-4a2d-bf61-5a2dc8ae2e33",
+  "AdminPass": "o",
+  "AllowAMSXFormat": true,
+  "AllowJSONFormat": true,
+  "BackwardWindowInDays": -3,
+  "ForewardWindowInDays": 21,
+  "ChunkSizeInDays": 1,
+  "AllowAnnonymousUsers": true,
+  "RefreshCron": "0 15 2,21 ? * * *",
+  "UTCOffset": 4.0,
+  "ConfigurationFile": "GetFlights.config.json",
+  "Storage": "SQL",
+  "SQLConnectionString": "Integrated Security=SSPI;Persist Security Info=False;Database=FLIGHTRESTAPIDB;Server=localhost;",
+  "StorageDirectory": "C:/Users/dave_/Desktop",
+  "EnableDirectAMSLookukOnSingleFlightCacheFailure": true,
+  "EnableDirectAMSLookukOnMultiFlightCacheFailure": true,
+  "MappedQueryParameters": {
+    "qa": "S--G_QualifierCategory",
+    "status": "S--G_Status",
+    "callsign": "S--G_CallSign"
+  },
+  "CustomFieldToParameter": {
+    "de-G_MostConfidentDepartureTime": "departureTime",
+    "de-G_MostConfidentArrivalTime": "arrivalTime",
+    "S--G_QualifierCategory": "operationQualifier",
+    "S--G_FlightStatusText": "flightStatus"
+  },
+  "Airports": [
+    {
+      "AptCode": "ABC",
+      "Token": "ef7676e6-17bc-48d1-92d3-4e6243912b1f",
+      "WSURL": "http://localhost/SITAAMSIntegrationService/DOH/v2/SITAAMSIntegrationService",
+      "NotificationQueue": ".\\private$\\fromams",
+      "IsEnabled": true
+    }
+  ],
+  "Users": {
+    "default": {
+      "Token": "default",
+      "Name": "Default User",
+      "Enabled": true,
+      "AllowXML": false,
+      "AllowedAirports": [
+        "ABC"
+      ],
+      "AllowedFields": [
+        "route",
+        "aircrafttypeiata",
+        "aircraftregistration",
+        "callsign",
+        "status",
+        "publicRemark",
+        "CustomTables",
+        "Events",
+        "CheckInSlots",
+        "StandSlots",
+        "CarouselSlots",
+        "GateSlots",
+        "LastUpdated",
+        "Values"
+      ],
+      "AllowedCustomFields": [
+        "departureTime",
+        "arrivalTime",
+        "operationQualifier",
+        "flightStatus",
+        "callsign"
+      ],
+      "Defaults": {
+        "apt": "ABC"
+      },
+      "Overrides": {
+        "partialResults": "true"
+      },
+      "NumCalls": 0,
+      "LastCall": "0001-01-01T00:00:00"
+    },
+    "62daad6e-41a2-4e0f-acf6-54fa212c65b5": {
+      "Token": "62daad6e-41a2-4e0f-acf6-54fa212c65b5",
+      "Name": "XYZ Ground Handler",
+      "Enabled": true,
+      "AllowXML": false,
+      "AllowedAirports": [
+        "DOH"
+      ],
+      "AllowedFields": [
+        "route",
+        "aircrafttypeiata",
+        "aircraftregistration",
+        "callsign",
+        "status",
+        "publicRemark",
+        "CustomTables",
+        "Events",
+        "CheckInSlots",
+        "StandSlots",
+        "CarouselSlots",
+        "GateSlots",
+        "LastUpdated",
+        "Values"
+      ],
+      "AllowedCustomFields": [
+        "departureTime",
+        "arrivalTime",
+        "operationQualifier",
+        "flightStatus",
+        "callsign"
+      ],
+      "Defaults": {
+        "apt": "DOH"
+      },
+      "Overrides": {
+        "partialResults": "true"
+      },
+      "NumCalls": 0,
+      "LastCall": "0001-01-01T00:00:00"
+    },
+    "1ecf91df-cbc1-4a2d-bf61-5a2dc8ae2e33": {
+      "Token": "1ecf91df-cbc1-4a2d-bf61-5a2dc8ae2e33",
+      "Name": "Interface User",
+      "Enabled": true,
+      "AllowXML": false,
+      "AllowedAirports": [
+        "DOH"
+      ],
+      "AllowedFields": [
+        "route",
+        "aircrafttypeiata",
+        "aircraftregistration",
+        "callsign",
+        "status",
+        "publicRemark",
+        "CustomTables",
+        "Events",
+        "CheckInSlots",
+        "StandSlots",
+        "CarouselSlots",
+        "GateSlots",
+        "LastUpdated",
+        "Values"
+      ],
+      "AllowedCustomFields": [
+        "departureTime",
+        "arrivalTime",
+        "operationQualifier",
+        "flightStatus",
+        "callsign"
+      ],
+      "Defaults": {
+        "apt": "ABC"
+      },
+      "Overrides": {
+        "partialResults": "true"
+      },
+      "NumCalls": 0,
+      "LastCall": "0001-01-01T00:00:00"
+    }
+  },
+  "IsTest": false,
+  "EnableSubscriptions": true,
+  "TestBacklog": false,
+  "BacklogMaxDepth": 1000
+}

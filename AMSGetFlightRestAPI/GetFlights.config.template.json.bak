@@ -1,0 +1,94 @@
+{
+  "AllowAMSXFormat": false,
+  "AllowJSONFormat": true,
+  "BackwardWindowInDays": -5,
+  "ForewardWindowInDays": 10,
+  "ChunkSizeInDays": 1,
+  "AllowAnnonymousUsers": true,
+  "CallSignMapper": null,
+  "RefreshCron": "0 15 2,21 ? * * *",
+  "UTCOffset": 4.0,
+  "StorageDirectory": "C:/Users/dave_/Desktop",
+  "ConfigurationFile": "C:/Users/dave_/Desktop/GetFlights.config.json",
+  "MappedQueryParameters": {
+    "qa": "S--G_QualifierCategory",
+    "status": "S--G_Status"
+  },
+  "Airports": [
+    {
+      "AptCode": "DOH",
+      "Token": "ef7676e6-17bc-48d1-92d3-4e6243912b1f",
+      "WSURL": "http://localhost/SITAAMSIntegrationService/DOH/v2/SITAAMSIntegrationService",
+      "NotificationQueue": ".\\private$\\fromams"
+    },
+    {
+      "AptCode": "SLL",
+      "Token": "ef7676e6-17bc-48d1-92d3-4e6243912b1f",
+      "WSURL": "http://localhost/SITAAMSIntegrationService/DOH/v2/SITAAMSIntegrationService",
+      "NotificationQueue": ".\\private$\\fromams"
+    }
+  ],
+  "Users": {
+    "default": {
+      "Name": "Default User",
+      "Enabled": true,
+      "AllowedAirports": [
+        "DOH"
+      ],
+      "AllowedFields": [
+        "route",
+        "aircrafttypeiata",
+        "aircraftregistration",
+        "callsign",
+        "status",
+        "publicRemark",
+        "customTables",
+        "events",
+        "checkInSlots",
+        "LastUpdated"
+      ],
+      "AllowedCustomFields": [
+        "ArrivalDeskGroupIsManuallySet",
+        "de-G_MostConfidentArrivalTime",
+        "S--G_QualifierCategory"
+      ],
+      "Defaults": {
+        "apt": "DOH"
+      },
+      "Overrides": {
+        "partialResults": "true"
+      }
+    },
+    "keyforthegroundhandler": {
+      "Name": "Ground Handler",
+      "Enabled": true,
+      "AllowedAirports": [
+        "DOH",
+        "SLL"
+      ],
+      "AllowedFields": [
+        "route",
+        "aircrafttypeiata",
+        "aircraftregistration",
+        "callsign",
+        "status",
+        "publicRemark",
+        "customTables",
+        "events",
+        "checkInSlots",
+        "LastUpdated"
+      ],
+      "AllowedCustomFields": [
+        "ArrivalDeskGroupIsManuallySet",
+        "de-G_MostConfidentArrivalTime",
+        "S--G_QualifierCategory"
+      ],
+      "Defaults": {
+        "apt": "DOH"
+      },
+      "Overrides": {
+        "partialResults": "true"
+      }
+    }
+  }
+}

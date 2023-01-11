@@ -52,6 +52,13 @@ namespace AMSGetFlights.Model
         public string error { get; set; }
         public List<AMSFlight> flights { get; set; }
     }
+    public class GetFlightScheduleResponse
+    {
+        public GetFlightQueryObject query { get; set; }
+        public bool partialResutlsRetuned { get; set; } = false;
+        public string error { get; set; }
+        public List<FlightIDExtended> flights { get; set; }
+    }
     public class LogEntry
     {
         public GetFlightQueryObject query { get; set; }
@@ -467,6 +474,41 @@ namespace AMSGetFlights.Model
 
         }
     }
+
+    public class FlightIDExtended 
+    {
+        [JsonIgnore]
+        public string flightID { get; set; }
+        public string flightNumber { get; set; }
+        public string iataAirline { get; set; }
+        public string icaoAirline { get; set; }
+        public string iatalocalairport { get; set; }
+        public string icaolocalairport { get; set; }
+        public string scheduleDate { get; set; }
+        public string scheduleTime { get; set; }
+        public bool deleted { get; set; } = false;
+        public string flightkind { get; set; }
+        public string flightUniqueID { get; set; }
+        public List<Dictionary<string, string>> route { get; set; } = new List<Dictionary<string, string>>(); 
+        
+        public FlightIDExtended(FlightID flightId, List<Dictionary<string, string>> route)
+        {
+            flightID = flightId.flightID;
+            flightNumber = flightId.flightNumber;
+            iataAirline = flightId.iataAirline;
+            flightkind = flightId.flightkind;
+            icaoAirline = flightId.icaoAirline;
+            iatalocalairport = flightId.iatalocalairport;
+            icaolocalairport = flightId.icaolocalairport;
+            scheduleDate = flightId.scheduleDate;
+            scheduleTime = flightId.scheduleTime;
+            flightUniqueID = flightId.flightUniqueID;
+            deleted = flightId.deleted;
+            this.route = route;
+
+        }
+    }
+
     public class CustomField : ICloneable
     {
         public CustomField(string name, string value)

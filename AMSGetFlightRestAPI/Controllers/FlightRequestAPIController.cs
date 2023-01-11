@@ -18,7 +18,7 @@ namespace AMSGetFlights.Controllers
         private readonly EventExchange eventExchange;
         private readonly FlightRepository repo;
 
-        public FlightRequestAPIController(FlightRequestHandler handler, GetFlightsConfigService configService, EventExchange eventExchange,FlightRepository repo)
+        public FlightRequestAPIController(FlightRequestHandler handler, GetFlightsConfigService configService, EventExchange eventExchange, FlightRepository repo)
         {
             this.handler = handler;
             this.configService = configService;
@@ -50,7 +50,8 @@ namespace AMSGetFlights.Controllers
                 status.ProcessMemory = usedMemory;
 
                 return status;
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 ServerStatus status = new()
                 {
@@ -73,7 +74,7 @@ namespace AMSGetFlights.Controllers
             // Are JSON requests allowed
             if (!configService.config.AllowJSONFormat)
             {
-               
+
                 Log($"JSON Request. JSON Not enabled. {Request.GetEncodedPathAndQuery}", warn: true);
                 return new GetFlightsResponse() { error = "Not Enabled" };
             }
@@ -82,7 +83,7 @@ namespace AMSGetFlights.Controllers
             {
                 // Parse the input
                 GetFlightQueryObject query = handler.GetQueryObject(Request, "JSON");
-               
+
 
                 //Check for Annonymous users
                 if (query.token == "default" && !configService.config.AllowAnnonymousUsers)
@@ -96,7 +97,8 @@ namespace AMSGetFlights.Controllers
                 {
                     Log("User Not Found", query, warn: true);
                     return new GetFlightsResponse() { error = "User Not Found" };
-                } else
+                }
+                else
                 {
                     configService.config.Users[query.token].NumCalls++;
                     configService.config.Users[query.token].LastCall = DateTime.Now;
@@ -114,10 +116,10 @@ namespace AMSGetFlights.Controllers
                 string queryStatus = handler.CheckQueryStatus(query);
 
                 // If configured go directly to AMS for a specific flight if out of bounds
-                if ((queryStatus =="OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnSingleFlightCacheFailure  && query.IsSingleFlight)
+                if ((queryStatus == "OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnSingleFlightCacheFailure && query.IsSingleFlight)
                 {
                     query.IsOutOfBoundsQuery = true;
-                    Log("Single Flight Out of Bounds Request", query, warn:true, showQuery:true);
+                    Log("Single Flight Out of Bounds Request", query, warn: true, showQuery: true);
                     string xml = GetOutOfBoundsFlight(query);
                     if (xml == "Flight Not Found")
                     {
@@ -127,23 +129,24 @@ namespace AMSGetFlights.Controllers
                     List<AMSFlight> tt = handler.GetSingleFlight(xml, query.token);
                     query.NumberOfResults = tt.Count;
 
-                    Log("Success", query, query.NumberOfResults.ToString(), warn: true,showQuery:true);
+                    Log("Success", query, query.NumberOfResults.ToString(), warn: true, showQuery: true);
 
-                    GetFlightsResponse res = new () { query = query, flights = tt, partialResutlsRetuned = queryStatus == "PARTIAL" };
+                    GetFlightsResponse res = new() { query = query, flights = tt, partialResutlsRetuned = queryStatus == "PARTIAL" };
                     Response.StatusCode = StatusCodes.Status200OK;
 
                     return res;
-                } else if ((queryStatus == "OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnMultiFlightCacheFailure)
+                }
+                else if ((queryStatus == "OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnMultiFlightCacheFailure)
                 {
                     query.IsOutOfBoundsQuery = true;
-                    Log("Multi Flight Out of Bounds Request", query, warn: true, showQuery:true);
+                    Log("Multi Flight Out of Bounds Request", query, warn: true, showQuery: true);
                     string xml = GetOutOfBoundsFlights(query);
                     if (xml == "Flights Not Found")
                     {
                         return new GetFlightsResponse() { error = "Flights Not Found", query = query, flights = new List<AMSFlight>() };
                     }
 
-                    List<AMSFlight> tt = handler.GetFlightsFromXML(xml,query);
+                    List<AMSFlight> tt = handler.GetFlightsFromXML(xml, query);
                     query.NumberOfResults = tt.Count;
 
                     Log("Success", query, query.NumberOfResults.ToString(), warn: true, showQuery: true);
@@ -153,7 +156,7 @@ namespace AMSGetFlights.Controllers
 
                     return res;
                 }
-                
+
                 // Query is completely out of bounds of the current cache
                 if (queryStatus == "OUTOFBOUND")
                 {
@@ -162,8 +165,9 @@ namespace AMSGetFlights.Controllers
                     return new GetFlightsResponse() { error = "Requested Dates are Out of Bounds" };
 
 
-                // Query is partiall out of bounds, so check if partial results are OK
-                } else  if (queryStatus == "PARTIAL" && query.partialResults.ToLower() == "false")
+                    // Query is partiall out of bounds, so check if partial results are OK
+                }
+                else if (queryStatus == "PARTIAL" && query.partialResults.ToLower() == "false")
                 {
                     Log("Partially Out of Bounds", query, warn: true);
                     Response.StatusCode = StatusCodes.Status400BadRequest;
@@ -175,7 +179,7 @@ namespace AMSGetFlights.Controllers
                 query.NumberOfResults = t.Count;
 
                 // Return the results
-                Log("Success", query, query.NumberOfResults.ToString(),info: true);
+                Log("Success", query, query.NumberOfResults.ToString(), info: true);
                 GetFlightsResponse r = new() { query = query, flights = t, partialResutlsRetuned = queryStatus == "PARTIAL" };
                 Response.StatusCode = StatusCodes.Status200OK;
 
@@ -193,6 +197,120 @@ namespace AMSGetFlights.Controllers
                 GC.Collect();
             }
         }
+
+        [HttpGet("GetFlightSchedule")]
+        public ActionResult<GetFlightScheduleResponse> GetSchedule()
+        {
+            eventExchange.TopStatusMessage($"JSON API Request Received");
+            eventExchange.URLRequestMade(Request.GetDisplayUrl());
+
+            // Are JSON requests allowed
+            if (!configService.config.AllowJSONFormat)
+            {
+
+                Log($"JSON Request. JSON Not enabled. {Request.GetEncodedPathAndQuery}", warn: true);
+                return new GetFlightScheduleResponse() { error = "Not Enabled" };
+            }
+
+            try
+            {
+                // Parse the input
+                GetFlightQueryObject query = handler.GetQueryObject(Request, "JSON");
+
+
+                //Check for Annonymous users
+                if (query.token == "default" && !configService.config.AllowAnnonymousUsers)
+                {
+                    Log("Not Authorized", query, warn: true);
+                    return new GetFlightScheduleResponse() { error = "Not Authorized" };
+                }
+
+                // Check the provided user token exists
+                if (!configService.config.Users.ContainsKey(query.token))
+                {
+                    Log("User Not Found", query, warn: true);
+                    return new GetFlightScheduleResponse() { error = "User Not Found" };
+                }
+                else
+                {
+                    configService.config.Users[query.token].NumCalls++;
+                    configService.config.Users[query.token].LastCall = DateTime.Now;
+                    eventExchange.UserAPICallsUpdated();
+                }
+
+                // Check the provided user token is enabled
+                if (!configService.config.Users[query.token].Enabled)
+                {
+                    Log("User Disabled", query, warn: true);
+                    return new GetFlightScheduleResponse() { error = "User Disabled" };
+                }
+
+                // Check the query agains the current contents of the cache
+                string queryStatus = handler.CheckQueryStatus(query);
+
+                // If configured go directly to AMS for a specific flight if out of bounds
+                if ((queryStatus == "OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnMultiFlightCacheFailure)
+                {
+                    query.IsOutOfBoundsQuery = true;
+                    Log("Multi Flight Out of Bounds Request", query, warn: true, showQuery: true);
+                    string xml = GetOutOfBoundsFlights(query);
+                    if (xml == "Flights Not Found")
+                    {
+                        return new GetFlightScheduleResponse() { error = "Flights Not Found", query = query, flights = new List<FlightIDExtended>() };
+                    }
+
+                    //List<Flight> tt = handler.GetFlightsFromXML(xml, query);
+                    //query.NumberOfResults = tt.Count;
+
+                    //Log("Success", query, query.NumberOfResults.ToString(), warn: true, showQuery: true);
+
+                    //GetFlightScheduleResponse res = new() { query = query, flights = tt, partialResutlsRetuned = queryStatus == "PARTIAL" };
+                    //Response.StatusCode = StatusCodes.Status200OK;
+
+                    //return res;
+                }
+
+                // Query is completely out of bounds of the current cache
+                if (queryStatus == "OUTOFBOUND")
+                {
+                    Log("Out of Bounds", query, warn: true);
+                    Response.StatusCode = StatusCodes.Status400BadRequest;
+                    return new GetFlightScheduleResponse() { error = "Requested Dates are Out of Bounds" };
+
+
+                    // Query is partiall out of bounds, so check if partial results are OK
+                }
+                else if (queryStatus == "PARTIAL" && query.partialResults.ToLower() == "false")
+                {
+                    Log("Partially Out of Bounds", query, warn: true);
+                    Response.StatusCode = StatusCodes.Status400BadRequest;
+                    return new GetFlightScheduleResponse() { error = "Requested Dates are Parrtially Out of Bounds" };
+                }
+
+                //Get the flights
+                List<FlightIDExtended> t = handler.GetFlightSchedule(query);
+                query.NumberOfResults = t.Count;
+
+                // Return the results
+                Log("Success", query, query.NumberOfResults.ToString(), info: true);
+                GetFlightScheduleResponse r = new() { query = query, flights = t, partialResutlsRetuned = queryStatus == "PARTIAL" };
+                Response.StatusCode = StatusCodes.Status200OK;
+
+                return r;
+            }
+            catch (Exception ex)
+            {
+                Log($"Query String: {Request.QueryString}. Error Message {ex.Message}", error: true);
+
+                Response.StatusCode = StatusCodes.Status500InternalServerError;
+                return new GetFlightScheduleResponse() { error = $"{ex.Message}" };
+            }
+            finally
+            {
+                GC.Collect();
+            }
+        }
+
 
         [HttpGet("GetFlightsXML")]
         public IActionResult GetXML()
@@ -216,7 +334,7 @@ namespace AMSGetFlights.Controllers
                 GetFlightQueryObject query = handler.GetQueryObject(Request, "XML");
                 if (query.token == "default" && !configService.config.AllowAnnonymousUsers)
                 {
-                    Log("Not Authorised",query, warn: true);
+                    Log("Not Authorised", query, warn: true);
                     return new ContentResult
                     {
                         Content = $"<error>Not Authorised</error>",
@@ -244,7 +362,7 @@ namespace AMSGetFlights.Controllers
                 }
                 if (!configService.config.Users[query.token].Enabled)
                 {
-                     Log("User Disabled", query, warn: true);
+                    Log("User Disabled", query, warn: true);
 
                     return new ContentResult
                     {
@@ -304,7 +422,7 @@ namespace AMSGetFlights.Controllers
                 else if ((queryStatus == "OUTOFBOUND" || queryStatus == "PARTIAL") && configService.config.EnableDirectAMSLookukOnMultiFlightCacheFailure)
                 {
                     query.IsOutOfBoundsQuery = true;
-                    Log("Multi Flight Out of Bounds Request",query, warn: true, showQuery: true);
+                    Log("Multi Flight Out of Bounds Request", query, warn: true, showQuery: true);
                     string xml = GetOutOfBoundsFlights(query);
                     if (xml == "Flight Not Found")
                     {
@@ -373,7 +491,7 @@ namespace AMSGetFlights.Controllers
 
                 Log("Sucess", query, info: true);
 
-                 return new ContentResult
+                return new ContentResult
                 {
                     Content = PrintXML(sb.ToString()),
                     ContentType = "text/xml",
@@ -388,7 +506,8 @@ namespace AMSGetFlights.Controllers
                     ContentType = "text/xml",
                     StatusCode = 500
                 };
-            } finally
+            }
+            finally
             {
                 System.GC.Collect();
             }
@@ -432,7 +551,7 @@ namespace AMSGetFlights.Controllers
             xml = xml.Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-datatypes\"", "")
          .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-messages\"", "")
          .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-webservice\"", "");
-            return xml; 
+            return xml;
         }
         private string GetOutOfBoundsFlights(GetFlightQueryObject query)
         {
@@ -462,7 +581,7 @@ namespace AMSGetFlights.Controllers
          .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-webservice\"", "");
             return xml;
         }
-        private void Log(string result,  GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false, bool showQuery = false)
+        private void Log(string result, GetFlightQueryObject? query = null, string? recordsReturned = null, bool info = false, bool warn = false, bool error = false, bool showQuery = false)
         {
             eventExchange.Log(result, query, recordsReturned, info, warn, error, showQuery);
         }

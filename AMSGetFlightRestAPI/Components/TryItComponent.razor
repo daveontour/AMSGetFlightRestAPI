@@ -70,7 +70,7 @@
         //await InvokeAsync(() => StateHasChanged());
 
         string result = await SendRequest();
-        if (RequestURL.Contains("GetFlightsJSON") || RequestURL.ToLower().Contains("subscription"))
+        if (RequestURL.Contains("GetFlightsJSON") || RequestURL.Contains("GetFlightSchedule") || RequestURL.ToLower().Contains("subscription"))
             try
             {
                 string jsonFormatted = JValue.Parse(result).ToString(Formatting.Indented);

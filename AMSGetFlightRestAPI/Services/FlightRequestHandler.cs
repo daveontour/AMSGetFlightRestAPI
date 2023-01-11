@@ -59,6 +59,24 @@ namespace AMSGetFlights.Services
             return res;
         }
 
+        public List<FlightIDExtended> GetFlightSchedule(GetFlightQueryObject query, bool IsXML = false)
+        {
+
+            // Get the list of flights
+            var res = repo.GetFlights(query);
+
+            List<FlightIDExtended> flights = new List<FlightIDExtended>();
+            foreach (var flight in res)
+            {
+                FlightIDExtended fe = new FlightIDExtended(flight.flightId, flight.route);  
+                flights.Add(fe);
+            }
+
+            eventExchange.APIRequestMade(query);
+
+            return flights;
+        }
+
         // Test the timeframe of the query against what is in the cache
         public string CheckQueryStatus(GetFlightQueryObject q)
         {
