@@ -25,7 +25,7 @@
     <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 1fr 200px 1fr">
         <div class="li-form-category-title">Subscription Filters</div>
         <div class="li-form-title">IATA Airport Code:</div><RadzenTextBox class="li-form-body" style="grid-column:2" @bind-Value=@sub.AirportIATA />
-        <div class="li-form-title" style="grid-column:3">IATA Airline Code (optional):</div><RadzenTextBox class="li-form-body" style="grid-column:4" @bind-Value=@sub.AirportIATA />
+        <div class="li-form-title" style="grid-column:3">IATA Airline Code (optional):</div><RadzenTextBox class="li-form-body" style="grid-column:4" @bind-Value=@sub.AirlineIATA />
     </div>
     <div class="li-editor-grid" style="display:grid; grid-template-columns:220px 50px 80px 50px">
         <div class="li-form-title">Arrivals:</div><RadzenCheckBox class="li-form-body" Style="grid-column:2" @bind-Value=@sub.IsArrival />

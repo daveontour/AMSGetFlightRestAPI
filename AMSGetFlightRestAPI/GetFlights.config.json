@@ -1,4 +1,5 @@
 {
+  "EnableSubscriptions": true,
   "MinNumSubscriptionThreads": 5,
   "MaxNumSubscriptionThreads": 40,
   "TryItDefaultURL": "https://localhost:7095/api/GetFlightsJSON",
@@ -20,8 +21,7 @@
   "EnableDirectAMSLookukOnMultiFlightCacheFailure": true,
   "MappedQueryParameters": {
     "qa": "S--G_QualifierCategory",
-    "status": "S--G_Status",
-    "callsign": "S--G_CallSign"
+    "status": "S--G_Status"
   },
   "CustomFieldToParameter": {
     "de-G_MostConfidentDepartureTime": "departureTime",
@@ -200,8 +200,8 @@
       "Overrides": {
         "partialResults": "true"
       },
-      "NumCalls": 0,
-      "LastCall": "0001-01-01T00:00:00"
+      "NumCalls": 1,
+      "LastCall": "2023-01-16T20:12:13.3228503+04:00"
     },
     "22e1ae97-517b-4329-9096-ddb45016851d": {
       "Token": "22e1ae97-517b-4329-9096-ddb45016851d",
@@ -245,7 +245,6 @@
     }
   },
   "IsTest": false,
-  "EnableSubscriptions": true,
   "TestBacklog": false,
   "BacklogMaxDepth": 1000
 }

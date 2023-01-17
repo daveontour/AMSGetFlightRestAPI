@@ -374,8 +374,23 @@ namespace AMSGetFlights.Model
         }
         private string GetValue(string xpath, XmlNode node)
         {
+            try
+            {
             string value = node.SelectSingleNode(xpath)?.InnerText;
             return value;
+            } catch (Exception ex)
+            {
+                Console.WriteLine($"XPATH Not found {xpath}");
+                if (node != null)
+                {
+                    Console.WriteLine(node.OuterXml);
+                } else
+                {
+                    Console.WriteLine("Node Empty");
+                }
+                throw ex;
+            }
+
         }
 
         [JsonIgnore]

@@ -9,6 +9,13 @@ using System.Net;
 namespace AMSGetFlights.Controllers
 {
 
+    /*
+     * 
+     * Class to implement the enpoints for managing subscriptions 
+     * 
+     * 
+     */
+
     [Route("subscription")]
     [ApiController]
     public class SubscriptionController : ControllerBase

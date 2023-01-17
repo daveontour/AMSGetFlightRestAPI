@@ -3,6 +3,10 @@
 
 namespace AMSGetFlights.Services;
 
+/*
+ *  Define all the interfaces fro the project for classes where there may be more than one possible implementation 
+ */
+
 public interface IFlightRepositoryDataAccessObject
 {
     void DeleteRecord(AMSFlight record);

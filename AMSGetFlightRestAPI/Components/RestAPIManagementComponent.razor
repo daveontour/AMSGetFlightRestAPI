@@ -23,6 +23,7 @@
                 <div style="grid-column:auto;display:flex;flex-direction:column">
                     <div class="pop-editor-grid" style="row-gap:2px;grid-auto-rows:28px;grid-template-columns:250px 50px 220px 50px 1fr">
                         <div class="li-form-category-title">Global Settings</div>
+                        <div class="li-form-title" style="grid-column:1"><sup>*</sup> Subscription Service Enabled:</div><div><RadzenCheckBox @bind-Value=@config.EnableSubscriptions Change="(bool args) => DataChanged()" /></div>
                         <div class="li-form-title">Allow Annonymous Requests:</div><div><RadzenCheckBox @bind-Value=@config.AllowAnnonymousUsers Change="(bool args) => DataChanged()" /></div>
                         <div class="li-form-title">Allow XML Requests:</div><div><RadzenCheckBox @bind-Value=@config.AllowAMSXFormat Change="(bool args) => DataChanged()" /></div>
                         <div class="li-form-title" style="grid-column:3">Allow JSON Requests:</div><div><RadzenCheckBox style="grid-column:4" @bind-Value=@config.AllowJSONFormat Change="(bool args) => DataChanged()" /></div>

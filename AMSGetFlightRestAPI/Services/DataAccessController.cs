@@ -5,6 +5,14 @@ using System.Data;
 
 namespace AMSGetFlights.Services
 {
+    /*
+     *  Classes for the direct access to the cache store on disk.
+     *  The access is defined by IFlightRepositoryDataAccessObject
+     *  
+     *  Two implementations are available. MSSQL and SQLite
+     * 
+     */
+
     public class StoredFlight
     {
         public string? XML { get; set; }
@@ -92,6 +100,8 @@ namespace AMSGetFlights.Services
         public IEnumerable<StoredFlight> GetStoredFlights(GetFlightQueryObject query, string? kind)
         {
 
+            //Dynamically create the SQL for the query based on the parameters set.
+
             string sql = $"SELECT * from StoredFlights WHERE datetime(sto) >= datetime('{query.startQuery}') AND datetime(sto) <= datetime('{query.endQuery}') ";
             if (query.schedDate != null)
             {
@@ -117,6 +127,11 @@ namespace AMSGetFlights.Services
             {
                 sql += $" AND type = '{kind}'";
             }
+            if (query.updatedFrom != null)
+            {
+                sql += $" AND datetime(lastupdate) >= '{query.updatedFrom}'";
+            }
+
 
             sql += " ORDER BY sto ";
 
@@ -366,6 +381,11 @@ namespace AMSGetFlights.Services
             if (kind != null)
             {
                 sql += $" AND type = '{kind}'";
+            }
+
+            if (query.updatedFrom != null)
+            {
+                sql += $" AND lastupdate >= '{query.updatedFrom}'";
             }
 
             sql += " ORDER BY sto ";

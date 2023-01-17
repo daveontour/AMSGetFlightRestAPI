@@ -807,3 +807,37 @@ div.rz-dropdown {
     font-size: 10pt;
     height: 25px;
 }
+
+div.lipre span {
+    font-family: 'Courier New';
+    font-size: 10pt;
+    color: #000000;
+}
+
+div.lipre .sc0 {
+}
+
+div.lipre .scc {
+    color:gray;
+    margin-left:30px;
+}
+
+div.lipre .sc1 {
+    color: #FF8000;
+}
+
+div.lipre .sc2 {
+    color: #800000;
+}
+
+div.lipre .sc4 {
+    color: #8000FF;
+}
+
+div.lipre .sc8 {
+}
+
+div.lipre .sc11 {
+    font-weight: bold;
+    color: #18AF8A;
+}

@@ -3,6 +3,11 @@ using Newtonsoft.Json;
 
 namespace AMSGetFlights.Services
 {
+
+    /*
+     *  Intermediary class between the request and the data access layser to do addtional filtering
+     *  and to manage the updates to the data storage
+     */ 
     public class FlightRepository 
     {
         private readonly GetFlightsConfigService configService;
@@ -66,6 +71,7 @@ namespace AMSGetFlights.Services
                 }
             }
 
+
             // Do the query to get the XML for the flight
             List<AMSFlight> fls = new List<AMSFlight>();
 
@@ -75,16 +81,19 @@ namespace AMSGetFlights.Services
             {
                 foreach (StoredFlight stfl in flights)
                 {
-                    DateTime lastUpdate = DateTime.MinValue;
-                    try
-                    {
-                        lastUpdate = DateTime.Parse(stfl.Lastupdate);   
-                    } catch (Exception)
-                    {
-                        lastUpdate = DateTime.MinValue;
-                    }
-                    if(lastUpdate >= query.updatedFrom) 
-                    fls.Add(new AMSFlight(stfl.XML, configService.config, DateTime.Parse(stfl.Lastupdate).AddHours(configService.config.UTCOffset).ToString("yyyy-MM-ddTHH:mm:ssK")));
+                    //Not needed now as the lastupdate has been moved into the query
+
+                    //DateTime lastUpdate = DateTime.MinValue;
+                    //try
+                    //{
+                    //    lastUpdate = DateTime.Parse(stfl.Lastupdate);
+                    //}
+                    //catch (Exception)
+                    //{
+                    //    lastUpdate = DateTime.MinValue;
+                    //}
+                    //if (lastUpdate >= query.updatedFrom)
+                        fls.Add(new AMSFlight(stfl.XML, configService.config, DateTime.Parse(stfl.Lastupdate).AddHours(configService.config.UTCOffset).ToString("yyyy-MM-ddTHH:mm:ssK")));
                 }
             } else
             {
@@ -112,9 +121,11 @@ namespace AMSGetFlights.Services
             Dictionary<string, string> allowedExtras = configService.config.GetMappedExtras();
             if (allowedExtras.ContainsKey("callsign"))
             {
+                if (allowedExtras.ContainsKey("callsign"))
                 allowedExtras.Remove("callsign");
             }
 
+            // Filter on any custom field defined filters
             foreach (string xtra in query.queryParams.Keys)
             {
                 if (allowedExtras.ContainsKey(xtra))

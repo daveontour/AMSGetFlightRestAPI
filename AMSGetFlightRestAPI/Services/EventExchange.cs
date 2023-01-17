@@ -5,6 +5,9 @@ using NLog;
 
 namespace AMSGetFlights.Services
 {
+    /*
+     * Class to facilitate the exchange of information between component via event notifivations
+     */
     public class EventExchange :IDisposable
     {
         public event Action<AMSFlight>? OnFlightDeleted;

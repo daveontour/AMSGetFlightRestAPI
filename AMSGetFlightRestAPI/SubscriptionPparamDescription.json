@@ -1,0 +1,111 @@
+[
+  {
+    "Parameter": "subscriptionID",
+    "Description": "A unique identifier to identify the specific subscription",
+    "Required": "Yes",
+    "Note": "Any text, no spaces"
+  },
+  {
+    "Parameter": "dataFormat",
+    "Description": "\"JSON\" or \"XML\"",
+    "Required": "Yes",
+    "Note": "For XML, the data is sent in AMSX format"
+  },
+  {
+    "Parameter": "isArrival",
+    "Description": " Send arrival flights",
+    "Required": "",
+    "Note": "\"true\" or \"false\"\", Default false"
+  },
+  {
+    "Parameter": "isDeparture",
+    "Description": " Send departure flights",
+    "Required": "",
+    "Note": "\"true\" or \"false\"\", Default false"
+  },
+  {
+    "Parameter": "isEnabled",
+    "Description": "Enable the subscription",
+    "Required": "",
+    "Note": "\"true\" or \"false\"\", Default true"
+  },
+  {
+    "Parameter": "airportIATA",
+    "Description": "3 letter IATA Airport code the subscription applies to",
+    "Required": "Yes",
+    "Note": ""
+  },
+  {
+    "Parameter": "callBackURL",
+    "Description": "The HTTP Post endpoint to call to send the update",
+    "Required": "Yes",
+    "Note": "Must be a well formed URL for the subscription to be accepted"
+  },
+  {
+    "Parameter": "maxHorizonInHours",
+    "Description": "The maximimum time in hours from \"NOW\" for the time of operation of flights you want updates for",
+    "Required": "",
+    "Note": "Default is 24"
+  },
+  {
+    "Parameter": "minHorizonInHours",
+    "Description": "The minimum time in hours from \"NOW\" for the time of operation of flights you want updates for",
+    "Required": "",
+    "Note": "Default is -24"
+  },
+  {
+    "Parameter": "authorizationHeaderName",
+    "Description": "When the system calls the defined endpoint, in can include an authorization header. This defines the name of the header",
+    "Required": "",
+    "Note": ""
+  },
+  {
+    "Parameter": "authorizationHeaderValue",
+    "Description": "The value of the authorization to incluse in the call back request",
+    "Required": "",
+    "Note": ""
+  },
+  {
+    "Parameter": " Change Parameters",
+    "Description": "See Note",
+    "Required": "",
+    "Note": "If you only want to receive an update if the estimated time of operation has changed, set changeEstimated to \"true\". If you want to only recieve updates when estimated time of operation has changed or checkin information has changes, set both changedEstimated and changeResourceCheckIn to \"true\" "
+  },
+  {
+    "Parameter": "changeResourceGate",
+    "Description": "Send updates which include a change in allocated Gate information",
+    "Required": "",
+    "Note": ""
+  },
+  {
+    "Parameter": "changeResourceStand",
+    "Description": "Send updates which include a change in allocated Stand information",
+    "Required": "",
+    "Note": ""
+  },
+  {
+    "Parameter": "changeResourceCheckIn",
+    "Description": "Send updates which include a change in allocated CheckIn information",
+    "Required": "",
+    "Note": ""
+  },
+  {
+    "Parameter": "changeResourceBaggageReclaim",
+    "Description": "Send updates which include a change in allocated Baggage Reclaim information",
+    "Required": "",
+    "Note": ""
+  },
+  {
+    "Parameter": "changeEstimated",
+    "Description": "Send updates which include a change in allocated Estimated time of operation",
+    "Required": "",
+    "Note": ""
+  },
+  {
+    "Parameter": "validUntil",
+    "Description": "The DateTime that the subscription is valid until",
+    "Required": "",
+    "Note": "For example: 2023-12-31T23:59:59"
+  }
+]
+

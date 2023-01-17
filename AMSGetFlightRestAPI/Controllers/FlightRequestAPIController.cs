@@ -9,6 +9,14 @@ using Microsoft.AspNetCore.Http.Extensions;
 
 namespace AMSGetFlights.Controllers
 {
+
+    /*
+     * 
+     *  Class to implement the endpoints for GetFlightXXXXXXX
+     * 
+     * 
+     */
+
     [Route("api")]
     [ApiController]
     public partial class FlightRequestAPIController : ControllerBase

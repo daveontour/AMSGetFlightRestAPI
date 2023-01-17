@@ -2,6 +2,19 @@
 
 
 <div style="height:calc(100vh - 195px);width:calc(100vw - 80px);max-width:calc(100vw - 80px);font-size:10pt">
+    <h2 style="margin:10px">API Requests</h2>
+    <div>Omni AMS GetFlights RestAPI continuously caches data from AMS so it can respond to RestAPI requests.</div>
+    <div>If configured, the system will also access AMS directly for flight data if the requested dates are outside the limits of the cache, otherwise, calls to the API do not impact AMS</div>
+    <div>Flight status data can be returned in JSON or AMSX format. Flight Schedule information can be returned in JSON format</div>
+    <div>Users can be configured to limit the specific flight and flight data that they can retrieve</div>
+    <div>Request to the API can include query parameter (see below) to specify the required flights to return</div>
+    
+    <div class="pop-editor-grid" style="display:grid;grid-template-columns: 220px auto;row-gap:2px;width:100%;grid-auto-rows: 22px;margin-bottom:20px;margin-top:20px">
+        <div class="li-form-title">Base Endpoints:</div>
+        <div style="grid-column:2">http://hostname/GetFlightsJSON <span><i></i></span></div>
+        <div style="grid-column:2">http://hostname/GetFlightsXML<span><i></i></span></div>
+        <div style="grid-column:2">http://hostname/GetFlightSchedule<span><i></i></span></div>
+    </div>
     <div class="pop-editor-grid" style="display:grid;grid-template-columns: 220px auto;row-gap:2px;width:100%;grid-auto-rows: 22px">
         <div class="li-form-title">Examples:</div>
         <div style="grid-column:2">http://hostname/GetFlightsJSON <span><i>(Results returned in JSON format)</i></span></div>

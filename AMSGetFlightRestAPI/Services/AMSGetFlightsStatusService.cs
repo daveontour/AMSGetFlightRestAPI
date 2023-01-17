@@ -13,12 +13,15 @@ namespace AMSGetFlights.Services;
 
 public class AMSGetFlightsStatusService
 {
+    /*
+     * Singleton to manage the interaction betwwen the system and AMS
+     */
     public bool Running { get; set; } = false;
 
     private bool startListenLoop;
-    private int advanceWindow = 10;
-    private int backWindow = -3;
-    private int chunkSize = 1;
+    private int advanceWindow = 10;   // The days in advance for the cache window
+    private int backWindow = -3;      // The days in arrears fo rthe cache window
+    private int chunkSize = 1;        // The number of days per call when filling the cache
     private List<string> listenerQueues = new List<string>();   
     private readonly Logger logger = LogManager.GetLogger("consoleLogger");
    
@@ -39,21 +42,26 @@ public class AMSGetFlightsStatusService
 
         Instance = this;
         //Scheduler for the refressh job
-        StdSchedulerFactory factory = new StdSchedulerFactory();
-        IScheduler scheduler = factory.GetScheduler().Result;
+        //StdSchedulerFactory factory = new StdSchedulerFactory();
+        //IScheduler scheduler = factory.GetScheduler().Result;
 
-        // and start it off
-        scheduler.Start().Wait();
+        //// and start it off
+        //scheduler.Start().Wait();
 
-        // Schedule the jobs to refresh the cache and update the status of tows
-        IJobDetail job = JobBuilder.Create<RefreshJob>().WithIdentity("job1", "group1").Build();
-        ITrigger trigger = TriggerBuilder.Create()
-            .WithIdentity("trigger1", "group1")
-            .WithCronSchedule(configService.config.RefreshCron)
-        .Build();
+        //// Schedule the jobs to refresh the cache and update the status of tows
+        //IJobDetail job = JobBuilder.Create<RefreshJob>().WithIdentity("job1", "group1").Build();
+        //ITrigger trigger = TriggerBuilder.Create()
+        //    .WithIdentity("trigger1", "group1")
+        //    .WithCronSchedule(configService.config.RefreshCron)
+        //.Build();
 
 
-        scheduler.ScheduleJob(job, trigger);
+        //scheduler.ScheduleJob(job, trigger);
+    }
+
+    public async Task BackgroundProcessing(CancellationToken stoppingToken)
+    {
+        await Task.Run(() => Start());
     }
     public async Task Start()
     {
@@ -67,15 +75,12 @@ public class AMSGetFlightsStatusService
         {
             try
             {
-
                 startListenLoop = true;
                 Thread receiveThread = new Thread(() => ListenToQueue(airport.NotificationQueue))
                 {
                     IsBackground = false
                 };
                 receiveThread.Start();
-
-
             }
             catch (Exception ex)
             {
@@ -108,10 +113,7 @@ public class AMSGetFlightsStatusService
         eventExchange.FlightServiceRunning(Running);
 
     }
-    public async Task BackgroundProcessing(CancellationToken stoppingToken)
-    {
-        await Task.Run(() => Start());
-    }
+
     public void PopulateFlightCache()
     {
         DateTime FromTime = DateTime.UtcNow.AddDays(backWindow);
@@ -130,7 +132,6 @@ public class AMSGetFlightsStatusService
             {
                 eventExchange.MonitorMessage($"Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
                 eventExchange.TopStatusMessage($"Loading: {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
-                Console.WriteLine($"Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
                 logger.Info($"Fetching flight for airport {airport.AptCode} From: {chunkFromTime} To: {chunkToTime}");
 
                 string xml = GetFlightsXML(chunkFromTime, chunkToTime, airport.AptCode, airport.Token, airport.WSURL).Result;
@@ -163,7 +164,6 @@ public class AMSGetFlightsStatusService
         eventExchange.TopStatusMessage($"Updating Flight Cache");
         foreach (AirportSource airport in configService.config.GetAirports())
         {
-
             DateTime chunkFromTime = FromTime;
             DateTime chunkToTime = chunkFromTime.AddDays(chunkSize);
 
@@ -182,10 +182,11 @@ public class AMSGetFlightsStatusService
                 chunkToTime = chunkFromTime.AddHours(24);
 
             } while (ToTime.AddDays(1) > chunkToTime.AddDays(1));
-
-
         }
+
+        // Remove the messages flights that have fallen off the back of the cache windoe
         repo.PruneRepo(backWindow);
+
         eventExchange.TopStatusMessage($"Updating Flight Cache Complete");
         repo.MinDateTime = DateTime.UtcNow.AddDays(backWindow);
         repo.MaxDateTime = DateTime.UtcNow.AddDays(advanceWindow);
@@ -231,11 +232,23 @@ public class AMSGetFlightsStatusService
             }
         }
     }
+   // Used when a message is received from the notification queue
     private void ProcessMessage(string xml)
     {
-        if (!xml.Contains("FlightUpdatedNotification") && !xml.Contains("FlightCreatedNotification") && !xml.Contains("FlightDeletedNotification"))
+        //Only interested in flight related messages
+        if (xml.Contains("<MovementUpdatedNotification>"))
         {
             return;
+        }
+            if (!xml.Contains("<FlightUpdatedNotification>"))
+        {
+            if (!xml.Contains("<FlightCreatedNotification>"))
+            {
+                if (!xml.Contains("<FlightDeletedNotification>"))
+                {
+                    return;
+                }
+            }
         }
 
         XmlDocument xmlDoc = new XmlDocument();
@@ -265,12 +278,16 @@ public class AMSGetFlightsStatusService
         }
         System.GC.Collect();
     }
+
+    // Called when a message was retrieved via the Get request to the AMS API
     private void ProcessMessageGet(string xml)
     {
         if (!xml.Contains("<Flight>"))
         {
             return;
         }
+
+        //Have you guesed I don't like having to deal with name spaces??
         xml = xml.Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-datatypes\"", "")
                  .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-messages\"", "")
                  .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-webservice\"", "");
@@ -287,6 +304,7 @@ public class AMSGetFlightsStatusService
         repo.BulkUpdateOrInsert(fls);
         System.GC.Collect();
     }
+    //Retrieve flight from AMS using the AMS Webservice Intrerface
     public async static Task<string> GetFlightsXML(DateTime from, DateTime to, string aptCode, string token, string url)
     {
 
@@ -348,10 +366,12 @@ public class AMSGetFlightsStatusService
             return null;
         }
     }
+   //Used when an out of bounds request is made
     public async static Task<string?> GetFlightXML(GetFlightQueryObject query, string kind, string token, string url)
     {
         return await GetFlightXML(query.al, query.flt, kind, query.schedDate, query.apt, token, url);
     }
+   // Out of bounds request fora single flight
     private async static Task<string?> GetFlightXML(string airline, string flt, string kind, string sdo, string aptCode, string token, string url)
     {
         string mediaType = "text/xml";
@@ -433,6 +453,7 @@ public class AMSGetFlightsStatusService
             return null;
         }
     }
+    // The job that is scheduled to run to update the content of the cache as time moves forward 
     internal class RefreshJob : IJob
     {
         public Task Execute(IJobExecutionContext context)

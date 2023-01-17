@@ -199,7 +199,8 @@ namespace AMSGetFlights.Services
                 sub.DataFormat = "JSON";
             }
 
-      
+
+            sub.SubscriberToken = userToken;
             Subscriptions.Add(sub);
 
             sub.StatusMessage = "Success";

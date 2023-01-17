@@ -2,7 +2,9 @@
 
 namespace AMSGetFlights.Model
 {
-
+    /*
+     *   Object to collect all the inputs and fnalize the query to be made
+     */
     public class GetFlightQueryObject
     {
         public string QueryID { get; set; } = Guid.NewGuid().ToString();
@@ -250,11 +252,11 @@ namespace AMSGetFlights.Model
                     updatedFrom = DateTime.Parse(_queryParams["updatedfrom"]);
                 } catch (Exception)
                 {
-                    updatedFrom = DateTime.MinValue;
+                    updatedFrom = DateTime.Parse("2000-01-01T00:00:00");
                 }
             } else
             {
-                updatedFrom = DateTime.MinValue;
+                updatedFrom = DateTime.Parse("2000-01-01T00:00:00");
             }
 
                 if (_queryParams.ContainsKey("scheddate"))

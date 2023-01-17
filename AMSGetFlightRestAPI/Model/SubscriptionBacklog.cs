@@ -3,6 +3,13 @@ using Newtonsoft.Json;
 
 namespace AMSGetFlights.Model
 {
+
+    /*
+     * Backlog object for each subscription
+     * 
+     * The backlog is backed by a private Queue
+     * The Put and Next methods control the serialization to disk 
+     */
     public class SubscriptionBacklog
     {
         public int Count {
@@ -24,6 +31,7 @@ namespace AMSGetFlights.Model
             // Put the flight on the queue and save the queue to disk
             _flights.Enqueue(fl.XmlRaw);
             
+            // Cleanp the backlog, so only the most recent messages are kept
             while(Count > maxDepth)
             {
                 _flights.TryDequeue(out string discard);
@@ -40,7 +48,7 @@ namespace AMSGetFlights.Model
         }
         public AMSFlight? Next(GetFlightsConfig config)
         {
-            //Take a flight off the Queue, Deserialize it and save the modified queue.
+            //Take a flight off the Queue, Serialize it and save the modified queue.
             _flights.TryDequeue(out string flstr);
             if (flstr == null)
             {
