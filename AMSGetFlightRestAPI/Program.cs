@@ -26,6 +26,7 @@ builder.Services.AddSingleton<AMSGetFlightsStatusService>();
 builder.Services.AddSingleton<GetFlightsConfigService>();
 builder.Services.AddSingleton<FlightRepository>();
 builder.Services.AddSingleton<FlightRequestHandler>();
+builder.Services.AddSingleton<FlightSanitizer>();
 
 
 // Load the correct DataAccessObject as defined in the defined fonfig file

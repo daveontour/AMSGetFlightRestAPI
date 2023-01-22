@@ -1,5 +1,4 @@
 {
-  "EnableSubscriptions": true,
   "MinNumSubscriptionThreads": 5,
   "MaxNumSubscriptionThreads": 40,
   "TryItDefaultURL": "https://localhost:7095/api/GetFlightsJSON",
@@ -175,24 +174,14 @@
         "route",
         "aircrafttypeiata",
         "aircraftregistration",
-        "callsign",
         "status",
-        "publicRemark",
-        "CustomTables",
-        "Events",
-        "CheckInSlots",
-        "StandSlots",
-        "CarouselSlots",
-        "GateSlots",
-        "LastUpdated",
-        "Values"
+        "Events"
       ],
       "AllowedCustomFields": [
         "departureTime",
         "arrivalTime",
         "operationQualifier",
-        "flightStatus",
-        "callsign"
+        "flightStatus"
       ],
       "Defaults": {
         "apt": "DOH"
@@ -200,8 +189,8 @@
       "Overrides": {
         "partialResults": "true"
       },
-      "NumCalls": 1,
-      "LastCall": "2023-01-16T20:12:13.3228503+04:00"
+      "NumCalls": 4,
+      "LastCall": "2023-01-22T15:58:55.6915543+04:00"
     },
     "22e1ae97-517b-4329-9096-ddb45016851d": {
       "Token": "22e1ae97-517b-4329-9096-ddb45016851d",
@@ -245,6 +234,7 @@
     }
   },
   "IsTest": false,
+  "EnableSubscriptions": true,
   "TestBacklog": false,
   "BacklogMaxDepth": 1000
 }

@@ -1,62 +1,242 @@
 ﻿using AMSGetFlights.Model;
 using Microsoft.Extensions.Primitives;
+using System.Collections.Generic;
+using System.Text;
 using System.Xml;
 
 namespace AMSGetFlights.Services
 {
-    public class FlightRequestHandler 
+    public class FlightRequestHandler
     {
         private readonly FlightRepository repo;
         private readonly GetFlightsConfigService configService;
         private readonly EventExchange eventExchange;
+        private FlightSanitizer sanitizer;
 
-        public FlightRequestHandler(FlightRepository repo, GetFlightsConfigService configService,EventExchange eventExchange)
+        public FlightRequestHandler(FlightRepository repo, GetFlightsConfigService configService, EventExchange eventExchange, FlightSanitizer sanitizer)
         {
             this.repo = repo;
             this.configService = configService;
             this.eventExchange = eventExchange;
+            this.sanitizer = sanitizer;
         }
         public List<AMSFlight> GetFlights(GetFlightQueryObject query, bool IsXML = false)
         {
-
+           
             // Get the list of flights
             var res = repo.GetFlights(query);
 
-            // Adjust the result so only elements the user is allowed to see are set
-            List<string> validFields = configService.config.ValidUserFields(query.token);
-            List<string> validCustomFields = configService.config.ValidUserCustomFields(query.token);
+            var result = sanitizer.SanitizeFlights(res, IsXML, query.token);
 
-            foreach (var flight in res)
-            {
-                foreach (var prop in flight.GetType().GetProperties())
-                {
-                    if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
-                    {
-                        if (prop.Name == "XmlRaw" && IsXML)
-                        {
-                            continue;
-                        }
-                        prop.SetValue(flight, null);
-                    }
-                }
-                if (flight.Values != null && validCustomFields.Count() > 0)
-                {
-                    Dictionary<string, string> fields = new Dictionary<string, string>();
-                    foreach (string key in flight.Values.Keys)
-                    {
-                        if (validCustomFields.Contains(key))
-                        {
-                            fields.Add(key, flight.Values[key]);
-                        }
-                    }
-                    flight.Values = fields;
-                    // flight.Values = flight.Values.Where(f => validCustomFields.Contains(f.name)).ToList();
-                }
-            }
+            //// Adjust the result so only elements the user is allowed to see are set
+            //List<string> validFields = configService.config.ValidUserFields(query.token);
+            //List<string> validCustomFields = configService.config.ValidUserCustomFields(query.token);
+            
+            //List<string> validCustomFieldKeys = new();
+            //foreach(string f in validCustomFields)
+            //{
+            //    var key = configService.config.CustomFieldToParameter.FirstOrDefault(x => x.Value == f).Key;
+            //    validCustomFieldKeys.Add(key);  
+            //}
+
+            
+            //// Remove any data the user is not configured to see. 
+            //foreach (var flight in res)
+            //{
+
+            //    if (IsXML)
+            //        // Sanitize the XML to only contain allowed Custom Fields
+            //    {
+            //        try
+            //        {
+            //            XmlDocument doc = new XmlDocument();
+            //            doc.LoadXml(flight.XmlRaw);
+
+            //            XmlNode flightStateNode = doc.SelectSingleNode(".//FlightState");
+            //            foreach (XmlNode node in flightStateNode.SelectNodes("./Value"))
+            //            {
+            //                // Remove all the Custome fields if not configured
+            //                if (!validFields.Contains("Values"))
+            //                {
+            //                    flightStateNode.RemoveChild(node);
+            //                    continue;
+            //                }
+
+            //                // Subset of Custom fields are allowed.
+            //                string prop = node.Attributes["propertyName"].Value;
+            //                if (validCustomFieldKeys.Contains(prop))
+            //                {
+            //                    continue;
+            //                }
+            //                flightStateNode.RemoveChild(node);
+            //            }
+
+            //            foreach (XmlNode node in flightStateNode.SelectNodes("./TableValue"))
+            //            {
+            //                // Remove all the Custome Tables if not configured
+            //                if (!validFields.Contains("CustomTables"))
+            //                {
+            //                    flightStateNode.RemoveChild(node);
+            //                    continue;
+            //                }
+
+            //                // Subset of Custom fields are allowed.
+            //                string prop = node.Attributes["propertyName"].Value;
+            //                if (validCustomFieldKeys.Contains(prop))
+            //                {
+            //                    continue;
+            //                }
+            //                flightStateNode.RemoveChild(node);
+            //            }
+
+            //            if (!validFields.Contains("StandSlots"))
+            //            {
+            //                XmlNode node = flightStateNode.SelectSingleNode(".//StandSlots");
+            //                if (node != null)
+            //                {
+            //                    try
+            //                    {
+            //                        flightStateNode.RemoveChild (node);
+            //                    } catch (Exception ex)
+            //                    {
+            //                        Console.WriteLine(ex.Message);  
+            //                    }
+            //                }
+            //            }
+            //            if (!validFields.Contains("GateSlots"))
+            //            {
+            //                XmlNode node = flightStateNode.SelectSingleNode(".//GateSlots");
+            //                if (node != null)
+            //                {
+            //                    try
+            //                    {
+            //                        flightStateNode.RemoveChild(node);
+            //                    }
+            //                    catch (Exception ex)
+            //                    {
+            //                        Console.WriteLine(ex.Message);
+            //                    }
+            //                }
+            //            }
+            //            if (!validFields.Contains("CarouselSlots"))
+            //            {
+            //                XmlNode node = flightStateNode.SelectSingleNode(".//CarouselSlots");
+            //                if (node != null)
+            //                {
+            //                    try
+            //                    {
+            //                        flightStateNode.RemoveChild(node);
+            //                    }
+            //                    catch (Exception ex)
+            //                    {
+            //                        Console.WriteLine(ex.Message);
+            //                    }
+            //                }
+            //            }
+            //            if (!validFields.Contains("CheckInSlots"))
+            //            {
+            //                XmlNode node = flightStateNode.SelectSingleNode(".//CheckInSlots");
+            //                if (node != null)
+            //                {
+            //                    try
+            //                    {
+            //                        flightStateNode.RemoveChild(node);
+            //                    }
+            //                    catch (Exception ex)
+            //                    {
+            //                        Console.WriteLine(ex.Message);
+            //                    }
+            //                }
+            //            }
+
+            //            flight.XmlRaw = PrintXML(doc);
+
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            Console.WriteLine(ex.ToString());
+            //        }
+
+
+            //    }
+
+            //    if (!IsXML)
+            //    {
+            //        foreach (var prop in flight.GetType().GetProperties())
+            //        {
+            //            if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
+            //            {
+            //                if (prop.Name == "XmlRaw" && IsXML)
+            //                {
+            //                    continue;
+            //                }
+            //                prop.SetValue(flight, null);
+            //            }
+            //        }
+            //    }
+            //    if (flight.Values != null && validCustomFields.Count() > 0 && !IsXML)
+            //    {
+            //        Dictionary<string, string> fields = new Dictionary<string, string>();
+            //        foreach (string key in flight.Values.Keys)
+            //        {
+            //            if (validCustomFields.Contains(key))
+            //            {
+            //                fields.Add(key, flight.Values[key]);
+            //            }
+            //        }
+            //        flight.Values = fields;
+            //        // flight.Values = flight.Values.Where(f => validCustomFields.Contains(f.name)).ToList();
+            //    }
+            //    if (validCustomFields == null || validCustomFields.Count() == 0)
+            //    {
+            //        flight.Values = null;
+            //    }
+            //}
 
             eventExchange.APIRequestMade(query);
 
-            return res;
+            return result;
+        }
+
+        public string PrintXML(XmlDocument document)
+        {
+            string result;
+
+            MemoryStream mStream = new();
+            XmlTextWriter writer = new(mStream, Encoding.Unicode);
+            
+
+            try
+            {
+
+
+                writer.Formatting = System.Xml.Formatting.Indented;
+
+                // Write the XML into a formatting XmlTextWriter
+                document.WriteContentTo(writer);
+                writer.Flush();
+                mStream.Flush();
+
+                // Have to rewind the MemoryStream in order to read
+                // its contents.
+                mStream.Position = 0;
+
+                // Read MemoryStream contents into a StreamReader.
+                StreamReader sReader = new(mStream);
+
+                // Extract the text from the StreamReader.
+                string formattedXml = sReader.ReadToEnd();
+
+                result = formattedXml;
+            }
+            catch (Exception)
+            {
+                return "<Error><Error>";
+            }
+
+            mStream.Close();
+            writer.Close();
+            return result;
         }
 
         public List<FlightIDExtended> GetFlightSchedule(GetFlightQueryObject query, bool IsXML = false)
@@ -68,7 +248,7 @@ namespace AMSGetFlights.Services
             List<FlightIDExtended> flights = new List<FlightIDExtended>();
             foreach (var flight in res)
             {
-                FlightIDExtended fe = new FlightIDExtended(flight.flightId, flight.route);  
+                FlightIDExtended fe = new FlightIDExtended(flight.flightId, flight.route);
                 flights.Add(fe);
             }
 
@@ -142,7 +322,7 @@ namespace AMSGetFlights.Services
 
             // Get the list of flights           
             List<AMSFlight> flights = new List<AMSFlight>();
-            foreach(XmlNode f in doc.SelectNodes(".//*[local-name() = 'Flights']/*[local-name() = 'Flight']"))
+            foreach (XmlNode f in doc.SelectNodes(".//*[local-name() = 'Flights']/*[local-name() = 'Flight']"))
             {
                 AMSFlight flight = new(f, configService.config);
                 flights.Add(flight);

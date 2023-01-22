@@ -12,13 +12,15 @@ namespace AMSGetFlights.Services
         EventExchange eventExchange;
         private SubscriptionManager? subManager;
         private GetFlightsConfigService configService;
+        private FlightSanitizer sanitizer;
 
 
-        public SubscriptionDispatcher(EventExchange eventExchange, GetFlightsConfigService configService, SubscriptionManager subManager)
+        public SubscriptionDispatcher(EventExchange eventExchange, GetFlightsConfigService configService, SubscriptionManager subManager, FlightSanitizer sanitizer)
         {
             this.eventExchange = eventExchange;
             this.configService = configService;
             this.subManager = subManager;
+            this.sanitizer = sanitizer;
 
             ThreadPool.SetMinThreads(configService.config.MinNumSubscriptionThreads, 0);
             ThreadPool.SetMaxThreads(configService.config.MaxNumSubscriptionThreads, 0);
@@ -172,40 +174,42 @@ namespace AMSGetFlights.Services
                         continue;
                     }
 
-                    // Customise for user
-                    // Adjust the result so only elements the user is allowed to see are set
-                    List<string> validFields = configService.config.ValidUserFields(sub.SubscriberToken);
-                    List<string> validCustomFields = configService.config.ValidUserCustomFields(sub.SubscriberToken);
-                    foreach (var prop in fl.GetType().GetProperties())
-                    {
-                        if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
-                        {
-                            try
-                            {
-                                if (prop.Name == "XmlRaw" || prop.Name == "Action")
-                                {
-                                    continue;
-                                }
-                                prop.SetValue(fl, null);
-                            } catch(Exception ex)
-                            {
-                                Console.WriteLine(ex.Message);   
-                            }
-                        }
-                    }
-                    if (fl.Values != null && validCustomFields.Count() > 0)
-                    {
-                        Dictionary<string, string> fields = new Dictionary<string, string>();
-                        foreach (string key in fl.Values.Keys)
-                        {
-                            if (validCustomFields.Contains(key))
-                            {
-                                fields.Add(key, fl.Values[key]);
-                            }
-                        }
-                        fl.Values = fields;
-                        // flight.Values = flight.Values.Where(f => validCustomFields.Contains(f.name)).ToList();
-                    }
+                    fl = sanitizer.SanitizeFlight(fl, sub.DataFormat=="XML", sub.SubscriberToken);
+
+                    //// Customise for user
+                    //// Adjust the result so only elements the user is allowed to see are set
+                    //List<string> validFields = configService.config.ValidUserFields(sub.SubscriberToken);
+                    //List<string> validCustomFields = configService.config.ValidUserCustomFields(sub.SubscriberToken);
+                    //foreach (var prop in fl.GetType().GetProperties())
+                    //{
+                    //    if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
+                    //    {
+                    //        try
+                    //        {
+                    //            if (prop.Name == "XmlRaw" || prop.Name == "Action")
+                    //            {
+                    //                continue;
+                    //            }
+                    //            prop.SetValue(fl, null);
+                    //        } catch(Exception ex)
+                    //        {
+                    //            Console.WriteLine(ex.Message);   
+                    //        }
+                    //    }
+                    //}
+                    //if (fl.Values != null && validCustomFields.Count() > 0)
+                    //{
+                    //    Dictionary<string, string> fields = new Dictionary<string, string>();
+                    //    foreach (string key in fl.Values.Keys)
+                    //    {
+                    //        if (validCustomFields.Contains(key))
+                    //        {
+                    //            fields.Add(key, fl.Values[key]);
+                    //        }
+                    //    }
+                    //    fl.Values = fields;
+                    //    // flight.Values = flight.Values.Where(f => validCustomFields.Contains(f.name)).ToList();
+                    //}
 
                     // Made it this far, so OK to try send the message
                     eventExchange.TopStatusMessage($"Sending Subscription Update for {fl.callsign}. Action = {fl.Action}");
