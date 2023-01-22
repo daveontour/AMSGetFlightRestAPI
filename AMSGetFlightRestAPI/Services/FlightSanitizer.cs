@@ -1,60 +1,68 @@
 ﻿using AMSGetFlights.Model;
-using Radzen;
 using System.Text;
 using System.Xml;
 
-namespace AMSGetFlights.Services
+namespace AMSGetFlights.Services;
+
+/*
+ *  Class that removes any data that the user is not configured to see
+ *  Used by the API Controller and the Subscription Dispatcher.
+ */
+public class FlightSanitizer
 {
-    public class FlightSanitizer
+    
+    private GetFlightsConfigService? configService;
+    public FlightSanitizer(GetFlightsConfigService configService)
     {
-        private GetFlightsConfigService configService;
-
-        public FlightSanitizer(GetFlightsConfigService configService)
+        this.configService = configService;
+    }
+    public List<AMSFlight> SanitizeFlights(List<AMSFlight> flights,bool IsXML, string userToken)
+    {
+        List<string>? validFields = configService.config.ValidUserFields(userToken);
+        List<string>? validCustomFields = configService.config.ValidUserCustomFields(userToken);
+        List<string>? validCustomFieldKeys = new();
+        foreach (string f in validCustomFields)
         {
-            this.configService = configService;
-        }
-        public List<AMSFlight> SanitizeFlights(List<AMSFlight> flights,bool IsXML, string userToken)
-        {
-            List<string> validFields = configService.config.ValidUserFields(userToken);
-            List<string> validCustomFields = configService.config.ValidUserCustomFields(userToken);
-            List<string> validCustomFieldKeys = new();
-            foreach (string f in validCustomFields)
-            {
-                var key = configService.config.CustomFieldToParameter.FirstOrDefault(x => x.Value == f).Key;
-                validCustomFieldKeys.Add(key);
-            }
-
-            foreach(AMSFlight f in flights)
-            {
-                SanitizeFlight(f, IsXML, userToken, validFields, validCustomFields, validCustomFieldKeys);
-            }
-
-            return flights;
+            var key = configService.config.CustomFieldToParameter.FirstOrDefault(x => x.Value == f).Key;
+            validCustomFieldKeys.Add(key);
         }
 
-        public AMSFlight SanitizeFlight(AMSFlight flight, bool IsXML, string userToken, List<string> validFields = null, List<string> validCustomFields = null, List<string> validCustomFieldKeys = null)
+        foreach(AMSFlight f in flights)
         {
-            if(validFields == null)
+            SanitizeFlight(f, IsXML, userToken, validFields, validCustomFields, validCustomFieldKeys);
+        }
+
+        return flights;
+    }
+    public AMSFlight SanitizeFlight(AMSFlight flight, bool IsXML, string userToken, List<string>? validFields = null, List<string>? validCustomFields = null, List<string>? validCustomFieldKeys = null)
+    {
+        if(validFields == null)
+        {
+            validFields = configService?.config?.ValidUserFields(userToken);
+            validCustomFields = configService?.config?.ValidUserCustomFields(userToken);
+            validCustomFieldKeys = new();
+
+            if (validCustomFields != null)
             {
-                validFields = configService.config.ValidUserFields(userToken);
-                validCustomFields = configService.config.ValidUserCustomFields(userToken);
-                validCustomFieldKeys = new();
                 foreach (string f in validCustomFields)
                 {
-                    var key = configService.config.CustomFieldToParameter.FirstOrDefault(x => x.Value == f).Key;
+                    string key = configService?.config?.CustomFieldToParameter.FirstOrDefault(x => x.Value == f).Key;
                     validCustomFieldKeys.Add(key);
                 }
             }
+        }
 
-            if (IsXML)
-            // Sanitize the XML to only contain allowed Custom Fields
+        if (IsXML)
+        // Sanitize the XML to only contain allowed Custom Fields
+        {
+            try
             {
-                try
-                {
-                    XmlDocument doc = new XmlDocument();
-                    doc.LoadXml(flight.XmlRaw);
+                XmlDocument doc = new XmlDocument();
+                doc.LoadXml(flight.XmlRaw);
 
-                    XmlNode flightStateNode = doc.SelectSingleNode(".//FlightState");
+                XmlNode flightStateNode = doc.SelectSingleNode(".//FlightState");
+                if (flightStateNode != null)
+                {
                     foreach (XmlNode node in flightStateNode.SelectNodes("./Value"))
                     {
                         // Remove all the Custome fields if not configured
@@ -151,33 +159,32 @@ namespace AMSGetFlights.Services
                             }
                         }
                     }
-
-                    flight.XmlRaw = PrintXML(doc);
-
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.ToString());
                 }
 
+                flight.XmlRaw = PrintXML(doc);
 
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
 
+
+        }
+
+        try
+        {
             if (!IsXML)
             {
                 foreach (var prop in flight.GetType().GetProperties())
                 {
-                    if (prop.Name != "flightId" && prop.Name != "Key" && !validFields.Contains(prop.Name))
+                    if (prop.Name != "flightId" && prop.Name != "Key" && prop.Name != "callsign" && !validFields.Contains(prop.Name))
                     {
-                        if (prop.Name == "XmlRaw" && IsXML)
-                        {
-                            continue;
-                        }
                         prop.SetValue(flight, null);
                     }
                 }
             }
-            if (flight.Values != null && validCustomFields.Count() > 0 && !IsXML)
+            if (flight.Values != null && validCustomFields?.Count > 0 && !IsXML)
             {
                 Dictionary<string, string> fields = new Dictionary<string, string>();
                 foreach (string key in flight.Values.Keys)
@@ -188,54 +195,55 @@ namespace AMSGetFlights.Services
                     }
                 }
                 flight.Values = fields;
-                // flight.Values = flight.Values.Where(f => validCustomFields.Contains(f.name)).ToList();
+
             }
-            if (validCustomFields == null || validCustomFields.Count() == 0)
+            if (validCustomFields == null || validCustomFields.Count == 0)
             {
                 flight.Values = null;
             }
-            return flight;
-        }
-
-        public string PrintXML(XmlDocument document)
+        } catch(Exception ex)
         {
-            string result;
-
-            MemoryStream mStream = new();
-            XmlTextWriter writer = new(mStream, Encoding.Unicode);
-
-
-            try
-            {
-
-
-                writer.Formatting = System.Xml.Formatting.Indented;
-
-                // Write the XML into a formatting XmlTextWriter
-                document.WriteContentTo(writer);
-                writer.Flush();
-                mStream.Flush();
-
-                // Have to rewind the MemoryStream in order to read
-                // its contents.
-                mStream.Position = 0;
-
-                // Read MemoryStream contents into a StreamReader.
-                StreamReader sReader = new(mStream);
-
-                // Extract the text from the StreamReader.
-                string formattedXml = sReader.ReadToEnd();
-
-                result = formattedXml;
-            }
-            catch (Exception)
-            {
-                return "<Error><Error>";
-            }
-
-            mStream.Close();
-            writer.Close();
-            return result;
+            Console.WriteLine(ex.Message);
+            Console.WriteLine(ex.StackTrace);
         }
+        return flight;
+    }
+    private static string PrintXML(XmlDocument document)
+    {
+        string result;
+
+        MemoryStream mStream = new();
+        XmlTextWriter writer = new(mStream, Encoding.Unicode);
+
+        try
+        {
+
+            writer.Formatting = System.Xml.Formatting.Indented;
+
+            // Write the XML into a formatting XmlTextWriter
+            document.WriteContentTo(writer);
+            writer.Flush();
+            mStream.Flush();
+
+            // Have to rewind the MemoryStream in order to read
+            // its contents.
+            mStream.Position = 0;
+
+            // Read MemoryStream contents into a StreamReader.
+            StreamReader sReader = new(mStream);
+
+            // Extract the text from the StreamReader.
+            string formattedXml = sReader.ReadToEnd();
+
+            result = formattedXml;
+        }
+        catch (Exception)
+        {
+            return "<Error><Error>";
+        }
+
+        mStream.Close();
+        writer.Close();
+        return result;
     }
 }

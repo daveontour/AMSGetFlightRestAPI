@@ -107,7 +107,6 @@
 
 @code {
 
-    private bool initOK = false;
     public string? consoleText = null;
 
     public List<string> AvailAirports { get; set; } = new List<string>();
@@ -144,10 +143,6 @@
         var fileTarget = (FileTarget)LogManager.Configuration.FindTargetByName("logfile");
         var logEventInfo = new LogEventInfo { TimeStamp = DateTime.Now };
         fileName = fileTarget.FileName.Render(logEventInfo);
-
-        initOK = true;
-
-
     }
     public void TabChange(int index)
     {
@@ -242,7 +237,7 @@
         DataChanged();
         StateHasChanged();
 
-        dialogService.Alert($"User {userName} Added", "Add User", new AlertOptions() { OkButtonText = "OK" });
+        await dialogService.Alert($"User {userName} Added", "Add User", new AlertOptions() { OkButtonText = "OK" });
     }
 
     public async Task RePopulate(){

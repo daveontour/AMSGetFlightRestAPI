@@ -7,6 +7,9 @@ namespace AMSGetFlights.Model
     /*
      * Backlog object for each subscription
      * 
+     * When the Subscription Dispatcher cannot send the message to the defined endpoint, the message is place on the backlog
+     * for retrying at a later time. The backlog works on a FIFO principle, so the most recent messages ar sent last.
+     * 
      * The backlog is backed by a private Queue
      * The Put and Next methods control the serialization to disk 
      */

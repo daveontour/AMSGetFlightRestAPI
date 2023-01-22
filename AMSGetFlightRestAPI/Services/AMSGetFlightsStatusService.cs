@@ -22,7 +22,7 @@ public class AMSGetFlightsStatusService
     private int advanceWindow = 10;   // The days in advance for the cache window
     private int backWindow = -3;      // The days in arrears fo rthe cache window
     private int chunkSize = 1;        // The number of days per call when filling the cache
-    private List<string> listenerQueues = new List<string>();   
+    private readonly List<string>  listenerQueues = new();   
     private readonly Logger logger = LogManager.GetLogger("consoleLogger");
    
     private static AMSGetFlightsStatusService Instance { get; set; }
@@ -76,7 +76,7 @@ public class AMSGetFlightsStatusService
             try
             {
                 startListenLoop = true;
-                Thread receiveThread = new Thread(() => ListenToQueue(airport.NotificationQueue))
+                Thread receiveThread = new(() => ListenToQueue(airport.NotificationQueue))
                 {
                     IsBackground = false
                 };
@@ -93,7 +93,7 @@ public class AMSGetFlightsStatusService
         await Task.Run(() => PopulateFlightCache());
 
         //   Scheduler for the refressh job
-        StdSchedulerFactory factory = new StdSchedulerFactory();
+        StdSchedulerFactory factory = new();
         IScheduler scheduler = factory.GetScheduler().Result;
 
         // and start it off
@@ -107,7 +107,7 @@ public class AMSGetFlightsStatusService
         .Build();
 
 
-        scheduler.ScheduleJob(job, trigger);
+        await scheduler.ScheduleJob(job, trigger);
 
         Running = true;
         eventExchange.FlightServiceRunning(Running);
@@ -200,7 +200,7 @@ public class AMSGetFlightsStatusService
 
         listenerQueues.Add(notificationQueue);  
 
-        MessageQueue recvQueue = new MessageQueue(notificationQueue);
+        MessageQueue recvQueue = new (notificationQueue);
         recvQueue.Purge();
 
         // Listen to messages on the incoming queue
@@ -209,17 +209,15 @@ public class AMSGetFlightsStatusService
             //Put it in a Try/Catch so no bad message or reading problem dont stop the system
             try
             {
-                using (Message msg = recvQueue.Receive(new TimeSpan(0, 0, 5)))
+                using Message msg = recvQueue.Receive(new TimeSpan(0, 0, 5));
+                string xml;
+                using (StreamReader reader = new(msg.BodyStream))
                 {
-                    string xml;
-                    using (StreamReader reader = new StreamReader(msg.BodyStream))
-                    {
-                        xml = reader.ReadToEnd()
-                            .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-datatypes\"", "")
-                            .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-messages\"", "");
-                    }
-                    ProcessMessage(xml);
+                    xml = reader.ReadToEnd()
+                        .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-datatypes\"", "")
+                        .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-messages\"", "");
                 }
+                ProcessMessage(xml);
             }
             catch (MessageQueueException)
             {
@@ -251,9 +249,9 @@ public class AMSGetFlightsStatusService
             }
         }
 
-        XmlDocument xmlDoc = new XmlDocument();
+        XmlDocument xmlDoc = new();
         xmlDoc.LoadXml(xml);
-        AMSFlight fl = new AMSFlight(xmlDoc, configService.config);
+        AMSFlight fl = new (xmlDoc, configService.config);
 
         if (xml.Contains("FlightDeletedNotification"))
         {
@@ -292,20 +290,20 @@ public class AMSGetFlightsStatusService
                  .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-messages\"", "")
                  .Replace("xmlns=\"http://www.sita.aero/ams6-xml-api-webservice\"", "");
 
-        XmlDocument xmlDoc = new XmlDocument();
+        XmlDocument xmlDoc = new ();
         xmlDoc.LoadXml(xml);
 
-        List<AMSFlight> fls = new List<AMSFlight>();
+        List<AMSFlight> fls = new();
         foreach (XmlNode flnode in xmlDoc.SelectNodes("//*[local-name() = 'Flights']/*[local-name() = 'Flight']"))
         {
-            AMSFlight fl = new AMSFlight(flnode, configService.config);
+            AMSFlight fl = new(flnode, configService.config);
             fls.Add(fl);
         }
         repo.BulkUpdateOrInsert(fls);
         System.GC.Collect();
     }
     //Retrieve flight from AMS using the AMS Webservice Intrerface
-    public async static Task<string> GetFlightsXML(DateTime from, DateTime to, string aptCode, string token, string url)
+    public async static Task<string?> GetFlightsXML(DateTime from, DateTime to, string aptCode, string token, string url)
     {
 
         string mediaType = "text/xml";
@@ -333,7 +331,7 @@ public class AMSGetFlightsStatusService
             client.Timeout = TimeSpan.FromSeconds(60);
 
 
-            HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, url)
+            HttpRequestMessage requestMessage = new (HttpMethod.Post, url)
             {
                 Content = new StringContent(messageXML, Encoding.UTF8, mediaType)
             };
@@ -354,7 +352,7 @@ public class AMSGetFlightsStatusService
                         return null;
                     }
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return null;
                 }
@@ -417,7 +415,7 @@ public class AMSGetFlightsStatusService
             client.Timeout = TimeSpan.FromSeconds(60);
 
 
-            HttpRequestMessage requestMessage = new HttpRequestMessage(HttpMethod.Post, url)
+            HttpRequestMessage requestMessage = new (HttpMethod.Post, url)
             {
                 Content = new StringContent(messageXML, Encoding.UTF8, mediaType)
             };

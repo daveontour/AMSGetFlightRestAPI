@@ -19,7 +19,6 @@ namespace AMSGetFlights.Services
         public event Action<string>? OnMonitorMessage;
         public event Action<string>? OnTopStatus;
         public event Action? OnServerFlightsUpdates;
-        public event Action? OnServerNoFlightsUpdates;
         public event Action<bool>? OnFlightServiceRunning;
         public event Action<string>? OnConsoleMessage;
         public event Action<List<Subscription>> OnSubscriptionsChanged;

@@ -1,31 +1,41 @@
 ﻿@inject GetFlightsConfigService configService;
 <h2><u>Subscriptions</u></h2>
+@if (!configService.config.EnableSubscriptions)
+{
+    <h3>Warning - Subscriptions Are Not Enabled</h3>
+}
 <div>Subscriptions allow you to register a HTTP end point which will be called with the latest flight information when flight data is updated</div>
 <div>You can register multiple subscriptions with different filtering criteria and different endpoints.</div>
 <div>To create and update a subscption, you call the "subscribe" API endpoint with a HTTP Post request. The body of the Post request is json formatted data with the details of the subscription </div>
 <div>There are number of management function for the subscription which are accessed by using HTTP Get Request</div>
 
 <h2 style="margin-top:20px">Subscribing</h2>
-POST:  /subscription/subscribe<br/>
-<br/>
-To create a subscription a POST request is sent to the /subscription/subscribe endpoint. <br/><br/>
-The body of the POST must be a JSON formatted subscription request as per below.<br/>
-The <b>Content-Type</b> header must be set to  application/json<br/>
-The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system<br/>
+POST:  /subscription/subscribe
+<br />
+<br />
+To create a subscription a POST request is sent to the /subscription/subscribe endpoint.
+<br />
+<br />
+The body of the POST must be a JSON formatted subscription request as per below.
+<br />
+The <b>Content-Type</b> header must be set to  application/json
+<br />
+The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system
+<br />
 
 
 <div style="display:grid; grid-template-columns: 1fr 1fr">
-<div class="lipre" style="white-space: pre; line-height: 1; background: #FFFFFF; ">
-    <span class="sc8">{</span><span class="sc0"></span>
-    <span class="sc4">"subscriptionID"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"mySubscriptionIDArrivals"</span><span class="sc8">,</span><span class="sc0"> </span>
-    <span class="sc4">"dataFormat"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"JSON"</span><span class="sc8">,</span><span class="sc0"> </span>
-    <span class="sc4">"isArrival"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">true</span><span class="sc8">,</span><span class="sc0"> </span>
-    <span class="sc4">"airportIATA"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"DOH"</span><span class="sc8">,</span><span class="sc0"> </span>
-    <span class="sc4">"authorizationHeaderName"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"SecurityKey"</span><span class="sc8">,</span><span class="sc0"> </span>
-    <span class="sc4">"authorizationHeaderValue"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"1KTasevsaw750pdfz"</span><span class="sc8">,</span><span class="sc0"></span>
-    <span class="sc4">"callBackURL"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"http://myserver/flightupdate"</span><span class="sc8">,</span><span class="sc0"> </span>
- <span class="sc8">}</span>
-</div>
+    <div class="lipre" style="white-space: pre; line-height: 1; background: #FFFFFF; ">
+        <span class="sc8">{</span><span class="sc0"></span>
+        <span class="sc4">"subscriptionID"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"mySubscriptionIDArrivals"</span><span class="sc8">,</span><span class="sc0"> </span>
+        <span class="sc4">"dataFormat"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"JSON"</span><span class="sc8">,</span><span class="sc0"> </span>
+        <span class="sc4">"isArrival"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">true</span><span class="sc8">,</span><span class="sc0"> </span>
+        <span class="sc4">"airportIATA"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"DOH"</span><span class="sc8">,</span><span class="sc0"> </span>
+        <span class="sc4">"authorizationHeaderName"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"SecurityKey"</span><span class="sc8">,</span><span class="sc0"> </span>
+        <span class="sc4">"authorizationHeaderValue"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"1KTasevsaw750pdfz"</span><span class="sc8">,</span><span class="sc0"></span>
+        <span class="sc4">"callBackURL"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"http://myserver/flightupdate"</span><span class="sc8">,</span><span class="sc0"> </span>
+        <span class="sc8">}</span>
+    </div>
 </div>
 
 <h4 style="margin:10px">Parameter Description</h4>
@@ -47,37 +57,36 @@ The <b>Authorization</b> header of the request must be set to the token assigned
 </RadzenDataGrid>
 
 <h4 style="margin:10px">Return Value</h4>
-The call to the subscribe endpoint will return a JSON formatted data structure which represent the subscription. 
+The call to the subscribe endpoint will return a JSON formatted data structure which represent the subscription.
 <div style="display:grid; grid-template-columns: 1fr 1fr;column-gap:15px;margin-top:20px">
     <div>If the subscription call has been successfull, the details of the subscription will be returned as well as the message "Sucess" in the "statusMessage" parameter</div>
     <div>If the subscription call has failed, "Error" will appear in the "statusMessage" parameter alond with an explanation</div>
     <div class="lipre" style="white-space: pre; line-height: 1; background: #FFFFFF; ">
-            <span class="sc8">{</span><span class="sc0"></span>
-            <span class="sc4">"subscriberToken"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"1ecf91df-cbc1-4a2d-bf61-5a2dc8ae2e33"</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"subscriptionID"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"mySubscriptionIDArrivals"</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"dataFormat"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"JSON"</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"changeResourceGate"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">false</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"changeResourceStand"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">false</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"changeResourceCheckIn"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">false</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"changeResourceBaggageReclaim"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">false</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"changeEstimated"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">false</span><span class="sc8">,</span><span class="sc0">            </span
-            ><span class="sc4">"isArrival"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">true</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"isDeparture"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">false</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"isEnabled"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">true</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"airportIATA"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"DOH"</span><span class="sc8">,</span><span class="sc0">           </span>
-            <span class="sc4">"maxHorizonInHours"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc1">24</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"minHorizonInHours"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc1">-24</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"authorizationHeaderName"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"SecurityKey"</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"authorizationHeaderValue"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"1KTasevsaw750pdfz"</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"callBackURL"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"</span><span class="sc9">http://myserver/flightupdate</span><span class="sc2">"</span><span class="sc8">,</span><span class="sc0"> </span>
-            <span class="sc4">"consecutiveUnsuccessfullCalls"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc1">0</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"consecutiveSuccessfullCalls"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc1">0</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"lastSuccess"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"0001-01-01T00:00:00"</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"lastFailure"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"0001-01-01T00:00:00"</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"validUntil"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"9999-12-31T23:59:59.9999999"</span><span class="sc8">,</span><span class="sc0">            </span>
-            <span class="sc4">"statusMessage"</span><span class="sc8">:</span><span class="sc0"> </span><span style="font-weight:bold">"Success"</span><span class="sc0">            </span>
-       <span class="sc8">}</span>
-      
+        <span class="sc8">{</span><span class="sc0"></span>
+        <span class="sc4">"subscriberToken"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"1ecf91df-cbc1-4a2d-bf61-5a2dc8ae2e33"</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"subscriptionID"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"mySubscriptionIDArrivals"</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"dataFormat"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"JSON"</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"changeResourceGate"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">false</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"changeResourceStand"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">false</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"changeResourceCheckIn"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">false</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"changeResourceBaggageReclaim"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">false</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"changeEstimated"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">false</span><span class="sc8">,</span><span class="sc0">            </span><span class="sc4">"isArrival"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">true</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"isDeparture"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">false</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"isEnabled"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc11">true</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"airportIATA"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"DOH"</span><span class="sc8">,</span><span class="sc0">           </span>
+        <span class="sc4">"maxHorizonInHours"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc1">24</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"minHorizonInHours"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc1">-24</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"authorizationHeaderName"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"SecurityKey"</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"authorizationHeaderValue"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"1KTasevsaw750pdfz"</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"callBackURL"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"</span><span class="sc9">http://myserver/flightupdate</span><span class="sc2">"</span><span class="sc8">,</span><span class="sc0"> </span>
+        <span class="sc4">"consecutiveUnsuccessfullCalls"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc1">0</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"consecutiveSuccessfullCalls"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc1">0</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"lastSuccess"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"0001-01-01T00:00:00"</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"lastFailure"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"0001-01-01T00:00:00"</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"validUntil"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"9999-12-31T23:59:59.9999999"</span><span class="sc8">,</span><span class="sc0">            </span>
+        <span class="sc4">"statusMessage"</span><span class="sc8">:</span><span class="sc0"> </span><span style="font-weight:bold">"Success"</span><span class="sc0">            </span>
+        <span class="sc8">}</span>
+
     </div>
     <div class="lipre" style="white-space: pre; line-height: 1; background: #FFFFFF; ">
         <div style="float: left; white-space: pre; line-height: 1; background: #FFFFFF; ">
@@ -98,63 +107,91 @@ The call to the subscribe endpoint will return a JSON formatted data structure w
             <span class="sc4">"lastFailure"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"0001-01-01T00:00:00"</span><span class="sc8">,</span><span class="sc0"></span>
             <span class="sc4">"validUntil"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2">"0001-01-01T00:00:00"</span><span class="sc8">,</span><span class="sc0"></span>
             <span class="sc4">"statusMessage"</span><span class="sc8">:</span><span class="sc0"> </span><span class="sc2" style="font-weight:bold">"Error. Subscription ID mySubscriptionIDArrivals Already Exists"</span><span class="sc0"></span>
-       <span class="sc8">}</span> </div>
+            <span class="sc8">}</span>
+        </div>
     </div>
 </div>
 
 <h2 style="margin-top:20px">Updating a Subscription</h2>
-POST:  /subscription/update<br/>
-<br/>
-To update an existing subscription, a POST request is sent to the /subscription/update endpoint. <br/><br/>
-The body of the POST must be a complete JSON formatted subscription request as per above<br/>
-The <b>Content-Type</b> header must be set to  application/json<br/>
-The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system<br/>
+POST:  /subscription/update
+<br />
+<br />
+To update an existing subscription, a POST request is sent to the /subscription/update endpoint.
+<br />
+<br />
+The body of the POST must be a complete JSON formatted subscription request as per above
+<br />
+The <b>Content-Type</b> header must be set to  application/json
+<br />
+The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system
+<br />
 
 <h2 style="margin-top:20px">Status of  Subscriptions</h2>
-GET:  /subscription/status<br/>
-<br/>
-To retrieve the status of all subscriptions for a particular user, a HTTP GET request is sent to the /subscription/status endpoint. <br/>
-The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system<br/>
+GET:  /subscription/status
+<br />
+<br />
+To retrieve the status of all subscriptions for a particular user, a HTTP GET request is sent to the /subscription/status endpoint.
+<br />
+The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system
+<br />
 
 <h2 style="margin-top:20px">Disabling a Subscription</h2>
-GET:  /subscription/disable/{subscriptionID}<br/>
-<br/>
-To disable a subscription, a HTTP GET request is sent to the /subscription/disable endpoint. <br/>
-The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system<br/>
+GET:  /subscription/disable/{subscriptionID}
+<br />
+<br />
+To disable a subscription, a HTTP GET request is sent to the /subscription/disable endpoint.
+<br />
+The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system
+<br />
 
 <h2 style="margin-top:20px">Enabling a Subscription</h2>
-GET:  /subscription/enable/{subscriptionID}<br/>
-<br/>
-To enable a subscription, a HTTP GET request is sent to the /subscription/enable endpoint. <br/>
-The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system<br/>
+GET:  /subscription/enable/{subscriptionID}
+<br />
+<br />
+To enable a subscription, a HTTP GET request is sent to the /subscription/enable endpoint.
+<br />
+The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system
+<br />
 
 <h2 style="margin-top:20px">Deleting a Subscription</h2>
-GET:  /subscription/delete/{subscriptionID}<br/>
-<br/>
-To delete a subscription, a HTTP GET request is sent to the /subscription/delete endpoint. <br/>
-The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system<br/>
+GET:  /subscription/delete/{subscriptionID}
+<br />
+<br />
+To delete a subscription, a HTTP GET request is sent to the /subscription/delete endpoint.
+<br />
+The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system
+<br />
 
 
 <h2 style="margin-top:20px"><u>Backlogs</u></h2>
 <div>If the system is unable to deliver an update to the endpoint defined in the subscription, the message will be placced on a backlog. Each time there is a new update, the system will attempt to send  the messages on the backlog in the order they were recieved</div>
 <h2 style="margin-top:20px">Backlog Size</h2>
-GET:  /subscription/backlogdepth/{subscriptionID}<br/>
-<br/>
-To retrieve the depth/size of a particular subscription, a HTTP GET request is sent to the /subscription/backlogdepth endpoint. <br/>
-The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system<br/>
+GET:  /subscription/backlogdepth/{subscriptionID}
+<br />
+<br />
+To retrieve the depth/size of a particular subscription, a HTTP GET request is sent to the /subscription/backlogdepth endpoint.
+<br />
+The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system
+<br />
 
 
 <h2 style="margin-top:20px">Clearing a Backlog</h2>
-GET:  /subscription/clearbacklog/{subscriptionID}<br/>
-<br/>
-To completely clear the backlog of a particular subscription, a HTTP GET request is sent to the /subscription/clearbacklog endpoint. <br/>
-The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system<br/>
+GET:  /subscription/clearbacklog/{subscriptionID}
+<br />
+<br />
+To completely clear the backlog of a particular subscription, a HTTP GET request is sent to the /subscription/clearbacklog endpoint.
+<br />
+The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system
+<br />
 
 <h2 style="margin-top:20px">Forcing the sending of a Backlog</h2>
-GET:  /subscription/sendbacklog/{subscriptionID}<br/>
-<br/>
-To ask the system to send the complete backlog of particular subscription, a HTTP GET request is sent to the /subscription/sendbacklog endpoint. <br/>
-The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system<br/>
+GET:  /subscription/sendbacklog/{subscriptionID}
+<br />
+<br />
+To ask the system to send the complete backlog of particular subscription, a HTTP GET request is sent to the /subscription/sendbacklog endpoint.
+<br />
+The <b>Authorization</b> header of the request must be set to the token assigned by the administrator when the user was granted access to the system
+<br />
 
 @code {
     public List<RequestDescription> items { get; set; } = new();
@@ -162,14 +199,18 @@ The <b>Authorization</b> header of the request must be set to the token assigned
 
     protected override async Task OnInitializedAsync()
     {
-        try {
+        try
+        {
             items = JsonConvert.DeserializeObject<List<RequestDescription>>(File.ReadAllText("SubscriptionPparamDescription.json"));
-        } catch (Exception){
+        }
+        catch (Exception)
+        {
             Console.WriteLine("Error reading: SubscriptionPparamDescription.json ");
         }
     }
 
-    public class RequestDescription{
+    public class RequestDescription
+    {
         public string? Parameter { get; set; }
         public string? Description { get; set; }
         public string? Required { get; set; }

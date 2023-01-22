@@ -12,8 +12,6 @@ var configuration = provider.GetService<IConfiguration>();
 string webConfigFile = configuration.GetSection("GetFlights").GetValue<string>("ConfigFile");
 GetFlightsConfig config = JsonConvert.DeserializeObject<GetFlightsConfig>(File.ReadAllText(webConfigFile));
 
-
-
 // Background process for monitoring updates from AMS
 builder.Services.AddHostedService<AMSGetFlightsBackgroundService>();
 
@@ -52,6 +50,7 @@ if (config.Storage == "SQL")
     builder.Services.AddSingleton<IFlightRepositoryDataAccessObject, MSSQLFlightRepository>();
 }
 
+// Builder finds the two classes that are annotated as "ApiController"
 // Configure Newtonsoft to handle the serialization and tell it to ignores keys with NULL values
 builder.Services.AddControllersWithViews().AddNewtonsoftJson(options =>
 {

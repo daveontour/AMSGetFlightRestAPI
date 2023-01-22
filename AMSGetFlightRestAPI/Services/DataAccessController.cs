@@ -97,7 +97,7 @@ namespace AMSGetFlights.Services
             }
         }
 
-        public IEnumerable<StoredFlight> GetStoredFlights(GetFlightQueryObject query, string? kind)
+        public IEnumerable<StoredFlight>? GetStoredFlights(GetFlightQueryObject query, string? kind)
         {
 
             //Dynamically create the SQL for the query based on the parameters set.
@@ -383,10 +383,10 @@ namespace AMSGetFlights.Services
                 sql += $" AND type = '{kind}'";
             }
 
-            if (query.updatedFrom != null)
-            {
+        //    if (query.updatedFrom != null)
+        //    {
                 sql += $" AND lastupdate >= '{query.updatedFrom}'";
-            }
+        //    }
 
             sql += " ORDER BY sto ";
 
@@ -428,7 +428,7 @@ namespace AMSGetFlights.Services
                     {
                         cnn.Execute(sql);
                     }
-                    catch (System.Data.SqlClient.SqlException ex)
+                    catch (System.Data.SqlClient.SqlException)
                     {
                         sql = $" UPDATE StoredFlights SET XML = '{record.XmlRaw}', callsign='{record.callsign}', al = '{record.flightId.iataAirline}', apt = '{record.flightId.iatalocalairport}', fltNum = '{record.flightId.flightNumber}', type = '{record.flightId.flightkind}', sdo = '{record.flightId.scheduleDate}', sto ='{record.flightId.scheduleTime}', lastupdate = GETDATE() WHERE flightID = '{record.Key}';";
 
@@ -458,7 +458,7 @@ namespace AMSGetFlights.Services
                     {
                         cnn.Execute(sql);
                     }
-                    catch (System.Data.SqlClient.SqlException ex)
+                    catch (System.Data.SqlClient.SqlException)
                     {
                         sql = $" UPDATE StoredFlights SET XML = '{record.XmlRaw}', callsign='{record.callsign}', al = '{record.flightId.iataAirline}', apt = '{record.flightId.iatalocalairport}', fltNum = '{record.flightId.flightNumber}', type = '{record.flightId.flightkind}', sdo = '{record.flightId.scheduleDate}', sto ='{record.flightId.scheduleTime}', lastupdate = GETDATE() WHERE flightID = '{record.Key}';";
 

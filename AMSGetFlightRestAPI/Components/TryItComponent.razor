@@ -32,9 +32,8 @@
 
 @code {
     private string RequestURL { get; set; } = "https://localhost:7095/GetFlightsJSON";
-    private string Token { get; set; }
-    private MonacoEditor jsonEditor;
-    private MonacoEditor xmlEditor;
+    private string? Token { get; set; }
+    private MonacoEditor? jsonEditor;
     private bool showJSON = true;
 
     protected override void OnInitialized()

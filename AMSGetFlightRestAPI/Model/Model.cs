@@ -1,121 +1,70 @@
 ﻿using AMSGetFlights.Services;
 using Newtonsoft.Json;
-using System.Collections.Concurrent;
 using System.Xml;
 
 namespace AMSGetFlights.Model
 {
-    public class AirportSource : ICloneable
-    {
-        public string? AptCode { get; set; }
-        public string? Token { get; set; }
-        public string? WSURL { get; set; }
-        public string? NotificationQueue { get; set; }
-        public bool IsEnabled { get; set; } = false;
-
-        public object Clone()
-        {
-            return MemberwiseClone();
-        }
-    }
-    public class User : ICloneable
-    {
-        public string Token { get; set; }
-        public string? Name { get; set; }
-        public bool Enabled { get; set; } = false;
-        public bool AllowXML { get; set; } = false;
-        public List<string> AllowedAirports { get; set; } = new List<string>();
-        public List<string> AllowedFields { get; set; } = new List<string>();
-        public List<string> AllowedCustomFields { get; set; } = new List<string>();
-        public Dictionary<string, string> Defaults { get; set; } = new Dictionary<string, string>();
-        public Dictionary<string, string> Overrides { get; set; } = new Dictionary<string, string>();
-        public int NumCalls { get; set; } = 0;
-        public DateTime LastCall { get; set; } = DateTime.MinValue; 
-
-        public object Clone()
-        {
-            return MemberwiseClone();
-        }
-    }
-    public class ServerStatus
-    {
-        public string EarliestEntry { get; set; }
-        public string LatestEntry { get; set; }
-        public int NumberOfEntries { get; set; }
-        public long ProcessMemory { get; set; }
-        public string Error { get; set; }
-    }
-    public class GetFlightsResponse
-    {
-        public GetFlightQueryObject query { get; set; }
-        public bool partialResutlsRetuned { get; set; } = false;
-        public string error { get; set; }
-        public List<AMSFlight> flights { get; set; }
-    }
-    public class GetFlightScheduleResponse
-    {
-        public GetFlightQueryObject query { get; set; }
-        public bool partialResutlsRetuned { get; set; } = false;
-        public string error { get; set; }
-        public List<FlightIDExtended> flights { get; set; }
-    }
-    public class LogEntry
-    {
-        public GetFlightQueryObject query { get; set; }
-        public string Result { get; set; }
-        public int RecordsReturned { get; set; } = 0;
-    }
-  
     public partial class AMSFlight : ICloneable
     {
+
+         [JsonIgnore]
+        public string Key
+        {
+            get
+            {
+                return flightId.flightID;
+            }
+            set
+            {
+                Key = value;
+            }
+        }
+        public FlightID flightId { get; set; }
+        public string? callsign
+        {
+            get
+            {
+                try
+                {
+                    if (Values!= null && Values.ContainsKey("callsign"))
+                    {
+                        return Values["callsign"];
+                    }
+                    else
+                    {
+                        return $"{flightId.iataAirline}{flightId.flightNumber}";
+                    }
+                } catch (Exception) { 
+                    return $"{flightId.iataAirline}{flightId.flightNumber}";
+                }
+            }
+        }
+        public string domesticintcode { get; set; }
+        public string aircrafttypeicao { get; set; }
+        public string aircrafttypeiata { get; set; }
+        public string aircraftregistration { get; set; }
+        public string status { get; set; }
+        public string publicRemark { get; set; }
+        public string flightUniqueID { get; set; }
+        public string amslinkedflightid { get; set; }
+        public List<Dictionary<string, string>> route { get; set; } = new List<Dictionary<string, string>>();
+        public List<Dictionary<string, string>> codeShares { get; set; } = new List<Dictionary<string, string>>();
+        public FlightID linkedflightId { get; set; }
+        public Dictionary<string, string> Values { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, Dictionary<string, string>> Events { get; set; } = new Dictionary<string, Dictionary<string, string>>();
+        public List<Dictionary<string, string>> CheckInSlots { get; set; } = new List<Dictionary<string, string>>();
+        public List<Dictionary<string, string>> StandSlots { get; set; } = new List<Dictionary<string, string>>();
+        public List<Dictionary<string, string>> CarouselSlots { get; set; } = new List<Dictionary<string, string>>();
+        public List<Dictionary<string, string>> GateSlots { get; set; } = new List<Dictionary<string, string>>();
+        public Dictionary<string, List<Dictionary<string, string>>> CustomTables { get; set; } = new Dictionary<string, List<Dictionary<string, string>>>();
+        [JsonIgnore] 
+        public string XmlRaw { get; set; }
+        public string LastUpdated { get; private set; }
+        public string Action { get;set; }
         public AMSFlight()
         {
 
         }
-
-        public bool HasUserInterestedChanges(Subscription sub )
-        {
-            // No filters are set, so pass the flight
-            if( !sub.ChangeEstimated 
-                && !sub.ChangeResourceBaggageReclaim 
-                && !sub.ChangeResourceCheckIn 
-                && !sub.ChangeResourceGate 
-                && !sub.ChangeResourceStand)
-            {
-                return true;
-            }
-
-            if (sub.ChangeEstimated)
-            {
-                if (flightId.flightkind.ToLower().StartsWith("arr"))
-                {
-                    if(XmlRaw.Contains("<Change propertyName=\"de-G_MostConfidentArrivalTime\">")) return true;
-                }
-                if (flightId.flightkind.ToLower().StartsWith("dep"))
-                {
-                    if (XmlRaw.Contains("<Change propertyName=\"de-G_MostConfidentDepartureTime\">")) return true;
-                }
-            }
-            if (sub.ChangeResourceStand)
-            {
-                if (XmlRaw.Contains("<StandSlotsChange>")) return true;
-            } 
-            if (sub.ChangeResourceCheckIn)
-            {
-                if (XmlRaw.Contains("<CheckInSlotsChange>")) return true;
-            } 
-            if (sub.ChangeResourceGate)
-            {
-                if (XmlRaw.Contains("<GateSlotsChange>")) return true;
-            } 
-            if (sub.ChangeResourceBaggageReclaim)
-            {
-                if (XmlRaw.Contains("<CarouselSlotsChange>")) return true;
-            }
-
-            return false;
-        }
-
         public AMSFlight(string xml, GetFlightsConfig config)
         {
             XmlDocument doc = new XmlDocument();
@@ -128,7 +77,6 @@ namespace AMSGetFlights.Model
             XmlRaw = node.OuterXml;
             LastUpdated = DateTime.Now.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssK");
         }
-
         public AMSFlight(string xml, GetFlightsConfig config, string timestamp = null)
         {
             XmlDocument doc = new XmlDocument();
@@ -188,21 +136,24 @@ namespace AMSGetFlights.Model
             fl.flightkind = nature;
             fl.flightUniqueID = flightUniqueID;
             fl.flightID = flightUniqueID;
+
+            if (lfltNum != null)
+            {
+                FlightID lfl = new FlightID();
+                lfl.flightNumber = lfltNum;
+                lfl.iataAirline = lairlineIata;
+                lfl.icaoAirline = lairlineIcao;
+                lfl.iatalocalairport = lapIATA;
+                lfl.icaolocalairport = lapICAO;
+                lfl.scheduleDate = lSTD;
+                lfl.scheduleTime = lSTO;
+                lfl.flightkind = lnature;
+                lfl.flightUniqueID = lflightUniqueID;
+                lfl.flightID = lflightUniqueID;
+                fl.linkedFlightId = lfl;
+            }
             this.flightId = fl;
 
-            FlightID lfl = new FlightID();
-            lfl.flightNumber = lfltNum;
-            lfl.iataAirline = lairlineIata;
-            lfl.icaoAirline = lairlineIcao;
-            lfl.iatalocalairport = lapIATA;
-            lfl.icaolocalairport = lapICAO;
-            lfl.scheduleDate = lSTD;
-            lfl.scheduleTime = lSTO;
-            lfl.flightkind = lnature;
-            lfl.flightUniqueID = lflightUniqueID;
-            lfl.flightID = lflightUniqueID;
-
-            this.linkedflightId = lfl;
 
             aircrafttypeicao = GetValue(".//FlightState/AircraftType/AircraftTypeId/AircraftTypeCode[@codeContext='ICAO']", node);
             aircrafttypeiata = GetValue(".//FlightState/AircraftType/AircraftTypeId/AircraftTypeCode[@codeContext='IATA']", node);
@@ -285,7 +236,6 @@ namespace AMSGetFlights.Model
                     StandSlots.Add(dict);
                 }
             }
-
             //Carousel Slots
             foreach (XmlNode xmlNode in node.SelectNodes(".//FlightState/CarouselSlots"))
             {
@@ -367,11 +317,6 @@ namespace AMSGetFlights.Model
                 }
             }
         }
-        private string GetValue(string xpath, XmlNode node, XmlNamespaceManager nsmgr)
-        {
-            string value = node.SelectSingleNode(xpath)?.InnerText;
-            return value;
-        }
         private string GetValue(string xpath, XmlNode node)
         {
             try
@@ -392,73 +337,114 @@ namespace AMSGetFlights.Model
             }
 
         }
+        public bool HasUserInterestedChanges(Subscription sub )
+        {
+            // No filters are set, so pass the flight
+            if( !sub.ChangeEstimated 
+                && !sub.ChangeResourceBaggageReclaim 
+                && !sub.ChangeResourceCheckIn 
+                && !sub.ChangeResourceGate 
+                && !sub.ChangeResourceStand)
+            {
+                return true;
+            }
 
-        [JsonIgnore]
-        public string Key
-        {
-            get
+            if (sub.ChangeEstimated)
             {
-                return flightId.flightID;
-            }
-            set
-            {
-                Key = value;
-            }
-        }
-        public FlightID flightId { get; set; }
-        public string? callsign
-        {
-            get
-            {
-                try
+                if (flightId.flightkind.ToLower().StartsWith("arr"))
                 {
-                    if (Values.ContainsKey("callsign"))
-                    {
-                        return Values["callsign"];
-                    }
-                    else
-                    {
-                        return $"{flightId.iataAirline}{flightId.flightNumber}";
-                    }
-                } catch (Exception ex)
+                    if(XmlRaw.Contains("<Change propertyName=\"de-G_MostConfidentArrivalTime\">")) return true;
+                }
+                if (flightId.flightkind.ToLower().StartsWith("dep"))
                 {
-                    Console.WriteLine(ex.Message);
-                    return $"{flightId.iataAirline}{flightId.flightNumber}";
+                    if (XmlRaw.Contains("<Change propertyName=\"de-G_MostConfidentDepartureTime\">")) return true;
                 }
             }
+            if (sub.ChangeResourceStand)
+            {
+                if (XmlRaw.Contains("<StandSlotsChange>")) return true;
+            } 
+            if (sub.ChangeResourceCheckIn)
+            {
+                if (XmlRaw.Contains("<CheckInSlotsChange>")) return true;
+            } 
+            if (sub.ChangeResourceGate)
+            {
+                if (XmlRaw.Contains("<GateSlotsChange>")) return true;
+            } 
+            if (sub.ChangeResourceBaggageReclaim)
+            {
+                if (XmlRaw.Contains("<CarouselSlotsChange>")) return true;
+            }
+
+            return false;
         }
-        public string domesticintcode { get; set; }
-        public string aircrafttypeicao { get; set; }
-        public string aircrafttypeiata { get; set; }
-        public string aircraftregistration { get; set; }
-        public string status { get; set; }
-        public string publicRemark { get; set; }
-        public string flightUniqueID { get; set; }
-        public string amslinkedflightid { get; set; }
 
-        public List<Dictionary<string, string>> route { get; set; } = new List<Dictionary<string, string>>();
-
-        public List<Dictionary<string, string>> codeShares { get; set; } = new List<Dictionary<string, string>>();
-        public FlightID linkedflightId { get; set; }
-        //   public List<CustomField> Values { get; set; } = new List<CustomField>();
-
-        public Dictionary<string, string> Values { get; set; } = new Dictionary<string, string>();
-        public Dictionary<string, Dictionary<string, string>> Events { get; set; } = new Dictionary<string, Dictionary<string, string>>();
-        public List<Dictionary<string, string>> CheckInSlots { get; set; } = new List<Dictionary<string, string>>();
-        public List<Dictionary<string, string>> StandSlots { get; set; } = new List<Dictionary<string, string>>();
-        public List<Dictionary<string, string>> CarouselSlots { get; set; } = new List<Dictionary<string, string>>();
-        public List<Dictionary<string, string>> GateSlots { get; set; } = new List<Dictionary<string, string>>();
-        public Dictionary<string, List<Dictionary<string, string>>> CustomTables { get; set; } = new Dictionary<string, List<Dictionary<string, string>>>();
-        [JsonIgnore] 
-        public string XmlRaw { get; set; }
-        public string LastUpdated { get; private set; }
-
-        public string Action { get;set; }
         public object Clone()
         {
             return (AMSFlight)MemberwiseClone();
         }
     }
+    public class AirportSource : ICloneable
+    {
+        public string? AptCode { get; set; }
+        public string? Token { get; set; }
+        public string? WSURL { get; set; }
+        public string? NotificationQueue { get; set; }
+        public bool IsEnabled { get; set; } = false;
+
+        public object Clone()
+        {
+            return MemberwiseClone();
+        }
+    }
+    public class User : ICloneable
+    {
+        public string Token { get; set; }
+        public string? Name { get; set; }
+        public bool Enabled { get; set; } = false;
+        public bool AllowXML { get; set; } = false;
+        public List<string> AllowedAirports { get; set; } = new List<string>();
+        public List<string> AllowedFields { get; set; } = new List<string>();
+        public List<string> AllowedCustomFields { get; set; } = new List<string>();
+        public Dictionary<string, string> Defaults { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Overrides { get; set; } = new Dictionary<string, string>();
+        public int NumCalls { get; set; } = 0;
+        public DateTime LastCall { get; set; } = DateTime.MinValue; 
+
+        public object Clone()
+        {
+            return MemberwiseClone();
+        }
+    }
+    public class ServerStatus
+    {
+        public string EarliestEntry { get; set; }
+        public string LatestEntry { get; set; }
+        public int NumberOfEntries { get; set; }
+        public long ProcessMemory { get; set; }
+        public string Error { get; set; }
+    }
+    public class GetFlightsResponse
+    {
+        public GetFlightQueryObject query { get; set; }
+        public bool partialResutlsRetuned { get; set; } = false;
+        public string error { get; set; }
+        public List<AMSFlight> flights { get; set; }
+    }
+    public class GetFlightScheduleResponse
+    {
+        public GetFlightQueryObject query { get; set; }
+        public bool partialResutlsRetuned { get; set; } = false;
+        public string error { get; set; }
+        public List<FlightIDExtended> flights { get; set; }
+    }
+    public class LogEntry
+    {
+        public GetFlightQueryObject query { get; set; }
+        public string Result { get; set; }
+        public int RecordsReturned { get; set; } = 0;
+    } 
     public class FlightID : ICloneable
     {
         [JsonIgnore]
@@ -482,6 +468,7 @@ namespace AMSGetFlights.Model
         public bool deleted { get; set; } = false;
         public string flightkind { get; set; }
         public string flightUniqueID { get; set; }
+        public FlightID linkedFlightId { get; set; }
 
         public object Clone()
         {
@@ -489,7 +476,6 @@ namespace AMSGetFlights.Model
 
         }
     }
-
     public class FlightIDExtended 
     {
         [JsonIgnore]
@@ -504,6 +490,7 @@ namespace AMSGetFlights.Model
         public bool deleted { get; set; } = false;
         public string flightkind { get; set; }
         public string flightUniqueID { get; set; }
+        public FlightID linkedFlightId { get; set; }
         public List<Dictionary<string, string>> route { get; set; } = new List<Dictionary<string, string>>(); 
         
         public FlightIDExtended(FlightID flightId, List<Dictionary<string, string>> route)
@@ -519,11 +506,11 @@ namespace AMSGetFlights.Model
             scheduleTime = flightId.scheduleTime;
             flightUniqueID = flightId.flightUniqueID;
             deleted = flightId.deleted;
+            linkedFlightId = flightId.linkedFlightId;
             this.route = route;
 
         }
     }
-
     public class CustomField : ICloneable
     {
         public CustomField(string name, string value)

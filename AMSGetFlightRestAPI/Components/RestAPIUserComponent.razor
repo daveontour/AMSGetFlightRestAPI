@@ -13,9 +13,12 @@
         <RadzenTabsItem Text="API Reference and Help">
             <HelpAndReferenceComponent />
         </RadzenTabsItem>
-        <RadzenTabsItem Text="Subscriptions Reference and Help">
-            <HelpSubscriptionComponent />
-        </RadzenTabsItem>
+        @if (configService.config.EnableSubscriptions)
+        {
+            <RadzenTabsItem Text="Subscriptions Reference and Help">
+                <HelpSubscriptionComponent />
+            </RadzenTabsItem>
+        }
         <RadzenTabsItem Text="Try It!">
             <TryItComponent />
         </RadzenTabsItem>
