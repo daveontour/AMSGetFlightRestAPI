@@ -22,8 +22,8 @@ namespace AMSGetFlights.Services
             this.subManager = subManager;
             this.sanitizer = sanitizer;
 
-            ThreadPool.SetMinThreads(configService.config.MinNumSubscriptionThreads, 0);
-            ThreadPool.SetMaxThreads(configService.config.MaxNumSubscriptionThreads, 0);
+            ThreadPool.SetMinThreads(configService.config.MinNumSubscriptionThreads, 5);
+            ThreadPool.SetMaxThreads(configService.config.MaxNumSubscriptionThreads, 5);
         }
 
         private void SendBacklogRequest(Subscription sub)
@@ -36,6 +36,7 @@ namespace AMSGetFlights.Services
         {
             if (configService.config.EnableSubscriptions)
             {
+                Console.WriteLine("Subscription Processing Enabled");
                 await Task.Run(() => Start());
             } else
             {
@@ -100,7 +101,7 @@ namespace AMSGetFlights.Services
 
 
 
-            lock (sub.BackLog)
+         //   lock (sub.BackLog)
             {
                 //Enqueue the new flight, and then process the Backlog queue until empty
 
@@ -116,6 +117,11 @@ namespace AMSGetFlights.Services
                     sub.BackLog.Put(flight);
                 }
 
+                if (!sub.IsSendEnabled)
+                {
+                    Console.WriteLine($"Send Disabled for {sub.SubscriptionID} {sub.SubscriberName}");
+                    return;
+                }
 
                 while (sub.BackLog.Count > 0 || initByPassBacklog)
                 {
@@ -197,7 +203,7 @@ namespace AMSGetFlights.Services
                         });
                     }
 
-                    if (!configService.config.IsTest)
+                    if (!configService.config.IsTest &&sub.IsSendEnabled)
                     {
                         try
                         {
@@ -224,6 +230,7 @@ namespace AMSGetFlights.Services
                                     if (response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Accepted)
                                     {
                                         sub.ConsecutiveSuccessfullCalls++;
+                                        sub.IsSendEnabled = true;
                                         sub.LastSuccess = DateTime.Now;
                                         sub.LastError = null;
                                         sub.ConsecutiveUnsuccessfullCalls = 0;
@@ -232,6 +239,9 @@ namespace AMSGetFlights.Services
                                     {
                                         sub.ConsecutiveSuccessfullCalls = 0;
                                         sub.ConsecutiveUnsuccessfullCalls++;
+                                        if (sub.ConsecutiveUnsuccessfullCalls > configService.config.NumSubUnSuccessfulSendBeforeDisable){
+                                            sub.IsSendEnabled = false;
+                                        }
                                         sub.LastFailure = DateTime.Now;
                                         sub.LastError = $"HTTP Status Code: {response.StatusCode}";
                                         sub.BackLog.Put(fl);
@@ -242,6 +252,10 @@ namespace AMSGetFlights.Services
                                 {
                                     sub.ConsecutiveSuccessfullCalls = 0;
                                     sub.ConsecutiveUnsuccessfullCalls++;
+                                    if (sub.ConsecutiveUnsuccessfullCalls > configService.config.NumSubUnSuccessfulSendBeforeDisable)
+                                    {
+                                        sub.IsSendEnabled = false;
+                                    }
                                     sub.LastFailure = DateTime.Now;
                                     sub.LastError = ex.Message;
                                     sub.BackLog.Put(fl);
@@ -253,6 +267,10 @@ namespace AMSGetFlights.Services
                         {
                             sub.ConsecutiveSuccessfullCalls = 0;
                             sub.ConsecutiveUnsuccessfullCalls++;
+                            if (sub.ConsecutiveUnsuccessfullCalls > configService.config.NumSubUnSuccessfulSendBeforeDisable)
+                            {
+                                sub.IsSendEnabled = false;
+                            }
                             sub.LastFailure = DateTime.Now;
                             sub.LastError = ex.Message;
                             sub.BackLog.Put(fl);
@@ -291,13 +309,16 @@ namespace AMSGetFlights.Services
         private void UpdatedEnqueue()
         {
 
-            AMSFlight obj = queue.Dequeue();
-
-            foreach (Subscription sub in subManager.Subscriptions)
+            Task.Run(() =>
             {
-                Tuple<Subscription, AMSFlight> state = new Tuple<Subscription, AMSFlight>(sub, obj);
-                ThreadPool.QueueUserWorkItem(new WaitCallback(TaskCallBack), state);
-            }
+                AMSFlight obj = queue.Dequeue();
+
+                foreach (Subscription sub in subManager.Subscriptions)
+                {
+                    Tuple<Subscription, AMSFlight> state = new Tuple<Subscription, AMSFlight>(sub, obj);
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(TaskCallBack), state);
+                }
+            });
         }
     }
 

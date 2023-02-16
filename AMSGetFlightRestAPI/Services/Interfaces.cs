@@ -18,4 +18,10 @@ public interface IFlightRepositoryDataAccessObject
     IEnumerable<string> GetAllSubscriptions();
     void SaveSubsciptions(List<string> subscriptions);
     void ClearFlights();
+    
+    // Following added for backlog processing
+    void ClearBacklog(string subID);
+    AMSFlight GetNextFromBacklog(string backlogID);
+    void AddToBacklog(string subID, AMSFlight flight);
+    void ClearEntryFromBacklog(string subID, long entryID);
 }

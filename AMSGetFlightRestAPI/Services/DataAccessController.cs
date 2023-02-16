@@ -23,9 +23,11 @@ namespace AMSGetFlights.Services
         private static string? dbLocation;
         private static string? dbfileName;
         private readonly EventExchange eventExchange;
+        private readonly GetFlightsConfigService configService;
 
         public SqLiteFlightRepository(GetFlightsConfigService configService, EventExchange eventExchange)
         {
+            this.configService = configService;
             dbLocation = configService.config.StorageDirectory;
             dbfileName = "AmsGetFlights.sqlite";
             File.Delete(Path.Combine(dbLocation, dbfileName));
@@ -67,8 +69,14 @@ namespace AMSGetFlights.Services
                     lastupdate                TEXT
                 )");
                 sqliteConnection.Execute(
-                    @"create table Subcriptions(
+                    @"create table Subscriptions(
                     subscription                  TEXT PRIMARY KEY
+                )");
+                sqliteConnection.Execute(
+                    @"create table BackLogs(
+                    backlogID                 INTEGER PRIMARY KEY,
+                    subscription              TEXT,
+                    XML                       TEXT
                 )");
                 sqliteConnection.Close();
                 System.GC.Collect();
@@ -183,8 +191,8 @@ namespace AMSGetFlights.Services
             {
                 cnn.Open();
                 SqliteCommand sqlComm;
-                sqlComm = new SqliteCommand("begin", cnn);
-                sqlComm.ExecuteNonQuery();
+                //sqlComm = new SqliteCommand("begin", cnn);
+                //sqlComm.ExecuteNonQuery();
 
 
                 foreach (AMSFlight record in fls)
@@ -195,8 +203,8 @@ namespace AMSGetFlights.Services
                 }
 
 
-                sqlComm = new SqliteCommand("end", cnn);
-                sqlComm.ExecuteNonQuery();
+                //sqlComm = new SqliteCommand("end", cnn);
+                //sqlComm.ExecuteNonQuery();
                 cnn.Close();
 
                 eventExchange.MonitorMessage($"Bulk Update of {fls.Count} flights");
@@ -210,8 +218,8 @@ namespace AMSGetFlights.Services
             {
                 cnn.Open();
                 SqliteCommand sqlComm;
-                sqlComm = new SqliteCommand("begin", cnn);
-                sqlComm.ExecuteNonQuery();
+                //sqlComm = new SqliteCommand("begin", cnn);
+                //sqlComm.ExecuteNonQuery();
 
 
                 foreach (AMSFlight record in fls)
@@ -222,8 +230,8 @@ namespace AMSGetFlights.Services
                 }
 
 
-                sqlComm = new SqliteCommand("end", cnn);
-                sqlComm.ExecuteNonQuery();
+                //sqlComm = new SqliteCommand("end", cnn);
+                //sqlComm.ExecuteNonQuery();
                 cnn.Close();
 
                 eventExchange.MonitorMessage($"Bulk Update of {fls.Count} flights");
@@ -239,7 +247,7 @@ namespace AMSGetFlights.Services
             try
             {
                 cnn.Open();
-                return cnn.Query<string>("SELECT subscription from Subcriptions ");
+                return cnn.Query<string>("SELECT subscription from Subscriptions ");
             }
             catch (Exception)
             {
@@ -257,9 +265,9 @@ namespace AMSGetFlights.Services
             using (var cnn = SimpleDbConnection())
             {
                 cnn.Open();
-                SqliteCommand sqlComm;
-                sqlComm = new SqliteCommand("begin", cnn);
-                sqlComm.ExecuteNonQuery();
+                //SqliteCommand sqlComm;
+                //sqlComm = new SqliteCommand("begin", cnn);
+                //sqlComm.ExecuteNonQuery();
 
                 cnn.Execute("DELETE FROM Subscriptions");
 
@@ -270,8 +278,8 @@ namespace AMSGetFlights.Services
                 }
 
 
-                sqlComm = new SqliteCommand("end", cnn);
-                sqlComm.ExecuteNonQuery();
+                //sqlComm = new SqliteCommand("end", cnn);
+                //sqlComm.ExecuteNonQuery();
                 cnn.Close();
             }
 
@@ -283,22 +291,81 @@ namespace AMSGetFlights.Services
             using (var cnn = SimpleDbConnection())
             {
                 cnn.Open();
-                SqliteCommand sqlComm;
-                sqlComm = new SqliteCommand("begin", cnn);
-                sqlComm.ExecuteNonQuery();
-
 
                 string sql = $"DELETE from StoredFlights";
                 cnn.Execute(sql);
 
-
-
-                sqlComm = new SqliteCommand("end", cnn);
-                sqlComm.ExecuteNonQuery();
                 cnn.Close();
             }
 
             GC.Collect();
+        }
+
+
+        //sqliteConnection.Execute(
+        //            @"create table BackLogs(
+        //            backlogID                 INTEGER PRIMARY KEY,
+        //            subscription              TEXT,
+        //            XML                       TEXT,
+        //        )");
+
+        public void ClearBacklog(string subID)
+        {
+            using (var cnn = SimpleDbConnection())
+            {
+                cnn.Open();
+
+                string sql = $"DELETE from BackLogs WHERE subscription = '{subID}'";
+                cnn.Execute(sql);
+
+                cnn.Close();
+            }
+
+            GC.Collect();
+        }
+
+        public AMSFlight GetNextFromBacklog(string backlogID)
+        {
+            using (var cnn = SimpleDbConnection())
+            {
+                cnn.Open();
+
+                string sql = $"Select * from BackLogs WHERE backlogID = '{backlogID} ORDER BY backlogID ASC LIMIT 1'";
+                try
+                {
+                    string xml = cnn.Query<string>(sql).First();
+                    AMSFlight fl = new AMSFlight(xml, configService.config, DateTime.Now.ToString());
+                    return fl;
+                }
+                catch (Exception ex)
+                {
+                    return null;
+                }
+                finally
+                {
+                    cnn.Close();
+                }
+
+
+            }
+        }
+
+        public void AddToBacklog(string backlogID, AMSFlight flight)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ClearEntryFromBacklog(string subID, long entryID)
+        {
+            using (var cnn = SimpleDbConnection())
+            {
+                cnn.Open();
+
+                string sql = $"DELETE from BackLogs WHERE backlogID = '{entryID}' AND subscription = '{subID}'";
+                cnn.Execute(sql);
+
+                cnn.Close();
+            }
         }
     }
     public class MSSQLFlightRepository : IFlightRepositoryDataAccessObject
@@ -383,10 +450,10 @@ namespace AMSGetFlights.Services
                 sql += $" AND type = '{kind}'";
             }
 
-        //    if (query.updatedFrom != null)
-        //    {
-                sql += $" AND lastupdate >= '{query.updatedFrom}'";
-        //    }
+            //    if (query.updatedFrom != null)
+            //    {
+            sql += $" AND lastupdate >= '{query.updatedFrom}'";
+            //    }
 
             sql += " ORDER BY sto ";
 
@@ -536,6 +603,26 @@ namespace AMSGetFlights.Services
                 cnn.Close();
                 System.GC.Collect();
             }
+        }
+
+        public void ClearBacklog(string backlogID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public AMSFlight GetNextFromBacklog(string backlogID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddToBacklog(string backlogID, AMSFlight flight)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ClearEntryFromBacklog(string backlogID, long entryID)
+        {
+            throw new NotImplementedException();
         }
     }
 }

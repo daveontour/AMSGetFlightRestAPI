@@ -553,6 +553,7 @@ namespace AMSGetFlights.Model
         public bool IsArrival { get; set; } = false;
         public bool IsDeparture { get; set; } = false;
         public bool IsEnabled { get; set; } = true;
+        public bool IsSendEnabled { get; set; } = true;
         public string? AirlineIATA { get; set; }
         public string? AirportIATA { get; set; }
         public int MaxHorizonInHours { get; set; } = 24;

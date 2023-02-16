@@ -1,40 +1,81 @@
 {
+  // the number of threads allocated to handling subscription processing
   "MinNumSubscriptionThreads": 5,
   "MaxNumSubscriptionThreads": 40,
+
+  // For sub scriptions
+  "NumSubUnSuccessfulSendBeforeDisable": 400,
+
+  // Whether to enable users to register subscriptions
+  "EnableSubscriptions": true,
+
+  // In the UI, the default setting for the "Try IT" URL
   "TryItDefaultURL": "https://localhost:7095/api/GetFlightsJSON",
+
+  // The user token used by the "Try IT" page
   "TryItDefaultToken": "1ecf91df-cbc1-4a2d-bf61-5a2dc8ae2e33",
-  "SQLConnectionString": "Integrated Security=SSPI;Persist Security Info=False;Database=FLIGHTRESTAPIDB;Server=localhost;",
-  "AdminPass": "o",
-  "AllowAMSXFormat": true,
-  "AllowJSONFormat": true,
-  "BackwardWindowInDays": -15,
-  "ForewardWindowInDays": 10,
-  "ChunkSizeInDays": 1,
-  "AllowAnnonymousUsers": true,
-  "RefreshCron": "0 15 2,21 ? * * *",
-  "UTCOffset": 4.0,
+
+  // The system can use either SQLite or MSSQL as a data store 
+  "Storage": "SQLite", // "SQLite" or "SQL"
+  // For SQLite data storage, the directory to write the datbase files
   "StorageDirectory": "C:/Users/dave_/Desktop",
+  // SQL Connnection string to use - if SQL is defined as the storage mechanism to use
+  "SQLConnectionString": "Integrated Security=SSPI;Persist Security Info=False;Database=FLIGHTRESTAPIDB;Server=localhost;",
+
   "ConfigurationFile": "GetFlights.config.json",
-  "Storage": "SQL",
+
+  // The pass word to enter admin mode
+  "AdminPass": "o",
+
+  // Allow requests for AMSX formatted response to be made (Configurable in UI)
+  "AllowAMSXFormat": true,
+  // Allow requests for JSON formatted response to be made (Configurable in UI)
+  "AllowJSONFormat": true,
+
+  // For inital loading of the cache, the time relative to NOW for starting the cache load  (Configurable in UI)
+  "BackwardWindowInDays": -15,
+  // For inital loading of the cache, the time relative to NOW for ending the cache load (Configurable in UI)
+  "ForewardWindowInDays": 10,
+  // The number of days in each request to for the initial cache load (Configurable in UI)
+  "ChunkSizeInDays": 1,
+
+  // Allow annonymous API access  (Configurable in UI)
+  "AllowAnnonymousUsers": true,
+
+
+  "RefreshCron": "0 15 2,21 ? * * *",
+
+  // Airport offset in UTC (needed for reporting)  (Configurable in UI)
+  "UTCOffset": 4.0,
+
+  //If a lookup for a single flight is done for a date range not in in the cache, then make a direct request to AMS  (Configurable in UI)
   "EnableDirectAMSLookukOnSingleFlightCacheFailure": true,
+  //If a lookup for multiple flights is done for a date range not in in the cache, then make a direct request to AMS  (Configurable in UI)
   "EnableDirectAMSLookukOnMultiFlightCacheFailure": true,
+
+  // In addtion to the core set of parameters that can be used in a lookup, also allow lookups based
+  // on the defined custom fields. The key is the paramter that should be contained in the request URL 
+  // and the value is the referenced custom field (Configurable in UI)
   "MappedQueryParameters": {
     "qa": "S--G_QualifierCategory",
     "status": "S--G_Status"
   },
   "CustomFieldToParameter": {
+    // The key is the AMS Propoerty Name and the value is the descriptor it is mapped to in the JSON output (Configurable in UI)
     "de-G_MostConfidentDepartureTime": "departureTime",
     "de-G_MostConfidentArrivalTime": "arrivalTime",
     "S--G_QualifierCategory": "operationQualifier",
     "S--G_FlightStatusText": "flightStatus"
   },
+
+  // The set of airports to be managed by this intance (Configurable in UI)
   "Airports": [
     {
-      "AptCode": "DOH",
-      "Token": "ef7676e6-17bc-48d1-92d3-4e6243912b1f",
-      "WSURL": "http://localhost/SITAAMSIntegrationService/DOH/v2/SITAAMSIntegrationService",
-      "NotificationQueue": ".\\private$\\fromams",
-      "IsEnabled": true
+      "AptCode": "DOH", //IATA Airport codes as configured in AMS
+      "Token": "ef7676e6-17bc-48d1-92d3-4e6243912b1f", //AMS API Access Token
+      "WSURL": "http://localhost/SITAAMSIntegrationService/DOH/v2/SITAAMSIntegrationService", //Webservice URL for AMS
+      "NotificationQueue": ".\\private$\\fromams", // The AMS Notification queue for this airport
+      "IsEnabled": true // Whether processing for this airport is enabled
     },
     {
       "AptCode": "SLL",
@@ -46,13 +87,23 @@
   ],
   "Users": {
     "default": {
-      "Token": "default",
+      // The values the user has to provide in the "Authorization" header key of the request to be identified.
+      // If no value is provided, then the value "default" will be used and the the request will be processed
+      // with the rights of the "defult" user (this config)
+      "Token": "default", // The same as the key for this entry. 
+
+      // Just for UI and reporting purposes
       "Name": "Default User",
+      // Whether the user access is enabled.
       "Enabled": true,
+      // Whether the user can make requests for XML data
       "AllowXML": true,
+
+      // The set of airports the user is allowed to access
       "AllowedAirports": [
         "DOH"
       ],
+      // The set or core fields that will returned to the user
       "AllowedFields": [
         "route",
         "aircrafttypeiata",
@@ -69,6 +120,7 @@
         "LastUpdated",
         "Values"
       ],
+      // The set of custom fields that will be returned to the user (name are post mapping - see above)
       "AllowedCustomFields": [
         "departureTime",
         "arrivalTime",
@@ -76,12 +128,18 @@
         "flightStatus",
         "callsign"
       ],
+      // If a user does not provide a value for a particular input parameter, then use the value define below
       "Defaults": {
         "apt": "DOH"
       },
+
+      // Even if a user provides a value for a particular input parameter, then use the 
+      // defined values not matter what. This can be used to enforce data restriction 
+      // on the user
       "Overrides": {
         "partialResults": "true"
       },
+      // Not really config setting, but initialisation of values for the user
       "NumCalls": 0,
       "LastCall": "0001-01-01T00:00:00"
     },
@@ -234,7 +292,6 @@
     }
   },
   "IsTest": false,
-  "EnableSubscriptions": true,
   "TestBacklog": false,
   "BacklogMaxDepth": 1000
 }

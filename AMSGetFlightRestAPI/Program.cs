@@ -27,7 +27,7 @@ builder.Services.AddSingleton<EventExchange>();
 // Manages the interaction betwwen the system and AMS
 builder.Services.AddSingleton<AMSGetFlightsStatusService>();
 
-// Reads the configuration file and manageas configuration updates
+// Reads the configuration file and manages configuration updates
 builder.Services.AddSingleton<GetFlightsConfigService>();
 
 // Service layer over the data access object
